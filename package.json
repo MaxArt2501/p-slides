@@ -1,0 +1,15 @@
+{
+  "name": "css-houdini-talk",
+  "version": "1.0.0",
+  "description": "Talking about Houdini",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": {
+    "name": "Massimo Artizzu",
+    "email": "maxart.x@gmail.com"
+  },
+  "license": "MIT"
+}
