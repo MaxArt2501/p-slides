@@ -8,16 +8,35 @@ customElements.define('p-deck', class extends HTMLElement {
       attachStyle('css/deck.css', this.root);
     }
 
-    requestIdleCallback(() => {
-      this.querySelectorAll('p-slide').forEach((slide, index) => slide.active = index === 0);
-    });
-
     this.keyHandler = this.keyHandler.bind(this);
+    this.computeFontSize = this.computeFontSize.bind(this);
+
     this.ownerDocument.addEventListener('keydown', this.keyHandler);
+    this.ownerDocument.defaultView.requestIdleCallback(() => {
+      this.querySelectorAll('p-slide').forEach((slide, index) => slide.active = index === 0);
+      this.computeFontSize();
+    });
+    this.ownerDocument.defaultView.addEventListener('resize', this.computeFontSize, { passive: true });
   }
 
   disconnectedCallback() {
     this.ownerDocument.removeEventListener('keydown', this.keyHandler);
+    this.ownerDocument.defaultView.removeEventListener('resize', this.keyHandler);
+  }
+
+  computeFontSize() {
+    const { width } = this.slideSizes;
+    this.style.fontSize = `${width / 20}px`;
+  }
+
+  get slideSizes() {
+    const { width, height } = this.getBoundingClientRect();
+    const deckRatio = width / height;
+    const aspectRatio = +this.ownerDocument.defaultView.getComputedStyle(this).getPropertyValue('--slide-aspect-ratio') || 1.5;
+    if (deckRatio > aspectRatio) {
+      return { width: height * aspectRatio, height };
+  }
+    return { width, height: width / aspectRatio };
   }
 
   get currentSlide() {
