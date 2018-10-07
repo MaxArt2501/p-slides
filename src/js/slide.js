@@ -22,6 +22,17 @@ customElements.define('p-slide', class extends HTMLElement {
     }
   }
 
+  get isPrevious() {
+    return this.getAttribute('previous') !== null;
+  }
+  set isPrevious(isPrevious) {
+    if (!!isPrevious) {
+      this.setAttribute('previous', '');
+    } else {
+      this.removeAttribute('previous');
+    }
+  }
+
   get fragments() {
     return [ ...this.querySelectorAll('p-fragment') ].sort((f1, f2) => {
       // There *should* be some handling in case of non-stable sort, but it has been fixed in Chrome too
@@ -41,7 +52,7 @@ customElements.define('p-slide', class extends HTMLElement {
       hiddenFragment.setAttribute('aria-hidden', 'false');
       return false;
     }
-    this.setAttribute('previous', '');
+    this.isPrevious = true;
     this.active = false;
     return true;
   }
@@ -51,7 +62,7 @@ customElements.define('p-slide', class extends HTMLElement {
       visibleFragment.setAttribute('aria-hidden', 'true');
       return false;
     }
-    this.removeAttribute('previous');
+    this.isPrevious = false;
     this.active = false;
     return true;
   }

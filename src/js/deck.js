@@ -56,12 +56,12 @@ customElements.define('p-deck', class extends HTMLElement {
     }
 
     for (const slide of slides.slice(0, numIndex)) {
-      slide.setAttribute('previous', '');
+      slide.isPrevious = true;
       slide.active = false;
       slide.setFragmentVisibility(true);
     }
     for (const slide of slides.slice(numIndex)) {
-      slide.removeAttribute('previous');
+      slide.isPrevious = false;
       slide.active = false;
       slide.setFragmentVisibility(false);
     }
