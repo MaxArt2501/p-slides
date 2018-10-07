@@ -30,10 +30,19 @@ customElements.define('p-deck', class extends HTMLElement {
     return this.querySelectorAll('p-slide');
   }
   get atStart() {
-    return this.currentIndex === 0;
+    if (this.currentIndex > 0) {
+      return false;
+    }
+    const firstSlide = this.slides[0];
+    return !firstSlide || !firstSlide.lastVisibleFragment;
   }
   get atEnd() {
-    return this.currentIndex === this.slides.length - 1;
+    if (this.currentIndex < this.slides.length - 1) {
+      return false;
+    }
+    const { slides } = this;
+    const lastSlide = slides[slides.length - 1];
+    return !lastSlide || !lastSlide.nextHiddenFragment;
   }
 
   keyHandler({ code }) {

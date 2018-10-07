@@ -22,12 +22,35 @@ customElements.define('p-slide', class extends HTMLElement {
     }
   }
 
+  get fragments() {
+    return [ ...this.querySelectorAll('p-fragment') ].sort((f1, f2) => {
+      // There *should* be some handling in case of non-stable sort, but it has been fixed in Chrome too
+      return f1.index - f2.index;
+    });
+  }
+  get nextHiddenFragment() {
+    return this.fragments.find(fragment => fragment.getAttribute('aria-hidden') === 'true');
+  }
+  get lastVisibleFragment() {
+    return this.fragments.reverse().find(fragment => fragment.getAttribute('aria-hidden') === 'false');
+  }
+
   next() {
+    const hiddenFragment = this.nextHiddenFragment;
+    if (hiddenFragment) {
+      hiddenFragment.setAttribute('aria-hidden', 'false');
+      return false;
+    }
     this.setAttribute('previous', '');
     this.active = false;
     return true;
   }
   previous() {
+    const visibleFragment = this.lastVisibleFragment;
+    if (visibleFragment) {
+      visibleFragment.setAttribute('aria-hidden', 'true');
+      return false;
+    }
     this.removeAttribute('previous');
     this.active = false;
     return true;
