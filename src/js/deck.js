@@ -42,30 +42,37 @@ customElements.define('p-deck', class extends HTMLElement {
   get currentSlide() {
     return this.querySelector('p-slide[aria-hidden="false"]');
   }
+  set currentSlide(nextSlide) {
+    if (!(nextSlide instanceof HTMLElement) || nextSlide.nodeName !== 'P-SLIDE') {
+      throw Error('Current slide can only be a <p-slide> element');
+    }
+    if (!this.contains(nextSlide)) {
+      throw Error('Deck does not contain given slide');
+    }
+
+    const { slides } = this;
+    for (const slide of slides) {
+      slide.active = slide === nextSlide;
+      const positionComparison = nextSlide.compareDocumentPosition(slide);
+      const isPrevious = positionComparison & this.DOCUMENT_POSITION_PRECEDING;
+      slide.isPrevious = isPrevious;
+      slide.setFragmentVisibility(isPrevious);
+    }
+  }
+
   get currentIndex() {
     return [ ...this.slides ].findIndex(slide => slide.active);
   }
   set currentIndex(index) {
-    const numIndex = +index;
-    if (isNaN(index) || numIndex < 0) {
+    const { slides } = this;
+    if (slides.lenght === 0 && +index === 0) {
       return;
     }
-    const slides = [ ...this.slides ];
-    if (numIndex >= slides.length) {
-      return;
+    const slide = slides[index];
+    if (!slide) {
+      throw Error(`Slide index out of range (must be 0-${slides.length - 1}, ${index} given)`);
     }
-
-    for (const slide of slides.slice(0, numIndex)) {
-      slide.isPrevious = true;
-      slide.active = false;
-      slide.setFragmentVisibility(true);
-    }
-    for (const slide of slides.slice(numIndex)) {
-      slide.isPrevious = false;
-      slide.active = false;
-      slide.setFragmentVisibility(false);
-    }
-    slides[numIndex].active = true;
+    this.currentSlide = slide;
   }
 
   get slides() {
