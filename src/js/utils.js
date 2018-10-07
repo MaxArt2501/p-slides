@@ -33,3 +33,24 @@ export function attachStyle(url, root) {
     }
   });
 }
+
+export function defineConstants(target, constantMap) {
+  const propDefinitions = Object.entries(constantMap).reduce((map, [ key, value ]) => {
+    map[key] = { value, writable: false };
+    return map;
+  }, {});
+  Object.defineProperties(target, propDefinitions);
+}
+
+export function matchKey(keyEvent, keyMap) {
+  for (const [ command, keys ] of Object.entries(keyMap)) {
+    for (const keyDef of keys) {
+      const { key, altKey = false, ctrlKey = false, metaKey = false, shiftKey = false } = keyDef;
+      const normalizedKeyDef = { key, altKey, ctrlKey, metaKey, shiftKey };
+      if (Object.entries(normalizedKeyDef).every(([ prop, value ]) => keyEvent[prop] === value)) {
+        return command;
+      }
+    }
+  }
+  return null;
+}

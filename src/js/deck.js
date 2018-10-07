@@ -1,6 +1,6 @@
-import { attachStyle } from './utils.js';
+import { attachStyle, defineConstants, matchKey } from './utils.js';
 
-customElements.define('p-deck', class extends HTMLElement {
+export class PresentationDeckElement extends HTMLElement {
   connectedCallback() {
     if (!this.root) {
       this.root = this.attachShadow({ mode: 'open' });
@@ -94,18 +94,39 @@ customElements.define('p-deck', class extends HTMLElement {
     return !lastSlide || !lastSlide.nextHiddenFragment;
   }
 
-  keyHandler({ code }) {
-    const currentIndex = this.currentIndex;
-    if (code === 'ArrowLeft' && !this.atStart) {
-      const goToPrevious = this.currentSlide.previous();
-      if (goToPrevious) {
-        this.slides[currentIndex - 1].active = true;
-      }
-    } else if (code === 'ArrowRight' && !this.atEnd) {
-      const goToNext = this.currentSlide.next();
-      if (goToNext) {
-        this.slides[currentIndex + 1].active = true;
-      }
+  keyHandler(keyEvent) {
+    const command = matchKey(keyEvent, this.keyCommands);
+    switch (command) {
+      case this.PREVIOUS_COMMAND:
+        if (!this.atStart) {
+          const { currentIndex } = this;
+          const goToPrevious = this.currentSlide.previous();
+          if (goToPrevious) {
+            this.slides[currentIndex - 1].active = true;
+          }
+        }
+        break;
+      case this.NEXT_COMMAND:
+        if (!this.atEnd) {
+          const { currentIndex } = this;
+          const goToNext = this.currentSlide.next();
+          if (goToNext) {
+            this.slides[currentIndex + 1].active = true;
+          }
+        }
+        break;
     }
   }
+}
+
+const _proto = PresentationDeckElement.prototype;
+defineConstants(_proto, {
+  NEXT_COMMAND: 'next',
+  PREVIOUS_COMMAND: 'previous'
 });
+_proto.keyCommands = {
+  [_proto.NEXT_COMMAND]: [{ key: 'ArrowRight' }, { key: 'ArrowDown' }],
+  [_proto.PREVIOUS_COMMAND]: [{ key: 'ArrowLeft' }, { key: 'ArrowUp' }]
+};
+
+customElements.define('p-deck', PresentationDeckElement);

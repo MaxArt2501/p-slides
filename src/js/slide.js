@@ -22,6 +22,10 @@ customElements.define('p-slide', class extends HTMLElement {
     }
   }
 
+  get deck() {
+    return this.closest('p-deck');
+  }
+
   get isPrevious() {
     return this.getAttribute('previous') !== null;
   }
@@ -31,6 +35,13 @@ customElements.define('p-slide', class extends HTMLElement {
     } else {
       this.removeAttribute('previous');
     }
+  }
+
+  get isCurrent() {
+    return this.deck.currentSlide === this;
+  }
+  set isCurrent(isCurrent) {
+    this.deck.currentSlide = this;
   }
 
   get fragments() {
