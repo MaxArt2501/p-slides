@@ -55,4 +55,10 @@ customElements.define('p-slide', class extends HTMLElement {
     this.active = false;
     return true;
   }
+
+  setFragmentVisibility(visible) {
+    for (const fragment of this.fragments) {
+      fragment.setAttribute('aria-hidden', !visible);
+    }
+  }
 });

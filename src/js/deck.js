@@ -35,7 +35,7 @@ customElements.define('p-deck', class extends HTMLElement {
     const aspectRatio = +this.ownerDocument.defaultView.getComputedStyle(this).getPropertyValue('--slide-aspect-ratio') || 1.5;
     if (deckRatio > aspectRatio) {
       return { width: height * aspectRatio, height };
-  }
+    }
     return { width, height: width / aspectRatio };
   }
 
@@ -45,6 +45,29 @@ customElements.define('p-deck', class extends HTMLElement {
   get currentIndex() {
     return [ ...this.slides ].findIndex(slide => slide.active);
   }
+  set currentIndex(index) {
+    const numIndex = +index;
+    if (isNaN(index) || numIndex < 0) {
+      return;
+    }
+    const slides = [ ...this.slides ];
+    if (numIndex >= slides.length) {
+      return;
+    }
+
+    for (const slide of slides.slice(0, numIndex)) {
+      slide.setAttribute('previous', '');
+      slide.active = false;
+      slide.setFragmentVisibility(true);
+    }
+    for (const slide of slides.slice(numIndex)) {
+      slide.removeAttribute('previous');
+      slide.active = false;
+      slide.setFragmentVisibility(false);
+    }
+    slides[numIndex].active = true;
+  }
+
   get slides() {
     return this.querySelectorAll('p-slide');
   }
