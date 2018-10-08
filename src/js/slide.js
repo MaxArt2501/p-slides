@@ -3,15 +3,7 @@ import { attachStyle } from './utils.js';
 customElements.define('p-slide', class extends HTMLElement {
   constructor() {
     super();
-    let active;
-    Object.defineProperty(this, 'active', {
-      get() { return active; },
-      set(value) {
-        active = Boolean(value);
-        this.setAttribute('aria-hidden', `${!active}`);
-      }
-    });
-    this.active = false;
+    this.isActive = false;
   }
 
   connectedCallback() {
@@ -24,6 +16,18 @@ customElements.define('p-slide', class extends HTMLElement {
 
   get deck() {
     return this.closest('p-deck');
+  }
+
+  get isActive() {
+    return this.getAttribute('active') !== null;
+  }
+  set isActive(isActive) {
+    this.setAttribute('aria-hidden', `${!isActive}`);
+    if (!!isActive) {
+      this.setAttribute('active', '');
+    } else {
+      this.removeAttribute('active');
+    }
   }
 
   get isPrevious() {
@@ -64,7 +68,7 @@ customElements.define('p-slide', class extends HTMLElement {
       return false;
     }
     this.isPrevious = true;
-    this.active = false;
+    this.isActive = false;
     return true;
   }
   previous() {
@@ -74,7 +78,7 @@ customElements.define('p-slide', class extends HTMLElement {
       return false;
     }
     this.isPrevious = false;
-    this.active = false;
+    this.isActive = false;
     return true;
   }
 

@@ -13,7 +13,7 @@ export class PresentationDeckElement extends HTMLElement {
 
     this.ownerDocument.addEventListener('keydown', this.keyHandler);
     this.ownerDocument.defaultView.requestIdleCallback(() => {
-      this.querySelectorAll('p-slide').forEach((slide, index) => slide.active = index === 0);
+      this.querySelectorAll('p-slide').forEach((slide, index) => slide.isActive = index === 0);
       this.computeFontSize();
     });
     this.ownerDocument.defaultView.addEventListener('resize', this.computeFontSize, { passive: true });
@@ -40,7 +40,7 @@ export class PresentationDeckElement extends HTMLElement {
   }
 
   get currentSlide() {
-    return this.querySelector('p-slide[aria-hidden="false"]');
+    return this.querySelector('p-slide[active]');
   }
   set currentSlide(nextSlide) {
     if (!(nextSlide instanceof HTMLElement) || nextSlide.nodeName !== 'P-SLIDE') {
@@ -52,7 +52,7 @@ export class PresentationDeckElement extends HTMLElement {
 
     const { slides } = this;
     for (const slide of slides) {
-      slide.active = slide === nextSlide;
+      slide.isActive = slide === nextSlide;
       const positionComparison = nextSlide.compareDocumentPosition(slide);
       const isPrevious = positionComparison & this.DOCUMENT_POSITION_PRECEDING;
       slide.isPrevious = isPrevious;
@@ -61,7 +61,7 @@ export class PresentationDeckElement extends HTMLElement {
   }
 
   get currentIndex() {
-    return [ ...this.slides ].findIndex(slide => slide.active);
+    return [ ...this.slides ].findIndex(slide => slide.isActive);
   }
   set currentIndex(index) {
     const { slides } = this;
@@ -98,23 +98,31 @@ export class PresentationDeckElement extends HTMLElement {
     const command = matchKey(keyEvent, this.keyCommands);
     switch (command) {
       case this.PREVIOUS_COMMAND:
-        if (!this.atStart) {
-          const { currentIndex } = this;
-          const goToPrevious = this.currentSlide.previous();
-          if (goToPrevious) {
-            this.slides[currentIndex - 1].active = true;
-          }
-        }
+        this.previous();
         break;
       case this.NEXT_COMMAND:
-        if (!this.atEnd) {
-          const { currentIndex } = this;
-          const goToNext = this.currentSlide.next();
-          if (goToNext) {
-            this.slides[currentIndex + 1].active = true;
-          }
-        }
+        this.next();
         break;
+    }
+  }
+
+  next() {
+    if (!this.atEnd) {
+      const { currentIndex } = this;
+      const goToNext = this.currentSlide.next();
+      if (goToNext) {
+        this.slides[currentIndex + 1].isActive = true;
+      }
+    }
+  }
+
+  previous() {
+    if (!this.atStart) {
+      const { currentIndex } = this;
+      const goToPrevious = this.currentSlide.previous();
+      if (goToPrevious) {
+        this.slides[currentIndex - 1].isActive = true;
+      }
     }
   }
 }
