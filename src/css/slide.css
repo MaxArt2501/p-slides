@@ -1,11 +1,15 @@
 :host {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   background: var(--slide-bg, skyblue);
   width: calc(100vmin * var(--slide-aspect-ratio, 1.777777));
   max-width: 100vw;
   height: calc(100vw / var(--slide-aspect-ratio, 1.777777));
   max-height: 100vh;
   grid-area: 1 / 1 / span 1 / span 1;
+  box-sizing: border-box;
+  padding: 5%;
 
   /* Transition-specific styles */
   /* transform: translate(0, 0) scale(0); */
