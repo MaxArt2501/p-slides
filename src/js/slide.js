@@ -45,7 +45,11 @@ customElements.define('p-slide', class extends HTMLElement {
     return this.deck.currentSlide === this;
   }
   set isCurrent(isCurrent) {
-    this.deck.currentSlide = this;
+    if (!isCurrent) {
+      this.isActive = false;
+    } else {
+      this.deck.currentSlide = this;
+    }
   }
 
   get fragments() {
