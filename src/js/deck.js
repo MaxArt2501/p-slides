@@ -49,14 +49,21 @@ export class PresentationDeckElement extends HTMLElement {
     if (!this.contains(nextSlide)) {
       throw Error('Deck does not contain given slide');
     }
+    if (!nextSlide.isActive) {
+      nextSlide.isActive = true;
+      return;
+    }
 
     const { slides } = this;
+    let isPrevious = true;
     for (const slide of slides) {
-      slide.isActive = slide === nextSlide;
-      const positionComparison = nextSlide.compareDocumentPosition(slide);
-      const isPrevious = positionComparison & this.DOCUMENT_POSITION_PRECEDING;
-      slide.isPrevious = isPrevious;
-      slide.setFragmentVisibility(isPrevious);
+      if (slide === nextSlide) {
+        isPrevious = false;
+      } else {
+        slide.isActive = false;
+        slide.isPrevious = isPrevious;
+        slide.setFragmentVisibility(isPrevious);
+      }
     }
   }
 

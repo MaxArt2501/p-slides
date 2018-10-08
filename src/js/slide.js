@@ -6,6 +6,23 @@ customElements.define('p-slide', class extends HTMLElement {
     this.isActive = false;
   }
 
+  static get observedAttributes() {
+    return [ 'active' ];
+  }
+
+  attributeChangedCallback(attribute, _, newValue) {
+    if (attribute === 'active') {
+      const isActive = newValue !== null;
+      this.setAttribute('aria-hidden', `${!isActive}`);
+      if (isActive) {
+        const { deck } = this;
+        if (deck) {
+          deck.currentSlide = this;
+        }
+      }
+    }
+  }
+
   connectedCallback() {
     if (!this.root) {
       this.root = this.attachShadow({ mode: 'open' });
@@ -22,7 +39,6 @@ customElements.define('p-slide', class extends HTMLElement {
     return this.getAttribute('active') !== null;
   }
   set isActive(isActive) {
-    this.setAttribute('aria-hidden', `${!isActive}`);
     if (!!isActive) {
       this.setAttribute('active', '');
     } else {
@@ -38,17 +54,6 @@ customElements.define('p-slide', class extends HTMLElement {
       this.setAttribute('previous', '');
     } else {
       this.removeAttribute('previous');
-    }
-  }
-
-  get isCurrent() {
-    return this.deck.currentSlide === this;
-  }
-  set isCurrent(isCurrent) {
-    if (!isCurrent) {
-      this.isActive = false;
-    } else {
-      this.deck.currentSlide = this;
     }
   }
 
