@@ -29,6 +29,7 @@ customElements.define('p-slide', class extends HTMLElement {
       this.root.innerHTML = '<slot></slot>'
       attachStyle('css/slide.css', this.root);
     }
+    this.setAttribute('aria-hidden', `${!this.isActive}`);
   }
 
   get deck() {
