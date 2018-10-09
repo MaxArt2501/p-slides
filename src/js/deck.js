@@ -13,8 +13,14 @@ export class PresentationDeckElement extends HTMLElement {
 
     this.ownerDocument.addEventListener('keydown', this.keyHandler);
     this.ownerDocument.defaultView.requestIdleCallback(() => {
-      this.querySelectorAll('p-slide').forEach((slide, index) => slide.isActive = index === 0);
       this.computeFontSize();
+      let { currentSlide } = this;
+      if (!currentSlide) {
+        currentSlide = this.querySelector('p-slide');
+      }
+      if (currentSlide) {
+        this.currentSlide = currentSlide;
+      }
     });
     this.ownerDocument.defaultView.addEventListener('resize', this.computeFontSize, { passive: true });
   }
