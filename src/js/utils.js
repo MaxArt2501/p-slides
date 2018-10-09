@@ -2,7 +2,7 @@ const requiringStyles = {};
 const requiredStyles = {};
 
 function makeStyle(cssText, root) {
-  const styleEl = document.createElement('style');
+  const styleEl = root.ownerDocument.createElement('style');
   styleEl.textContent = cssText;
   root.appendChild(styleEl);
   return styleEl;
