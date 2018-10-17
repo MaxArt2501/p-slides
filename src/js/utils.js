@@ -1,36 +1,13 @@
-const requiringStyles = {};
-const requiredStyles = {};
-
-function makeStyle(cssText, root) {
-  const styleEl = root.ownerDocument.createElement('style');
-  styleEl.textContent = cssText;
-  root.appendChild(styleEl);
-  return styleEl;
-}
-
 export function attachStyle(url, root) {
-  if (url in requiredStyles) {
-    return Promise.resolve(makeStyle(requiredStyles[url], root));
-  }
-  return new Promise(async (resolve, reject) => {
-    if (url in requiringStyles) {
-      requiringStyles[url].push({ resolve, reject, root });
-    } else {
-      requiringStyles[url] = [{ resolve, reject, root }];
-      try {
-        const response = await fetch(url);
-        const cssText = await response.text();
-        requiredStyles[url] = cssText;
-        for (const request of requiringStyles[url]) {
-          request.resolve(makeStyle(cssText, request.root));
-        }
-      } catch (error) {
-        for (const request of requiringStyles[url]) {
-          request.reject(error);
-        }
-      }
-      delete requiringStyles[url];
-    }
+  const linkEl = root.ownerDocument.createElement('link');
+  linkEl.rel = 'stylesheet';
+  linkEl.href = url;
+  return new Promise((resolve, reject) => {
+    linkEl.addEventListener('load', () => {
+      resolve(linkEl.sheet);
+    });
+    linkEl.addEventListener('error', reject);
+    root.appendChild(linkEl);
   });
 }
 
