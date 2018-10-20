@@ -4,6 +4,8 @@ customElements.define('p-slide', class extends HTMLElement {
   constructor() {
     super();
     this.isActive = false;
+    createRoot(this, '<slot></slot>');
+    attachStyle('css/slide.css', this.root);
   }
 
   static get observedAttributes() {
@@ -24,11 +26,6 @@ customElements.define('p-slide', class extends HTMLElement {
   }
 
   connectedCallback() {
-    if (!this.root) {
-      this.root = this.attachShadow({ mode: 'open' });
-      this.root.innerHTML = '<slot></slot>'
-      attachStyle('css/slide.css', this.root);
-    }
     this.setAttribute('aria-hidden', `${!this.isActive}`);
   }
 

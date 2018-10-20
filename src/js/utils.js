@@ -31,3 +31,10 @@ export function matchKey(keyEvent, keyMap) {
   }
   return null;
 }
+
+export function createRoot(element, innerHTML) {
+  if (element.root) return;
+
+  element.root = element.attachShadow({ mode: 'open' });
+  element.root.innerHTML = innerHTML;
+}

@@ -1,13 +1,13 @@
-import { attachStyle, defineConstants, matchKey } from './utils.js';
+import { attachStyle, defineConstants, matchKey, createRoot } from './utils.js';
 
 export class PresentationDeckElement extends HTMLElement {
-  connectedCallback() {
-    if (!this.root) {
-      this.root = this.attachShadow({ mode: 'open' });
-      this.root.innerHTML = '<slot></slot>';
-      attachStyle('css/deck.css', this.root);
-    }
+  constructor() {
+    super();
+    createRoot(this, '<slot></slot>');
+    attachStyle('css/deck.css', this.root);
+  }
 
+  connectedCallback() {
     this.keyHandler = this.keyHandler.bind(this);
     this.computeFontSize = this.computeFontSize.bind(this);
 
