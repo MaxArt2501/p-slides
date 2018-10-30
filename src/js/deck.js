@@ -17,32 +17,11 @@ export class PresentationDeckElement extends HTMLElement {
       this.resetCurrentSlide();
     });
     this.ownerDocument.defaultView.addEventListener('resize', this.computeFontSize, { passive: true });
-
-    this.slideObserver = new MutationObserver(changes => {
-      const removingCurrentSlideChange = changes.find(({ removedNodes }) => {
-        return [ ...removedNodes ].some(node => node.nodeName === 'P-SLIDE' && node.isActive);
-      });
-      if (removingCurrentSlideChange) {
-        const { previousSibling } = removingCurrentSlideChange;
-        let previousSlide = previousSibling;
-        if (previousSlide.nodeName !== 'P-SLIDE') {
-          previousSlide = [ ...this.slides ].reduce((previous, slide) => {
-            if (previousSibling.compareDocumentPosition(slide) & this.DOCUMENT_POSITION_PRECEDING) {
-              return slide;
-            }
-            return previous;
-          }, undefined);
-        }
-        this.resetCurrentSlide(previousSlide);
-      }
-    });
-    this.slideObserver.observe(this, { childList: true, subtree: true });
   }
 
   disconnectedCallback() {
     this.ownerDocument.removeEventListener('keydown', this.keyHandler);
     this.ownerDocument.defaultView.removeEventListener('resize', this.keyHandler);
-    this.slideObserver.disconnect();
   }
 
   resetCurrentSlide(nextSlide = this.querySelector('p-slide')) {
