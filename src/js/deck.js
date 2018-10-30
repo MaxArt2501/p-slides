@@ -7,6 +7,10 @@ export class PresentationDeckElement extends HTMLElement {
     attachStyle('css/deck.css', this.root);
   }
 
+  static get observedAttributes() {
+    return [ 'mode' ];
+  }
+
   connectedCallback() {
     this.keyHandler = this.keyHandler.bind(this);
     this.computeFontSize = this.computeFontSize.bind(this);
@@ -22,6 +26,29 @@ export class PresentationDeckElement extends HTMLElement {
   disconnectedCallback() {
     this.ownerDocument.removeEventListener('keydown', this.keyHandler);
     this.ownerDocument.defaultView.removeEventListener('resize', this.keyHandler);
+  }
+
+  attributeChangedCallback(attribute, _, value) {
+    if (attribute === 'mode') {
+      switch (value) {
+        case this.PRESENTATION_MODE:
+          this.slides.forEach(slide => slide.removeAttribute('full-view'));
+          break;
+        case this.SPEAKER_MODE:
+          this.slides.forEach(slide => slide.setAttribute('full-view', ''));
+          break;
+      }
+    }
+  }
+
+  get mode() {
+    const attrValue = this.getAttribute('mode');
+    return [ this.PRESENTATION_MODE, this.SPEAKER_MODE ].includes(attrValue) ? attrValue : this.PRESENTATION_MODE;
+  }
+  set mode(mode) {
+    if ([ this.PRESENTATION_MODE, this.SPEAKER_MODE ].includes(mode)) {
+      this.setAttribute('mode', mode);
+    }
   }
 
   resetCurrentSlide(nextSlide = this.querySelector('p-slide')) {
@@ -67,6 +94,11 @@ export class PresentationDeckElement extends HTMLElement {
     const { slides } = this;
     let isPrevious = true;
     for (const slide of slides) {
+      if (slide.matches('[active] + p-slide')) {
+        slide.setAttribute('next', '');
+      } else {
+        slide.removeAttribute('next');
+      }
       if (slide === nextSlide) {
         isPrevious = false;
       } else {
@@ -98,6 +130,9 @@ export class PresentationDeckElement extends HTMLElement {
   get atStart() {
     if (this.currentIndex > 0) {
       return false;
+    }
+    if (this.mode === this.SPEAKER_MODE) {
+      return true;
     }
     const firstSlide = this.slides[0];
     return !firstSlide || !firstSlide.lastVisibleFragment;

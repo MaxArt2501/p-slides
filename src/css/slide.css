@@ -12,7 +12,6 @@
   padding: 5%;
 
   /* Transition-specific styles */
-  /* transform: translate(0, 0) scale(0); */
   animation: slide-out-right var(--sliding-duration) 1 forwards;
   transition: z-index var(--sliding-duration);
   z-index: -100;

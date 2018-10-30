@@ -10,4 +10,42 @@
   justify-items: center;
   align-items: center;
   color: #222;
+  --speaker-next-scale: .66667;
+}
+aside {
+  display: none;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: calc(100% * var(--speaker-next-scale));
+  color: white;
+}
+span:nth-child(2) { font-size: 70%; }
+span:nth-child(2)::before { content: "/"; }
+
+:host([mode="speaker"]) {
+  background: black;
+}
+:host([mode="speaker"]) ::slotted(p-slide) {
+  animation: none !important;
+  display: none;
+}
+:host([mode="speaker"]) ::slotted(p-slide[active]) {
+  display: flex;
+  transform: scale(calc(1 - var(--speaker-next-scale)));
+  position: relative;
+  top: calc(var(--speaker-next-scale) * -50%);
+  left: calc(var(--speaker-next-scale) * 50% - 50%);
+  opacity: .5;
+}
+:host([mode="speaker"]) ::slotted(p-slide[next]) {
+  display: flex;
+  transform: scale(var(--speaker-next-scale));
+  position: relative;
+  top: calc(50% - var(--speaker-next-scale) * 50%);
+  left: calc(var(--speaker-next-scale) * 50% - 50%);
+}
+:host([mode="speaker"]) aside {
+  display: block;
 }

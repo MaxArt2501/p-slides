@@ -1,4 +1,4 @@
-import { attachStyle } from './utils.js';
+import { attachStyle, createRoot } from './utils.js';
 
 customElements.define('p-slide', class extends HTMLElement {
   constructor() {
@@ -9,12 +9,12 @@ customElements.define('p-slide', class extends HTMLElement {
   }
 
   static get observedAttributes() {
-    return [ 'active' ];
+    return [ 'active', 'full-view' ];
   }
 
-  attributeChangedCallback(attribute, _, newValue) {
+  attributeChangedCallback(attribute, _, value) {
     if (attribute === 'active') {
-      const isActive = newValue !== null;
+      const isActive = value !== null;
       this.setAttribute('aria-hidden', `${!isActive}`);
       if (isActive) {
         const { deck } = this;
@@ -22,6 +22,8 @@ customElements.define('p-slide', class extends HTMLElement {
           deck.currentSlide = this;
         }
       }
+    } else if (attribute === 'full-view') {
+      this.setFragmentVisibility(value !== null);
     }
   }
 
@@ -41,6 +43,17 @@ customElements.define('p-slide', class extends HTMLElement {
       this.setAttribute('active', '');
     } else {
       this.removeAttribute('active');
+    }
+  }
+
+  get isFullView() {
+    return this.getAttribute('full-view') !== null;
+  }
+  set isFullView(isFullView) {
+    if (!!isFullView) {
+      this.setAttribute('full-view', '');
+    } else {
+      this.removeAttribute('full-view');
     }
   }
 
@@ -68,6 +81,10 @@ customElements.define('p-slide', class extends HTMLElement {
     return this.fragments.reverse().find(fragment => fragment.getAttribute('aria-hidden') === 'false');
   }
 
+  get notes() {
+    return this.querySelectorAll('p-notes');
+  }
+
   next() {
     const hiddenFragment = this.nextHiddenFragment;
     if (hiddenFragment) {
@@ -79,10 +96,12 @@ customElements.define('p-slide', class extends HTMLElement {
     return true;
   }
   previous() {
-    const visibleFragment = this.lastVisibleFragment;
-    if (visibleFragment) {
-      visibleFragment.setAttribute('aria-hidden', 'true');
-      return false;
+    if (!this.isFullView) {
+      const visibleFragment = this.lastVisibleFragment;
+      if (visibleFragment) {
+        visibleFragment.setAttribute('aria-hidden', 'true');
+        return false;
+      }
     }
     this.isPrevious = false;
     this.isActive = false;
