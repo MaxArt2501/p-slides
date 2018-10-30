@@ -3,7 +3,9 @@ import { attachStyle, createRoot } from './utils.js';
 customElements.define('p-fragment', class extends HTMLElement {
   constructor() {
     super();
-    this.setAttribute('aria-hidden', 'true');
+    if (!this.hasAttribute('aria-hidden')) {
+      this.isVisible = false;
+    }
     createRoot(this, '<slot></slot>');
     attachStyle('css/fragment.css', this.root);
   }
@@ -18,5 +20,12 @@ customElements.define('p-fragment', class extends HTMLElement {
     } else {
       this.removeAttribute('index');
     }
+  }
+
+  get isVisible() {
+    return this.getAttribute('aria-hidden') === 'false';
+  }
+  set isVisible(isVisible) {
+    this.setAttribute('aria-hidden', `${!isVisible}`);
   }
 });
