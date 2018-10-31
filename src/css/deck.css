@@ -20,10 +20,26 @@ aside {
   bottom: 0;
   left: calc(100% * var(--speaker-next-scale));
   color: white;
+  flex-direction: column;
 }
 header {
   font-size: 87.5%;
   text-align: center;
+  background: #111;
+  margin-bottom: .25em;
+  flex: 0 0 auto;
+}
+ul {
+  background: #111;
+  margin: 0;
+  padding: .5em .5em .5em 1.5em;
+  flex: 1 0 auto;
+  overflow: auto;
+  font-size: 50%;
+}
+li:only-child {
+  list-style-type: none;
+  margin-left: -1em;
 }
 span:nth-child(2) { font-size: 70%; }
 span:nth-child(2)::before { content: "/"; }
@@ -87,5 +103,5 @@ button:last-of-type::after {
   left: calc(var(--speaker-next-scale) * 50% - 50%);
 }
 :host([mode="speaker"]) aside {
-  display: block;
+  display: flex;
 }

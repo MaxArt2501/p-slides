@@ -125,6 +125,17 @@ export class PresentationDeckElement extends HTMLElement {
       }
     }
     this.root.querySelector('span').textContent = this.currentIndex + 1;
+    const noteContainer = this.root.querySelector('ul');
+    while (noteContainer.lastChild) {
+      noteContainer.removeChild(noteContainer.lastChild);
+    }
+    nextSlide.notes.forEach(note => {
+      const li = this.ownerDocument.createElement('li');
+      for (const child of note.childNodes) {
+        li.appendChild(child.cloneNode(true));
+      }
+      noteContainer.appendChild(li);
+    });
   }
 
   get currentIndex() {
