@@ -3,8 +3,18 @@ import { attachStyle, defineConstants, matchKey, createRoot } from './utils.js';
 export class PresentationDeckElement extends HTMLElement {
   constructor() {
     super();
-    createRoot(this, '<slot></slot>');
+    createRoot(this, '<slot></slot><aside><header><span></span><span></span> <time></time> <button type="button"></button> <button type="button"></button></header><ul></ul></aside>');
     attachStyle('css/deck.css', this.root);
+    this._millCounter = 0;
+    this._countStart = null;
+    this.root.querySelector('button').addEventListener('click', () => {
+      if (this.isClockRunning) {
+        this.stopClock();
+      } else {
+        this.startClock();
+      }
+    });
+    this.root.querySelector('button:last-of-type').addEventListener('click', () => this.clock = 0);
   }
 
   static get observedAttributes() {
@@ -12,20 +22,27 @@ export class PresentationDeckElement extends HTMLElement {
   }
 
   connectedCallback() {
-    this.keyHandler = this.keyHandler.bind(this);
-    this.computeFontSize = this.computeFontSize.bind(this);
+    this._keyHandler = this._keyHandler.bind(this);
+    this._computeFontSize = this._computeFontSize.bind(this);
+    this._updateClock = this._updateClock.bind(this);
 
-    this.ownerDocument.addEventListener('keydown', this.keyHandler);
-    this.ownerDocument.defaultView.requestIdleCallback(() => {
-      this.computeFontSize();
-      this.resetCurrentSlide();
+    this.ownerDocument.addEventListener('keydown', this._keyHandler);
+    const window = this.ownerDocument.defaultView;
+    window.requestIdleCallback(() => {
+      this._computeFontSize();
+      this._resetCurrentSlide();
     });
-    this.ownerDocument.defaultView.addEventListener('resize', this.computeFontSize, { passive: true });
+    window.addEventListener('resize', this._computeFontSize, { passive: true });
+    this._clockInterval = window.setInterval(this._updateClock, 1000);
+    this.root.querySelector('span:nth-child(2)').textContent = this.slides.length;
+    this._updateClock();
   }
 
   disconnectedCallback() {
-    this.ownerDocument.removeEventListener('keydown', this.keyHandler);
-    this.ownerDocument.defaultView.removeEventListener('resize', this.keyHandler);
+    this.ownerDocument.removeEventListener('keydown', this._keyHandler);
+    this.ownerDocument.defaultView.removeEventListener('resize', this._computeFontSize);
+    this.ownerDocument.defaultView.clearInterval(this._clockInterval);
+    this._clockInterval = null;
   }
 
   attributeChangedCallback(attribute, _, value) {
@@ -51,7 +68,7 @@ export class PresentationDeckElement extends HTMLElement {
     }
   }
 
-  resetCurrentSlide(nextSlide = this.querySelector('p-slide')) {
+  _resetCurrentSlide(nextSlide = this.querySelector('p-slide')) {
     let { currentSlide } = this;
     if (!currentSlide) {
       currentSlide = nextSlide;
@@ -61,7 +78,7 @@ export class PresentationDeckElement extends HTMLElement {
     }
   }
 
-  computeFontSize() {
+  _computeFontSize() {
     const { width } = this.slideSizes;
     this.style.fontSize = `${width / 20}px`;
   }
@@ -107,6 +124,7 @@ export class PresentationDeckElement extends HTMLElement {
         slide.setFragmentVisibility(isPrevious);
       }
     }
+    this.root.querySelector('span').textContent = this.currentIndex + 1;
   }
 
   get currentIndex() {
@@ -141,12 +159,15 @@ export class PresentationDeckElement extends HTMLElement {
     if (this.currentIndex < this.slides.length - 1) {
       return false;
     }
+    if (this.mode === this.SPEAKER_MODE) {
+      return true;
+    }
     const { slides } = this;
     const lastSlide = slides[slides.length - 1];
     return !lastSlide || !lastSlide.nextHiddenFragment;
   }
 
-  keyHandler(keyEvent) {
+  _keyHandler(keyEvent) {
     const command = matchKey(keyEvent, this.keyCommands);
     switch (command) {
       case this.PREVIOUS_COMMAND:
@@ -177,12 +198,51 @@ export class PresentationDeckElement extends HTMLElement {
       }
     }
   }
+
+  startClock() {
+    this._countStart = Date.now();
+    this.root.querySelector('time').setAttribute('running', '');
+  }
+  stopClock() {
+    if (this.isClockRunning) {
+      this._millCounter += Date.now() - this._countStart;
+    }
+    this._countStart = null;
+    this.root.querySelector('time').removeAttribute('running');
+  }
+  _updateClock() {
+    const secs = Math.floor(this.clock / 1000);
+    this.root.querySelector('time').textContent
+      = (secs < 0 ? '-' : '')
+      + Math.floor(secs / 3600).toString().padStart(2, '0')
+      + ':' + Math.floor((secs % 3600) / 60).toString().padStart(2, '0')
+      + ':' + Math.floor(secs % 60).toString().padStart(2, '0');
+  }
+  get clock() {
+    return this._millCounter + (this.isClockRunning ? Date.now() - this._countStart : 0);
+  }
+  set clock(value) {
+    if (!isNaN(value)) {
+      this._millCounter = +value;
+      if (this.isClockRunning) {
+        this._countStart = Date.now();
+      }
+    }
+    if (this._clockInterval) {
+      this._updateClock();
+    }
+  }
+  get isClockRunning() {
+    return this._countStart !== null;
+  }
 }
 
 const _proto = PresentationDeckElement.prototype;
 defineConstants(_proto, {
   NEXT_COMMAND: 'next',
-  PREVIOUS_COMMAND: 'previous'
+  PREVIOUS_COMMAND: 'previous',
+  PRESENTATION_MODE: 'presentation',
+  SPEAKER_MODE: 'speaker'
 });
 _proto.keyCommands = {
   [_proto.NEXT_COMMAND]: [{ key: 'ArrowRight' }, { key: 'ArrowDown' }],

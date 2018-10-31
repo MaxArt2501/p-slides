@@ -21,8 +21,48 @@ aside {
   left: calc(100% * var(--speaker-next-scale));
   color: white;
 }
+header {
+  font-size: 87.5%;
+  text-align: center;
+}
 span:nth-child(2) { font-size: 70%; }
 span:nth-child(2)::before { content: "/"; }
+button {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+  font-size: .75em;
+  color: inherit;
+  width: 1em;
+  height: 1em;
+  box-sizing: border-box;
+  position: relative;
+}
+button:first-of-type {
+  border-style: solid;
+  border-color: transparent currentColor;
+  border-width: .5em 0 .5em 1em;
+  vertical-align: .5em;
+}
+time[running] + button:first-of-type {
+  border-width: 0 .33em;
+  vertical-align: 0;
+}
+button:last-of-type::before,
+button:last-of-type::after {
+  content: "";
+  width: .25em;
+  height: 1em;
+  background: currentColor;
+  position: absolute;
+  top: 0;
+  left: .375em;
+  transform: rotate(45deg);
+}
+button:last-of-type::after {
+  transform: rotate(-45deg);
+}
 
 :host([mode="speaker"]) {
   background: black;
