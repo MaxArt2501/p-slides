@@ -1,4 +1,4 @@
-import { attachStyle, createRoot } from './utils.js';
+import { attachStyle, createRoot, fireEvent } from './utils.js';
 
 customElements.define('p-slide', class extends HTMLElement {
   constructor() {
@@ -89,6 +89,7 @@ customElements.define('p-slide', class extends HTMLElement {
     const hiddenFragment = this.nextHiddenFragment;
     if (hiddenFragment) {
       hiddenFragment.setAttribute('aria-hidden', 'false');
+      fireEvent(this, 'p-slides.fragmenttoggle', { fragment: hiddenFragment, isVisible: false });
       return false;
     }
     this.isPrevious = true;
@@ -100,6 +101,7 @@ customElements.define('p-slide', class extends HTMLElement {
       const visibleFragment = this.lastVisibleFragment;
       if (visibleFragment) {
         visibleFragment.setAttribute('aria-hidden', 'true');
+        fireEvent(this, 'p-slides.fragmenttoggle', { fragment: visibleFragment, isVisible: true });
         return false;
       }
     }

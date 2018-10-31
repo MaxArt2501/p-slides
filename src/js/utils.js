@@ -38,3 +38,8 @@ export function createRoot(element, innerHTML) {
   element.root = element.attachShadow({ mode: 'open' });
   element.root.innerHTML = innerHTML;
 }
+
+export function fireEvent(target, eventName, detail = {}) {
+  const event = new CustomEvent(eventName, { bubbles: true, detail });
+  target.dispatchEvent(event);
+}

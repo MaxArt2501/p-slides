@@ -1,4 +1,4 @@
-import { attachStyle, defineConstants, matchKey, createRoot } from './utils.js';
+import { attachStyle, defineConstants, matchKey, createRoot, fireEvent } from './utils.js';
 
 export class PresentationDeckElement extends HTMLElement {
   constructor() {
@@ -70,7 +70,7 @@ export class PresentationDeckElement extends HTMLElement {
 
   _resetCurrentSlide(nextSlide = this.querySelector('p-slide')) {
     let { currentSlide } = this;
-    if (!currentSlide) {
+    if (!currentSlide && nextSlide) {
       currentSlide = nextSlide;
     }
     if (currentSlide) {
@@ -97,6 +97,10 @@ export class PresentationDeckElement extends HTMLElement {
     return this.querySelector('p-slide[active]');
   }
   set currentSlide(nextSlide) {
+    const { _currentSlide } = this;
+    if (_currentSlide === nextSlide) {
+      return;
+    }
     if (!(nextSlide instanceof HTMLElement) || nextSlide.nodeName !== 'P-SLIDE') {
       throw Error('Current slide can only be a <p-slide> element');
     }
@@ -110,14 +114,17 @@ export class PresentationDeckElement extends HTMLElement {
 
     const { slides } = this;
     let isPrevious = true;
+    let isNext = false;
     for (const slide of slides) {
-      if (slide.matches('[active] + p-slide')) {
+      if (isNext) {
         slide.setAttribute('next', '');
+        isNext = false;
       } else {
         slide.removeAttribute('next');
       }
       if (slide === nextSlide) {
         isPrevious = false;
+        isNext = true;
       } else {
         slide.isActive = false;
         slide.isPrevious = isPrevious;
@@ -136,6 +143,8 @@ export class PresentationDeckElement extends HTMLElement {
       }
       noteContainer.appendChild(li);
     });
+    this._currentSlide = nextSlide;
+    fireEvent(this, 'p-slides.slidechange', { slide: nextSlide, previous: _currentSlide });
   }
 
   get currentIndex() {
@@ -196,6 +205,9 @@ export class PresentationDeckElement extends HTMLElement {
       const goToNext = this.currentSlide.next();
       if (goToNext) {
         this.slides[currentIndex + 1].isActive = true;
+      }
+      if (this.atEnd) {
+        fireEvent(this, 'p-slides.finish');
       }
     }
   }
