@@ -77,6 +77,10 @@ customElements.define('p-slide', class extends HTMLElement {
     if (hiddenFragment) {
       hiddenFragment.setAttribute('aria-hidden', 'false');
       fireEvent(this, 'p-slides.fragmenttoggle', { fragment: hiddenFragment, isVisible: false });
+      const { deck } = this;
+      if (deck) {
+        deck.broadcastState();
+      }
       return false;
     }
     this.isPrevious = true;
@@ -88,6 +92,10 @@ customElements.define('p-slide', class extends HTMLElement {
     if (visibleFragment) {
       visibleFragment.setAttribute('aria-hidden', 'true');
       fireEvent(this, 'p-slides.fragmenttoggle', { fragment: visibleFragment, isVisible: true });
+      const { deck } = this;
+      if (deck) {
+        deck.broadcastState();
+      }
       return false;
     }
     this.isPrevious = false;

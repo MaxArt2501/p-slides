@@ -20,6 +20,28 @@ export class PresentationDeckElement extends HTMLElement {
       }
     });
     this.root.querySelector('button:last-of-type').addEventListener('click', () => this.clock = 0);
+
+    // Channel for state sync
+    const channel = new BroadcastChannel('p-slides');
+    channel.addEventListener('message', ({ data }) => {
+      // Sending a null state => requesting the state
+      if (data === null) {
+        this.broadcastState();
+      } else {
+        fromBroadcast = true;
+        this.state = data;
+        fromBroadcast = false;
+      }
+    });
+    let fromBroadcast = false;
+    this.broadcastState = () => {
+      if (!fromBroadcast) {
+        channel.postMessage(this.state);
+      }
+    };
+    this.requestState = () => {
+      channel.postMessage(null);
+    };
   }
 
   connectedCallback() {
@@ -28,6 +50,7 @@ export class PresentationDeckElement extends HTMLElement {
     window.requestIdleCallback(() => {
       this._computeFontSize();
       this._resetCurrentSlide();
+      this.requestState();
     });
     window.addEventListener('resize', this._computeFontSize, { passive: true });
     this._clockInterval = window.setInterval(this._updateClock, 1000);
@@ -127,8 +150,11 @@ export class PresentationDeckElement extends HTMLElement {
       }
       noteContainer.appendChild(li);
     });
-    this._currentSlide = nextSlide;
-    fireEvent(this, 'p-slides.slidechange', { slide: nextSlide, previous: _currentSlide });
+    if (_currentSlide !== nextSlide) {
+      this._currentSlide = nextSlide;
+      fireEvent(this, 'p-slides.slidechange', { slide: nextSlide, previous: _currentSlide });
+      this.broadcastState();
+    }
   }
 
   get currentIndex() {
