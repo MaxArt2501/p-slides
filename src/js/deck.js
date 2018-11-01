@@ -29,14 +29,14 @@ export class PresentationDeckElement extends HTMLElement {
         this.broadcastState();
       } else this._muteAction(() => {
         this.state = data;
-    });
+      });
     });
     const broadcastState = () => channel.postMessage(this.state);
     this._muteAction = fn => {
       this.broadcastState = () => {};
       fn();
       this.broadcastState = broadcastState;
-      }
+    }
     this.broadcastState = broadcastState;
     this.requestState = () => {
       channel.postMessage(null);
@@ -49,7 +49,7 @@ export class PresentationDeckElement extends HTMLElement {
     window.requestIdleCallback(() => {
       this._computeFontSize();
       this._muteAction(() => {
-      this._resetCurrentSlide();
+        this._resetCurrentSlide();
       });
       this.requestState();
     });
@@ -154,6 +154,9 @@ export class PresentationDeckElement extends HTMLElement {
     if (_currentSlide !== nextSlide) {
       this._currentSlide = nextSlide;
       fireEvent(this, 'p-slides.slidechange', { slide: nextSlide, previous: _currentSlide });
+      if (this.atEnd) {
+        fireEvent(this, 'p-slides.finish');
+      }
       this.broadcastState();
     }
   }
@@ -210,8 +213,7 @@ export class PresentationDeckElement extends HTMLElement {
       const goToNext = this.currentSlide.next();
       if (goToNext) {
         this.slides[currentIndex + 1].isActive = true;
-      }
-      if (this.atEnd) {
+      } else if (this.atEnd) {
         fireEvent(this, 'p-slides.finish');
       }
     }
