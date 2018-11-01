@@ -1,4 +1,4 @@
-import { attachStyle, defineConstants, matchKey, createRoot, fireEvent } from './utils.js';
+import { attachStyle, defineConstants, matchKey, createRoot, fireEvent, formatClock, selectSlide, copyNotes } from './utils.js';
 
 export class PresentationDeckElement extends HTMLElement {
   constructor() {
@@ -10,15 +10,8 @@ export class PresentationDeckElement extends HTMLElement {
     this._clockStart = null;
     this._keyHandler = this._keyHandler.bind(this);
     this._computeFontSize = this._computeFontSize.bind(this);
-    this._updateClock = this._updateClock.bind(this);
 
-    this.root.querySelector('button').addEventListener('click', () => {
-      if (this.isClockRunning) {
-        this.stopClock();
-      } else {
-        this.startClock();
-      }
-    });
+    this.root.querySelector('button').addEventListener('click', () => this.toggleClock());
     this.root.querySelector('button:last-of-type').addEventListener('click', () => this.clock = 0);
 
     // Channel for state sync
@@ -31,16 +24,15 @@ export class PresentationDeckElement extends HTMLElement {
         this.state = data;
       });
     });
-    const broadcastState = () => channel.postMessage(this.state);
-    this._muteAction = fn => {
-      this.broadcastState = () => {};
-      fn();
-      this.broadcastState = broadcastState;
-    }
+    this.broadcastState = () => channel.postMessage(this.state);
+    this.requestState = () => channel.postMessage(null);
+  }
+
+  _muteAction(fn) {
+    const { broadcastState } = this;
+    this.broadcastState = () => {};
+    fn();
     this.broadcastState = broadcastState;
-    this.requestState = () => {
-      channel.postMessage(null);
-    };
   }
 
   connectedCallback() {
@@ -48,13 +40,11 @@ export class PresentationDeckElement extends HTMLElement {
     const window = this.ownerDocument.defaultView;
     window.requestIdleCallback(() => {
       this._computeFontSize();
-      this._muteAction(() => {
-        this._resetCurrentSlide();
-      });
+      this._muteAction(() => this._resetCurrentSlide());
       this.requestState();
     });
     window.addEventListener('resize', this._computeFontSize, { passive: true });
-    this._clockInterval = window.setInterval(this._updateClock, 1000);
+    this._clockInterval = window.setInterval(() => this._updateClock(), 1000);
     this.root.querySelector('span:nth-child(2)').textContent = this.slides.length;
     this._updateClock();
   }
@@ -64,6 +54,7 @@ export class PresentationDeckElement extends HTMLElement {
     this.ownerDocument.defaultView.removeEventListener('resize', this._computeFontSize);
     this.ownerDocument.defaultView.clearInterval(this._clockInterval);
     this._clockInterval = null;
+    this.stopClock();
   }
 
   get mode() {
@@ -120,45 +111,16 @@ export class PresentationDeckElement extends HTMLElement {
       return;
     }
 
-    const { slides } = this;
-    let isPrevious = true;
-    let isNext = false;
-    for (const slide of slides) {
-      if (isNext) {
-        slide.setAttribute('next', '');
-        isNext = false;
-      } else {
-        slide.removeAttribute('next');
-      }
-      if (slide === nextSlide) {
-        isPrevious = false;
-        isNext = true;
-      } else {
-        slide.isActive = false;
-        slide.isPrevious = isPrevious;
-        slide.setFragmentVisibility(isPrevious);
-      }
-    }
+    selectSlide(this.slides, nextSlide);
     this.root.querySelector('span').textContent = this.currentIndex + 1;
-    const noteContainer = this.root.querySelector('ul');
-    while (noteContainer.lastChild) {
-      noteContainer.removeChild(noteContainer.lastChild);
+    copyNotes(this.root.querySelector('ul'), nextSlide.notes);
+
+    this._currentSlide = nextSlide;
+    fireEvent(this, 'p-slides.slidechange', { slide: nextSlide, previous: _currentSlide });
+    if (this.atEnd) {
+      fireEvent(this, 'p-slides.finish');
     }
-    nextSlide.notes.forEach(note => {
-      const li = this.ownerDocument.createElement('li');
-      for (const child of note.childNodes) {
-        li.appendChild(child.cloneNode(true));
-      }
-      noteContainer.appendChild(li);
-    });
-    if (_currentSlide !== nextSlide) {
-      this._currentSlide = nextSlide;
-      fireEvent(this, 'p-slides.slidechange', { slide: nextSlide, previous: _currentSlide });
-      if (this.atEnd) {
-        fireEvent(this, 'p-slides.finish');
-      }
-      this.broadcastState();
-    }
+    this.broadcastState();
   }
 
   get currentIndex() {
@@ -232,6 +194,7 @@ export class PresentationDeckElement extends HTMLElement {
   startClock() {
     this._clockStart = Date.now();
     this.root.querySelector('time').setAttribute('running', '');
+    this.broadcastState();
   }
   stopClock() {
     if (this.isClockRunning) {
@@ -239,14 +202,18 @@ export class PresentationDeckElement extends HTMLElement {
     }
     this._clockStart = null;
     this.root.querySelector('time').removeAttribute('running');
+    this.broadcastState();
   }
+  toggleClock() {
+    if (this.isClockRunning) {
+      this.stopClock();
+    } else {
+      this.startClock();
+    }
+  }
+
   _updateClock() {
-    const secs = Math.floor(this.clock / 1000);
-    this.root.querySelector('time').textContent
-      = (secs < 0 ? '-' : '')
-      + Math.floor(secs / 3600).toString().padStart(2, '0')
-      + ':' + Math.floor((secs % 3600) / 60).toString().padStart(2, '0')
-      + ':' + Math.floor(secs % 60).toString().padStart(2, '0');
+    this.root.querySelector('time').textContent = formatClock(this.clock);
   }
   get clock() {
     return this._clockRemainder + (this.isClockRunning ? Date.now() - this._clockStart : 0);
@@ -257,6 +224,7 @@ export class PresentationDeckElement extends HTMLElement {
       if (this.isClockRunning) {
         this._clockStart = Date.now();
       }
+      this.broadcastState();
     }
     if (this._clockInterval) {
       this._updateClock();

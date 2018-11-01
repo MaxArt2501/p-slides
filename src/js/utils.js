@@ -11,6 +11,40 @@ export function attachStyle(url, root) {
   });
 }
 
+export function selectSlide(slides, nextSlide) {
+  let isPrevious = true;
+  let isNext = false;
+  for (const slide of slides) {
+    if (isNext) {
+      slide.setAttribute('next', '');
+      isNext = false;
+    } else {
+      slide.removeAttribute('next');
+    }
+    if (slide === nextSlide) {
+      isPrevious = false;
+      isNext = true;
+    } else {
+      slide.isActive = false;
+      slide.isPrevious = isPrevious;
+      slide.setFragmentVisibility(isPrevious);
+    }
+  }
+}
+
+export function copyNotes(noteContainer, notes) {
+  while (noteContainer.lastChild) {
+    noteContainer.removeChild(noteContainer.lastChild);
+  }
+  for (const note of notes) {
+    const li = noteContainer.ownerDocument.createElement('li');
+    for (const child of note.childNodes) {
+      li.appendChild(child.cloneNode(true));
+    }
+    noteContainer.appendChild(li);
+  };
+}
+
 export function defineConstants(target, constantMap) {
   const propDefinitions = Object.entries(constantMap).reduce((map, [ key, value ]) => {
     map[key] = { value, writable: false };
@@ -42,4 +76,12 @@ export function createRoot(element, innerHTML) {
 export function fireEvent(target, eventName, detail = {}) {
   const event = new CustomEvent(eventName, { bubbles: true, detail });
   target.dispatchEvent(event);
+}
+
+export function formatClock(millis) {
+  const secs = Math.floor(millis / 1000);
+  return (secs < 0 ? '-' : '')
+    + Math.floor(secs / 3600).toString().padStart(2, '0')
+    + ':' + Math.floor((secs % 3600) / 60).toString().padStart(2, '0')
+    + ':' + Math.floor(secs % 60).toString().padStart(2, '0');
 }
