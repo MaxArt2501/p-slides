@@ -116,9 +116,9 @@ export class PresentationDeckElement extends HTMLElement {
     copyNotes(this.root.querySelector('ul'), nextSlide.notes);
 
     this._currentSlide = nextSlide;
-    fireEvent(this, 'p-slides.slidechange', { slide: nextSlide, previous: _currentSlide });
+    fireEvent(this, 'slidechange', { slide: nextSlide, previous: _currentSlide });
     if (this.atEnd) {
-      fireEvent(this, 'p-slides.finish');
+      fireEvent(this, 'finish');
     }
     this.broadcastState();
   }
@@ -176,7 +176,7 @@ export class PresentationDeckElement extends HTMLElement {
       if (goToNext) {
         this.slides[currentIndex + 1].isActive = true;
       } else if (this.atEnd) {
-        fireEvent(this, 'p-slides.finish');
+        fireEvent(this, 'finish');
       }
     }
   }

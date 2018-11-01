@@ -74,7 +74,7 @@ export function createRoot(element, innerHTML) {
 }
 
 export function fireEvent(target, eventName, detail = {}) {
-  const event = new CustomEvent(eventName, { bubbles: true, detail });
+  const event = new CustomEvent(`p-slides.${eventName}`, { bubbles: true, detail });
   target.dispatchEvent(event);
 }
 

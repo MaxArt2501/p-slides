@@ -76,7 +76,7 @@ customElements.define('p-slide', class extends HTMLElement {
     const hiddenFragment = this.nextHiddenFragment;
     if (hiddenFragment) {
       hiddenFragment.setAttribute('aria-hidden', 'false');
-      fireEvent(this, 'p-slides.fragmenttoggle', { fragment: hiddenFragment, isVisible: false });
+      fireEvent(this, 'fragmenttoggle', { fragment: hiddenFragment, isVisible: false });
       const { deck } = this;
       if (deck) {
         deck.broadcastState();
@@ -91,7 +91,7 @@ customElements.define('p-slide', class extends HTMLElement {
     const visibleFragment = this.lastVisibleFragment;
     if (visibleFragment) {
       visibleFragment.setAttribute('aria-hidden', 'true');
-      fireEvent(this, 'p-slides.fragmenttoggle', { fragment: visibleFragment, isVisible: true });
+      fireEvent(this, 'fragmenttoggle', { fragment: visibleFragment, isVisible: true });
       const { deck } = this;
       if (deck) {
         deck.broadcastState();
