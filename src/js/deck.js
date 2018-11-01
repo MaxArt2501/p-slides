@@ -27,18 +27,17 @@ export class PresentationDeckElement extends HTMLElement {
       // Sending a null state => requesting the state
       if (data === null) {
         this.broadcastState();
-      } else {
-        fromBroadcast = true;
+      } else this._muteAction(() => {
         this.state = data;
-        fromBroadcast = false;
-      }
     });
-    let fromBroadcast = false;
-    this.broadcastState = () => {
-      if (!fromBroadcast) {
-        channel.postMessage(this.state);
+    });
+    const broadcastState = () => channel.postMessage(this.state);
+    this._muteAction = fn => {
+      this.broadcastState = () => {};
+      fn();
+      this.broadcastState = broadcastState;
       }
-    };
+    this.broadcastState = broadcastState;
     this.requestState = () => {
       channel.postMessage(null);
     };
@@ -49,7 +48,9 @@ export class PresentationDeckElement extends HTMLElement {
     const window = this.ownerDocument.defaultView;
     window.requestIdleCallback(() => {
       this._computeFontSize();
+      this._muteAction(() => {
       this._resetCurrentSlide();
+      });
       this.requestState();
     });
     window.addEventListener('resize', this._computeFontSize, { passive: true });
