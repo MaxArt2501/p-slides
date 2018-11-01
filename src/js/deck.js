@@ -259,6 +259,24 @@ export class PresentationDeckElement extends HTMLElement {
   get isClockRunning() {
     return this._clockStart !== null;
   }
+
+  get state() {
+    const state = {
+      currentIndex: this.currentIndex,
+      currentSlideFragmentVisibility: this.currentSlide.fragments.map(f => f.isVisible),
+      clockRemainder: this._clockRemainder,
+      clockStart: this._clockStart
+    };
+    return state;
+  }
+  set state(state) {
+    this.currentIndex = state.currentIndex;
+    this._clockRemainder = state.clockRemainder;
+    this._clockStart = state.clockStart;
+    this.currentSlide.fragments.forEach((fragment, index) => {
+      fragment.isVisible = state.currentSlideFragmentVisibility[index];
+    });
+  }
 }
 
 const _proto = PresentationDeckElement.prototype;
