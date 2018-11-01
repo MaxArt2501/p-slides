@@ -9,7 +9,7 @@ customElements.define('p-slide', class extends HTMLElement {
   }
 
   static get observedAttributes() {
-    return [ 'active', 'full-view' ];
+    return [ 'active' ];
   }
 
   attributeChangedCallback(attribute, _, value) {
@@ -22,8 +22,6 @@ customElements.define('p-slide', class extends HTMLElement {
           deck.currentSlide = this;
         }
       }
-    } else if (attribute === 'full-view') {
-      this.setFragmentVisibility(value !== null);
     }
   }
 
@@ -43,17 +41,6 @@ customElements.define('p-slide', class extends HTMLElement {
       this.setAttribute('active', '');
     } else {
       this.removeAttribute('active');
-    }
-  }
-
-  get isFullView() {
-    return this.getAttribute('full-view') !== null;
-  }
-  set isFullView(isFullView) {
-    if (!!isFullView) {
-      this.setAttribute('full-view', '');
-    } else {
-      this.removeAttribute('full-view');
     }
   }
 
@@ -97,13 +84,11 @@ customElements.define('p-slide', class extends HTMLElement {
     return true;
   }
   previous() {
-    if (!this.isFullView) {
-      const visibleFragment = this.lastVisibleFragment;
-      if (visibleFragment) {
-        visibleFragment.setAttribute('aria-hidden', 'true');
-        fireEvent(this, 'p-slides.fragmenttoggle', { fragment: visibleFragment, isVisible: true });
-        return false;
-      }
+    const visibleFragment = this.lastVisibleFragment;
+    if (visibleFragment) {
+      visibleFragment.setAttribute('aria-hidden', 'true');
+      fireEvent(this, 'p-slides.fragmenttoggle', { fragment: visibleFragment, isVisible: true });
+      return false;
     }
     this.isPrevious = false;
     this.isActive = false;

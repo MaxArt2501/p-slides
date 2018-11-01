@@ -22,10 +22,6 @@ export class PresentationDeckElement extends HTMLElement {
     this.root.querySelector('button:last-of-type').addEventListener('click', () => this.clock = 0);
   }
 
-  static get observedAttributes() {
-    return [ 'mode' ];
-  }
-
   connectedCallback() {
     this.ownerDocument.addEventListener('keydown', this._keyHandler);
     const window = this.ownerDocument.defaultView;
@@ -44,19 +40,6 @@ export class PresentationDeckElement extends HTMLElement {
     this.ownerDocument.defaultView.removeEventListener('resize', this._computeFontSize);
     this.ownerDocument.defaultView.clearInterval(this._clockInterval);
     this._clockInterval = null;
-  }
-
-  attributeChangedCallback(attribute, _, value) {
-    if (attribute === 'mode') {
-      switch (value) {
-        case this.PRESENTATION_MODE:
-          this.slides.forEach(slide => slide.removeAttribute('full-view'));
-          break;
-        case this.SPEAKER_MODE:
-          this.slides.forEach(slide => slide.setAttribute('full-view', ''));
-          break;
-      }
-    }
   }
 
   get mode() {
@@ -170,18 +153,12 @@ export class PresentationDeckElement extends HTMLElement {
     if (this.currentIndex > 0) {
       return false;
     }
-    if (this.mode === this.SPEAKER_MODE) {
-      return true;
-    }
     const firstSlide = this.slides[0];
     return !firstSlide || !firstSlide.lastVisibleFragment;
   }
   get atEnd() {
     if (this.currentIndex < this.slides.length - 1) {
       return false;
-    }
-    if (this.mode === this.SPEAKER_MODE) {
-      return true;
     }
     const { slides } = this;
     const lastSlide = slides[slides.length - 1];
