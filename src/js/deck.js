@@ -6,7 +6,7 @@ export class PresentationDeckElement extends HTMLElement {
     createRoot(this, '<slot></slot><aside><header><span></span><span></span> <time></time> <button type="button"></button> <button type="button"></button></header><ul></ul></aside>');
     attachStyle('css/deck.css', this.root);
 
-    this._clockRemainder = 0;
+    this._clockElapsed = 0;
     this._clockStart = null;
     this._keyHandler = this._keyHandler.bind(this);
     this._computeFontSize = this._computeFontSize.bind(this);
@@ -166,6 +166,12 @@ export class PresentationDeckElement extends HTMLElement {
       case this.NEXT_COMMAND:
         this.next();
         break;
+      case this.TOGGLE_CLOCK_COMMAND:
+        this.toggleClock();
+        break;
+      case this.RESET_CLOCK_COMMAND:
+        this.clock = 0;
+        break;
     }
   }
 
@@ -194,14 +200,16 @@ export class PresentationDeckElement extends HTMLElement {
   startClock() {
     this._clockStart = Date.now();
     this.root.querySelector('time').setAttribute('running', '');
+    fireEvent(this, 'clockstart', { timestamp: this._clockStart, elapsed: this._clockElapsed });
     this.broadcastState();
   }
   stopClock() {
     if (this.isClockRunning) {
-      this._clockRemainder += Date.now() - this._clockStart;
+      this._clockElapsed += Date.now() - this._clockStart;
     }
     this._clockStart = null;
     this.root.querySelector('time').removeAttribute('running');
+    fireEvent(this, 'clockstop', { elapsed: this._clockElapsed });
     this.broadcastState();
   }
   toggleClock() {
@@ -216,14 +224,15 @@ export class PresentationDeckElement extends HTMLElement {
     this.root.querySelector('time').textContent = formatClock(this.clock);
   }
   get clock() {
-    return this._clockRemainder + (this.isClockRunning ? Date.now() - this._clockStart : 0);
+    return this._clockElapsed + (this.isClockRunning ? Date.now() - this._clockStart : 0);
   }
   set clock(value) {
     if (!isNaN(value)) {
-      this._clockRemainder = +value;
+      this._clockElapsed = +value;
       if (this.isClockRunning) {
         this._clockStart = Date.now();
       }
+      fireEvent(this, 'clockset', { elapsed: this._clockElapsed });
       this.broadcastState();
     }
     if (this._clockInterval) {
@@ -238,14 +247,14 @@ export class PresentationDeckElement extends HTMLElement {
     const state = {
       currentIndex: this.currentIndex,
       currentSlideFragmentVisibility: this.currentSlide.fragments.map(f => f.isVisible),
-      clockRemainder: this._clockRemainder,
+      clockElapsed: this._clockElapsed,
       clockStart: this._clockStart
     };
     return state;
   }
   set state(state) {
     this.currentIndex = state.currentIndex;
-    this._clockRemainder = state.clockRemainder;
+    this._clockElapsed = state.clockElapsed;
     this._clockStart = state.clockStart;
     this.currentSlide.fragments.forEach((fragment, index) => {
       fragment.isVisible = state.currentSlideFragmentVisibility[index];
@@ -257,12 +266,16 @@ const _proto = PresentationDeckElement.prototype;
 defineConstants(_proto, {
   NEXT_COMMAND: 'next',
   PREVIOUS_COMMAND: 'previous',
+  TOGGLE_CLOCK_COMMAND: 'toggleclock',
+  RESET_CLOCK_COMMAND: 'resetclock',
   PRESENTATION_MODE: 'presentation',
   SPEAKER_MODE: 'speaker'
 });
 _proto.keyCommands = {
   [_proto.NEXT_COMMAND]: [{ key: 'ArrowRight' }, { key: 'ArrowDown' }],
-  [_proto.PREVIOUS_COMMAND]: [{ key: 'ArrowLeft' }, { key: 'ArrowUp' }]
+  [_proto.PREVIOUS_COMMAND]: [{ key: 'ArrowLeft' }, { key: 'ArrowUp' }],
+  [_proto.TOGGLE_CLOCK_COMMAND]: [{ key: 'P' }, { key: 'p' }],
+  [_proto.RESET_CLOCK_COMMAND]: [{ key: '0', altKey: true }]
 };
 
 customElements.define('p-deck', PresentationDeckElement);
