@@ -5,8 +5,13 @@ export class PresentationDeckElement extends HTMLElement {
     super();
     createRoot(this, '<slot></slot><aside><header><span></span><span></span> <time></time> <button type="button"></button> <button type="button"></button></header><ul></ul></aside>');
     attachStyle('css/deck.css', this.root);
-    this._millCounter = 0;
-    this._countStart = null;
+
+    this._clockRemainder = 0;
+    this._clockStart = null;
+    this._keyHandler = this._keyHandler.bind(this);
+    this._computeFontSize = this._computeFontSize.bind(this);
+    this._updateClock = this._updateClock.bind(this);
+
     this.root.querySelector('button').addEventListener('click', () => {
       if (this.isClockRunning) {
         this.stopClock();
@@ -22,10 +27,6 @@ export class PresentationDeckElement extends HTMLElement {
   }
 
   connectedCallback() {
-    this._keyHandler = this._keyHandler.bind(this);
-    this._computeFontSize = this._computeFontSize.bind(this);
-    this._updateClock = this._updateClock.bind(this);
-
     this.ownerDocument.addEventListener('keydown', this._keyHandler);
     const window = this.ownerDocument.defaultView;
     window.requestIdleCallback(() => {
@@ -223,14 +224,14 @@ export class PresentationDeckElement extends HTMLElement {
   }
 
   startClock() {
-    this._countStart = Date.now();
+    this._clockStart = Date.now();
     this.root.querySelector('time').setAttribute('running', '');
   }
   stopClock() {
     if (this.isClockRunning) {
-      this._millCounter += Date.now() - this._countStart;
+      this._clockRemainder += Date.now() - this._clockStart;
     }
-    this._countStart = null;
+    this._clockStart = null;
     this.root.querySelector('time').removeAttribute('running');
   }
   _updateClock() {
@@ -242,13 +243,13 @@ export class PresentationDeckElement extends HTMLElement {
       + ':' + Math.floor(secs % 60).toString().padStart(2, '0');
   }
   get clock() {
-    return this._millCounter + (this.isClockRunning ? Date.now() - this._countStart : 0);
+    return this._clockRemainder + (this.isClockRunning ? Date.now() - this._clockStart : 0);
   }
   set clock(value) {
     if (!isNaN(value)) {
-      this._millCounter = +value;
+      this._clockRemainder = +value;
       if (this.isClockRunning) {
-        this._countStart = Date.now();
+        this._clockStart = Date.now();
       }
     }
     if (this._clockInterval) {
@@ -256,7 +257,7 @@ export class PresentationDeckElement extends HTMLElement {
     }
   }
   get isClockRunning() {
-    return this._countStart !== null;
+    return this._clockStart !== null;
   }
 }
 
