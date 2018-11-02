@@ -20,3 +20,49 @@
 p-deck[mode="speaker"] p-fragment {
   opacity: 1;
 }
+
+nav {
+  position: fixed;
+  bottom: .5em;
+  right: 0;
+  display: flex;
+}
+nav button {
+  position: relative;
+  display: block;
+  width: 1em;
+  height: 1em;
+  border: none;
+  background: none;
+  padding: 0;
+  margin: .25em;
+  font-size: 3rem;
+  cursor: pointer;
+}
+nav button:disabled {
+  cursor: default;
+  opacity: .5;
+}
+nav button::before,
+nav button::after {
+  content: "";
+  position: absolute;
+  top: .45em;
+  left: .45em;
+  width: .707em;
+  height: .1em;
+  background: gray;
+  transform-origin: .05em .05em;
+}
+.previous::before {
+  transform: rotate(45deg);
+}
+.previous::after {
+  transform: rotate(-45deg);
+}
+.next::before {
+  transform: rotate(135deg);
+}
+.next::after {
+  transform: rotate(-135deg);
+}

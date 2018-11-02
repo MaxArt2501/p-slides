@@ -11,6 +11,8 @@ function handleHash() {
   const mode = params.get('mode');
   if (mode) {
     deck.setAttribute('mode', mode);
+  } else {
+    deck.removeAttribute('mode');
   }
   if (slide && slide !== current) {
     if (current) {
@@ -30,7 +32,16 @@ function getSlide(slideRef) {
 }
 
 const progressBar = document.querySelector('[role="progressbar"]');
-document.addEventListener('p-slides.slidechange', ({ detail: { slide } }) => {
+const navButtons = [ ...document.querySelectorAll('nav button') ].reduce((map, button) => {
+  map[button.className] = button;
+  return map;
+}, {});
+function toggleNavButtons() {
+  navButtons.previous.disabled = deck.atStart;
+  navButtons.next.disabled = deck.atEnd;
+}
+
+deck.addEventListener('p-slides.slidechange', ({ detail: { slide } }) => {
   const slideRef = slide.id || deck.currentIndex;
   const { mode } = deck;
   location.href = '#' + slideRef + (mode === 'presentation' ? '' : `&mode=${mode}`);
@@ -38,4 +49,10 @@ document.addEventListener('p-slides.slidechange', ({ detail: { slide } }) => {
   const progress = +(deck.currentIndex * 100 / (deck.slides.length - 1)).toFixed(2);
   progressBar.setAttribute('aria-valuenow', progress);
   progressBar.style.setProperty('--progress', progress + '%');
+
+  toggleNavButtons();
 });
+deck.addEventListener('p-slides.fragmenttoggle', toggleNavButtons);
+navButtons.previous.addEventListener('click', () => deck.previous());
+navButtons.next.addEventListener('click', () => deck.next());
+
