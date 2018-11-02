@@ -50,6 +50,13 @@ export function copyNotes(noteContainer, notes) {
     }
     noteContainer.appendChild(li);
   };
+  checkNoteActivations(noteContainer, notes);
+}
+
+export function checkNoteActivations(noteContainer, notes) {
+  notes.forEach((note, index) => {
+    noteContainer.children[index].classList.toggle('not-visible', !note.isVisible);
+  });
 }
 
 export function defineConstants(target, constantMap) {

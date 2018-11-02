@@ -1,4 +1,4 @@
-import { attachStyle, defineConstants, matchKey, createRoot, fireEvent, formatClock, selectSlide, copyNotes, whenAllDefined } from './utils.js';
+import { attachStyle, defineConstants, matchKey, createRoot, fireEvent, formatClock, selectSlide, copyNotes, whenAllDefined, checkNoteActivations } from './utils.js';
 
 export class PresentationDeckElement extends HTMLElement {
   constructor() {
@@ -176,22 +176,27 @@ export class PresentationDeckElement extends HTMLElement {
 
   next() {
     if (!this.atEnd) {
-      const { currentIndex } = this;
-      const goToNext = this.currentSlide.next();
+      const { currentIndex, currentSlide } = this;
+      const goToNext = currentSlide.next();
       if (goToNext) {
         this.slides[currentIndex + 1].isActive = true;
-      } else if (this.atEnd) {
-        fireEvent(this, 'finish');
+      } else {
+        checkNoteActivations(this.root.querySelector('ul'), currentSlide.notes);
+        if (this.atEnd) {
+          fireEvent(this, 'finish');
+        }
       }
     }
   }
 
   previous() {
     if (!this.atStart) {
-      const { currentIndex } = this;
-      const goToPrevious = this.currentSlide.previous();
+      const { currentIndex, currentSlide } = this;
+      const goToPrevious = currentSlide.previous();
       if (goToPrevious) {
         this.slides[currentIndex - 1].isActive = true;
+      } else {
+        checkNoteActivations(this.root.querySelector('ul'), currentSlide.notes);
       }
     }
   }

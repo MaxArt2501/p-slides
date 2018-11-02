@@ -37,9 +37,15 @@ ul {
   overflow: auto;
   font-size: 50%;
 }
+li {
+  transition: opacity var(--fragment-duration);
+}
 li:only-child {
   list-style-type: none;
   margin-left: -1em;
+}
+li.not-visible {
+  opacity: .5;
 }
 span:nth-child(2) { font-size: 70%; }
 span:nth-child(2)::before { content: "/"; }
