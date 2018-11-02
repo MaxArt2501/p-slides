@@ -5,3 +5,14 @@
   --fragment-duration: calc(300ms + 1200ms * var(--slide-debug, 0));
   font-family: system-ui, sans-serif;
 }
+
+[role="progressbar"] {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100vw;
+  height: .5rem;
+  z-index: 150;
+  --progress: 0;
+  background-image: linear-gradient(to right, #f60 var(--progress), transparent 0);
+}

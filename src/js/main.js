@@ -29,8 +29,13 @@ function getSlide(slideRef) {
   return document.querySelector(`#${slideRef}`);
 }
 
+const progressBar = document.querySelector('[role="progressbar"]');
 document.addEventListener('p-slides.slidechange', ({ detail: { slide } }) => {
   const slideRef = slide.id || deck.currentIndex;
   const { mode } = deck;
   location.href = '#' + slideRef + (mode === 'presentation' ? '' : `&mode=${mode}`);
+
+  const progress = +(deck.currentIndex * 100 / (deck.slides.length - 1)).toFixed(2);
+  progressBar.setAttribute('aria-valuenow', progress);
+  progressBar.style.setProperty('--progress', progress + '%');
 });
