@@ -56,3 +56,11 @@ deck.addEventListener('p-slides.fragmenttoggle', toggleNavButtons);
 navButtons.previous.addEventListener('click', () => deck.previous());
 navButtons.next.addEventListener('click', () => deck.next());
 
+const fullscreenButton = document.querySelector('.fullscreen');
+fullscreenButton.addEventListener('click', () => {
+  if (document.fullscreenElement) {
+    document.exitFullscreen();
+  } else {
+    document.body.requestFullscreen();
+  }
+});
