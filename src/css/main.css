@@ -16,3 +16,7 @@
   --progress: 0;
   background-image: linear-gradient(to right, #f60 var(--progress), transparent 0);
 }
+
+p-deck[mode="speaker"] p-fragment {
+  opacity: 1;
+}
