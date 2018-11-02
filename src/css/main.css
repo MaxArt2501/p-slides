@@ -17,6 +17,12 @@
   background-image: linear-gradient(to right, #f60 var(--progress), transparent 0);
 }
 
+p-deck:not([mode]),
+p-deck[mode="presentation"] {
+  transition: background-color var(--sliding-duration) var(--sliding-duration);
+  background-color: var(--current-slide-bg, transparent);
+}
+
 p-deck[mode="speaker"] p-fragment {
   opacity: 1;
 }
