@@ -1,3 +1,10 @@
+export function whenAllDefined() {
+  return Promise.all(
+    [ 'p-deck', 'p-slide', 'p-fragment', 'p-notes' ]
+      .map(tag => customElements.whenDefined(tag))
+  );
+}
+
 export function attachStyle(url, root) {
   const linkEl = root.ownerDocument.createElement('link');
   linkEl.rel = 'stylesheet';

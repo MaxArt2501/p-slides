@@ -1,10 +1,10 @@
-import { attachStyle, defineConstants, matchKey, createRoot, fireEvent, formatClock, selectSlide, copyNotes } from './utils.js';
+import { attachStyle, defineConstants, matchKey, createRoot, fireEvent, formatClock, selectSlide, copyNotes, whenAllDefined } from './utils.js';
 
 export class PresentationDeckElement extends HTMLElement {
   constructor() {
     super();
     createRoot(this, '<slot></slot><aside><header><span></span><span></span> <time></time> <button type="button"></button> <button type="button"></button></header><ul></ul></aside>');
-    attachStyle('css/deck.css', this.root);
+    attachStyle('css/deck.css', this.root).then(() => this._computeFontSize());
 
     this._clockElapsed = 0;
     this._clockStart = null;
@@ -37,16 +37,15 @@ export class PresentationDeckElement extends HTMLElement {
 
   connectedCallback() {
     this.ownerDocument.addEventListener('keydown', this._keyHandler);
-    const window = this.ownerDocument.defaultView;
-    window.requestIdleCallback(() => {
-      this._computeFontSize();
+    this.ownerDocument.defaultView.addEventListener('resize', this._computeFontSize, { passive: true });
+    this._clockInterval = this.ownerDocument.defaultView.setInterval(() => this._updateClock(), 1000);
+    this.root.querySelector('span:nth-child(2)').textContent = this.slides.length;
+    this._updateClock();
+
+    whenAllDefined().then(() => {
       this._muteAction(() => this._resetCurrentSlide());
       this.requestState();
     });
-    window.addEventListener('resize', this._computeFontSize, { passive: true });
-    this._clockInterval = window.setInterval(() => this._updateClock(), 1000);
-    this.root.querySelector('span:nth-child(2)').textContent = this.slides.length;
-    this._updateClock();
   }
 
   disconnectedCallback() {

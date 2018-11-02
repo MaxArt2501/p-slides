@@ -1,9 +1,11 @@
-import { attachStyle, createRoot, fireEvent } from './utils.js';
+import { attachStyle, createRoot, fireEvent, whenAllDefined } from './utils.js';
+
+let allDefined = false;
+whenAllDefined().then(() => allDefined = true);
 
 customElements.define('p-slide', class extends HTMLElement {
   constructor() {
     super();
-    this.isActive = false;
     createRoot(this, '<slot></slot>');
     attachStyle('css/slide.css', this.root);
   }
@@ -30,7 +32,7 @@ customElements.define('p-slide', class extends HTMLElement {
   }
 
   get deck() {
-    return this.closest('p-deck');
+    return allDefined && this.closest('p-deck');
   }
 
   get isActive() {

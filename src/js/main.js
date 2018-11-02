@@ -6,13 +6,17 @@ function handleHash() {
   const [ slideRef, ...keys ] = [ ...params.keys() ];
 
   const slide = getSlide(slideRef);
+  const current = document.querySelector('p-slide[active]');
 
   const mode = params.get('mode');
   if (mode) {
     deck.setAttribute('mode', mode);
   }
-  if (slide && deck.currentSlide !== slide) {
-    deck.currentSlide = slide;
+  if (slide && slide !== current) {
+    if (current) {
+      current.removeAttribute('active');
+    }
+    slide.setAttribute('active', '');
   }
 }
 addEventListener('hashchange', handleHash);
@@ -20,7 +24,7 @@ handleHash();
 
 function getSlide(slideRef) {
   if (/^\d+$/.test(`${slideRef}`.trim())) {
-    return deck.slides[+slideRef] || null;
+    return deck.querySelectorAll('p-slide')[+slideRef] || null;
   }
   return document.querySelector(`#${slideRef}`);
 }
