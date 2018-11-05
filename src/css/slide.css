@@ -9,7 +9,7 @@
   max-height: 100vh;
   grid-area: 1 / 1 / span 1 / span 1;
   box-sizing: border-box;
-  padding: 5%;
+  padding: 1em;
 
   /* Transition-specific styles */
   animation: slide-out-right var(--sliding-duration) 1 forwards;

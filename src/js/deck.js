@@ -78,7 +78,8 @@ export class PresentationDeckElement extends HTMLElement {
 
   _computeFontSize() {
     const { width } = this.slideSizes;
-    this.style.fontSize = `${width / 20}px`;
+    const fontSize = +this.ownerDocument.defaultView.getComputedStyle(this).getPropertyValue('--slide-font-size') || 5;
+    this.style.fontSize = `${width * fontSize / 100}px`;
   }
 
   get slideSizes() {
