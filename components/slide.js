@@ -1,9 +1,9 @@
-import { attachStyle, createRoot, fireEvent, whenAllDefined } from './utils.js';
+import { attachStyle, createRoot, fireEvent, whenAllDefined } from '../utils.js';
 
 let allDefined = false;
 whenAllDefined().then(() => allDefined = true);
 
-customElements.define('p-slide', class extends HTMLElement {
+export class PresentationSlideElement extends HTMLElement {
   constructor() {
     super();
     createRoot(this, '<slot></slot>');
@@ -110,4 +110,4 @@ customElements.define('p-slide', class extends HTMLElement {
       fragment.setAttribute('aria-hidden', !visible);
     }
   }
-});
+}

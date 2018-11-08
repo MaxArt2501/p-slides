@@ -1,4 +1,4 @@
-import { attachStyle, defineConstants, matchKey, createRoot, fireEvent, formatClock, selectSlide, copyNotes, whenAllDefined, checkNoteActivations } from './utils.js';
+import { attachStyle, defineConstants, matchKey, createRoot, fireEvent, formatClock, selectSlide, copyNotes, whenAllDefined, checkNoteActivations } from '../utils.js';
 
 export class PresentationDeckElement extends HTMLElement {
   constructor() {

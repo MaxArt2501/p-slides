@@ -1,6 +1,6 @@
-import { createRoot } from './utils.js';
+import { createRoot } from '../utils.js';
 
-customElements.define('p-notes', class extends HTMLElement {
+export class PresentationNotesElement extends HTMLElement {
   constructor() {
     super();
     createRoot(this, '');
@@ -10,4 +10,4 @@ customElements.define('p-notes', class extends HTMLElement {
     const fragment = this.closest('p-fragment');
     return !fragment || fragment.isVisible;
   }
-});
+}

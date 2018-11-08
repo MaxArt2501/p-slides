@@ -1,7 +1,7 @@
 {
-  "name": "css-houdini-talk",
-  "version": "1.0.0",
-  "description": "Talking about Houdini",
+  "name": "p-slides",
+  "version": "0.0.1",
+  "description": "Presentation framework using Web Components",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
