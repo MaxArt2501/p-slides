@@ -5,10 +5,15 @@ export function whenAllDefined() {
   );
 }
 
-export function attachStyle(url, root) {
+let styleRoot = 'css/';
+export function setStyleRoot(root) {
+  styleRoot = root;
+}
+
+export function attachStyle(name, root) {
   const linkEl = root.ownerDocument.createElement('link');
   linkEl.rel = 'stylesheet';
-  linkEl.href = url;
+  linkEl.href = `${styleRoot}${name}.css`;
   return new Promise((resolve, reject) => {
     linkEl.addEventListener('load', () => {
       resolve(linkEl.sheet);
