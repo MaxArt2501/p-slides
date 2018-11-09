@@ -1,6 +1,6 @@
 {
   "name": "p-slides",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Presentation framework using Web Components",
   "main": "index.js",
   "scripts": {
