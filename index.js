@@ -10,10 +10,8 @@ export {
   PresentationNotesElement
 };
 
-export function registerElements(prefix = 'p') {
-  if (!prefix || typeof prefix !== 'string') {
-    throw TypeError(`Invalid prefix '${prefix}'`);
-  }
+const prefix = 'p';
+export function registerElements() {
   customElements.define(`${prefix}-deck`, PresentationDeckElement);
   customElements.define(`${prefix}-slide`, PresentationSlideElement);
   customElements.define(`${prefix}-fragment`, PresentationFragmentElement);
