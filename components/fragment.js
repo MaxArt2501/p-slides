@@ -7,7 +7,7 @@ export class PresentationFragmentElement extends HTMLElement {
       this.isVisible = false;
     }
     createRoot(this, '<slot></slot>');
-    attachStyle('css/fragment.css', this.root);
+    attachStyle('fragment', this.root);
   }
 
   get index() {

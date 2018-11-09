@@ -4,7 +4,7 @@ export class PresentationDeckElement extends HTMLElement {
   constructor() {
     super();
     createRoot(this, '<slot></slot><aside><header><span></span><span></span> <time></time> <button type="button"></button> <button type="button"></button></header><ul></ul></aside>');
-    attachStyle('css/deck.css', this.root).then(() => this._computeFontSize());
+    attachStyle('deck', this.root).then(() => this._computeFontSize());
 
     this._clockElapsed = 0;
     this._clockStart = null;
