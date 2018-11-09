@@ -16,6 +16,13 @@
   transition: z-index var(--sliding-duration);
   z-index: -100;
 }
+:host > ::slotted(img),
+:host > ::slotted(video),
+:host > ::slotted(canvas),
+:host > ::slotted(svg),
+:host > ::slotted(iframe) {
+  align-self: center;
+}
 :host([aria-hidden="false"]) {
   z-index: 100;
   animation-name: slide-in-right;
