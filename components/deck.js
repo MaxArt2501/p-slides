@@ -282,5 +282,3 @@ _proto.keyCommands = {
   [_proto.TOGGLE_CLOCK_COMMAND]: [{ key: 'P' }, { key: 'p' }],
   [_proto.RESET_CLOCK_COMMAND]: [{ key: '0', altKey: true }]
 };
-
-customElements.define('p-deck', PresentationDeckElement);
