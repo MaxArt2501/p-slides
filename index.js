@@ -12,11 +12,10 @@ export {
   setStyleRoot
 };
 
-const prefix = 'p';
 export function registerElements() {
-  customElements.define(`${prefix}-deck`, PresentationDeckElement);
-  customElements.define(`${prefix}-slide`, PresentationSlideElement);
-  customElements.define(`${prefix}-fragment`, PresentationFragmentElement);
-  customElements.define(`${prefix}-notes`, PresentationNotesElement);
+  customElements.define('p-deck', PresentationDeckElement);
+  customElements.define('p-slide', PresentationSlideElement);
+  customElements.define('p-fragment', PresentationFragmentElement);
+  customElements.define('p-notes', PresentationNotesElement);
   return whenAllDefined();
 }
