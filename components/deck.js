@@ -3,16 +3,17 @@ import { attachStyle, defineConstants, matchKey, createRoot, fireEvent, formatCl
 export class PresentationDeckElement extends HTMLElement {
   constructor() {
     super();
-    createRoot(this, '<slot></slot><aside><header><span></span><span></span> <time></time> <button type="button"></button> <button type="button"></button></header><ul></ul></aside>');
-    attachStyle('deck', this.root).then(() => this._computeFontSize());
 
     this._clockElapsed = 0;
     this._clockStart = null;
     this._keyHandler = this._keyHandler.bind(this);
     this._computeFontSize = this._computeFontSize.bind(this);
 
-    this.root.querySelector('button').addEventListener('click', () => this.toggleClock());
-    this.root.querySelector('button:last-of-type').addEventListener('click', () => this.clock = 0);
+    createRoot(this, '<slot></slot><aside><header><span></span><span></span> <time></time> <button type="button"></button> <button type="button"></button></header><ul></ul></aside>');
+    attachStyle(this).then(this._computeFontSize);
+
+    this.shadowRoot.querySelector('button').addEventListener('click', () => this.toggleClock());
+    this.shadowRoot.querySelector('button:last-of-type').addEventListener('click', () => this.clock = 0);
 
     // Channel for state sync
     const channel = new BroadcastChannel('p-slides');
@@ -39,7 +40,7 @@ export class PresentationDeckElement extends HTMLElement {
     this.ownerDocument.addEventListener('keydown', this._keyHandler);
     this.ownerDocument.defaultView.addEventListener('resize', this._computeFontSize, { passive: true });
     this._clockInterval = this.ownerDocument.defaultView.setInterval(() => this._updateClock(), 1000);
-    this.root.querySelector('span:nth-child(2)').textContent = this.slides.length;
+    this.shadowRoot.querySelector('span:nth-child(2)').textContent = this.slides.length;
     this._updateClock();
 
     whenAllDefined().then(() => {
@@ -112,8 +113,8 @@ export class PresentationDeckElement extends HTMLElement {
     }
 
     selectSlide(this.slides, nextSlide);
-    this.root.querySelector('span').textContent = this.currentIndex + 1;
-    copyNotes(this.root.querySelector('ul'), nextSlide.notes);
+    this.shadowRoot.querySelector('span').textContent = this.currentIndex + 1;
+    copyNotes(this.shadowRoot.querySelector('ul'), nextSlide.notes);
 
     this._currentSlide = nextSlide;
     fireEvent(this, 'slidechange', { slide: nextSlide, previous: _currentSlide });
@@ -182,7 +183,7 @@ export class PresentationDeckElement extends HTMLElement {
       if (goToNext) {
         this.slides[currentIndex + 1].isActive = true;
       } else {
-        checkNoteActivations(this.root.querySelector('ul'), currentSlide.notes);
+        checkNoteActivations(this.shadowRoot.querySelector('ul'), currentSlide.notes);
         if (this.atEnd) {
           fireEvent(this, 'finish');
         }
@@ -197,14 +198,14 @@ export class PresentationDeckElement extends HTMLElement {
       if (goToPrevious) {
         this.slides[currentIndex - 1].isActive = true;
       } else {
-        checkNoteActivations(this.root.querySelector('ul'), currentSlide.notes);
+        checkNoteActivations(this.shadowRoot.querySelector('ul'), currentSlide.notes);
       }
     }
   }
 
   startClock() {
     this._clockStart = Date.now();
-    this.root.querySelector('time').setAttribute('running', '');
+    this.shadowRoot.querySelector('time').setAttribute('running', '');
     fireEvent(this, 'clockstart', { timestamp: this._clockStart, elapsed: this._clockElapsed });
     this.broadcastState();
   }
@@ -213,7 +214,7 @@ export class PresentationDeckElement extends HTMLElement {
       this._clockElapsed += Date.now() - this._clockStart;
     }
     this._clockStart = null;
-    this.root.querySelector('time').removeAttribute('running');
+    this.shadowRoot.querySelector('time').removeAttribute('running');
     fireEvent(this, 'clockstop', { elapsed: this._clockElapsed });
     this.broadcastState();
   }
@@ -226,7 +227,7 @@ export class PresentationDeckElement extends HTMLElement {
   }
 
   _updateClock() {
-    this.root.querySelector('time').textContent = formatClock(this.clock);
+    this.shadowRoot.querySelector('time').textContent = formatClock(this.clock);
   }
   get clock() {
     return this._clockElapsed + (this.isClockRunning ? Date.now() - this._clockStart : 0);

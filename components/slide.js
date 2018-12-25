@@ -7,7 +7,7 @@ export class PresentationSlideElement extends HTMLElement {
   constructor() {
     super();
     createRoot(this, '<slot></slot>');
-    attachStyle('slide', this.root);
+    attachStyle(this);
   }
 
   static get observedAttributes() {

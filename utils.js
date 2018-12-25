@@ -10,8 +10,9 @@ export function setStyleRoot(root) {
   styleRoot = root;
 }
 
-export function attachStyle(name, root) {
-  const linkEl = root.ownerDocument.createElement('link');
+export function attachStyle(element) {
+  const name = element.localName.replace(/^p-/, '');
+  const linkEl = element.ownerDocument.createElement('link');
   linkEl.rel = 'stylesheet';
   linkEl.href = `${styleRoot}${name}.css`;
   return new Promise((resolve, reject) => {
@@ -19,7 +20,7 @@ export function attachStyle(name, root) {
       resolve(linkEl.sheet);
     });
     linkEl.addEventListener('error', reject);
-    root.appendChild(linkEl);
+    element.shadowRoot.appendChild(linkEl);
   });
 }
 
@@ -86,10 +87,10 @@ export function matchKey(keyEvent, keyMap) {
 }
 
 export function createRoot(element, innerHTML) {
-  if (element.root) return;
+  if (element.shadowRoot) return;
 
-  element.root = element.attachShadow({ mode: 'open' });
-  element.root.innerHTML = innerHTML;
+  element.attachShadow({ mode: 'open' });
+  element.shadowRoot.innerHTML = innerHTML;
 }
 
 export function fireEvent(target, eventName, detail = {}) {
