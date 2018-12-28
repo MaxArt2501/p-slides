@@ -28,4 +28,15 @@ export class PresentationFragmentElement extends HTMLElement {
   set isVisible(isVisible) {
     this.setAttribute('aria-hidden', `${!isVisible}`);
   }
+
+  get isCurrent() {
+    return this.hasAttribute('current');
+  }
+  set isCurrent(isCurrent) {
+    if (isCurrent) {
+      this.setAttribute('current', '');
+    } else {
+      this.removeAttribute('current');
+    }
+  }
 }

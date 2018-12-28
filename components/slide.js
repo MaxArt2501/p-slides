@@ -19,6 +19,7 @@ export class PresentationSlideElement extends HTMLElement {
       const isActive = value !== null;
       this.setAttribute('aria-hidden', `${!isActive}`);
       if (isActive) {
+        this._setCurrentFragment();
         const { deck } = this;
         if (deck) {
           deck.currentSlide = this;
@@ -29,6 +30,12 @@ export class PresentationSlideElement extends HTMLElement {
 
   connectedCallback() {
     this.setAttribute('aria-hidden', `${!this.isActive}`);
+  }
+
+  _setCurrentFragment() {
+    this.fragments.forEach((fragment, index, fragments) => {
+      fragment.isCurrent = fragment.isVisible && (!fragments[index + 1] || !fragments[index + 1].isVisible);
+    });
   }
 
   get deck() {
@@ -77,7 +84,8 @@ export class PresentationSlideElement extends HTMLElement {
   next() {
     const hiddenFragment = this.nextHiddenFragment;
     if (hiddenFragment) {
-      hiddenFragment.setAttribute('aria-hidden', 'false');
+      hiddenFragment.isVisible = true;
+      this._setCurrentFragment();
       fireEvent(this, 'fragmenttoggle', { fragment: hiddenFragment, isVisible: false });
       const { deck } = this;
       if (deck) {
@@ -92,7 +100,8 @@ export class PresentationSlideElement extends HTMLElement {
   previous() {
     const visibleFragment = this.lastVisibleFragment;
     if (visibleFragment) {
-      visibleFragment.setAttribute('aria-hidden', 'true');
+      visibleFragment.isVisible = false;
+      this._setCurrentFragment();
       fireEvent(this, 'fragmenttoggle', { fragment: visibleFragment, isVisible: true });
       const { deck } = this;
       if (deck) {
@@ -107,7 +116,7 @@ export class PresentationSlideElement extends HTMLElement {
 
   setFragmentVisibility(visible) {
     for (const fragment of this.fragments) {
-      fragment.setAttribute('aria-hidden', !visible);
+      fragment.isVisible = !!visible;
     }
   }
 }
