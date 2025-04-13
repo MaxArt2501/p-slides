@@ -1,8 +1,0 @@
-:host {
-  opacity: 1;
-  transition: opacity var(--fragment-duration, 300ms);
-}
-:host([aria-hidden="true"]) {
-  opacity: 0;
-  pointer-events: none;
-}

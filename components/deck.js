@@ -1,285 +1,310 @@
-import { attachStyle, defineConstants, matchKey, createRoot, fireEvent, formatClock, selectSlide, copyNotes, whenAllDefined, checkNoteActivations } from '../utils.js';
+import {
+	attachStyle,
+	checkNoteActivations,
+	copyNotes,
+	fireEvent,
+	formatClock,
+	matchKey,
+	selectSlide,
+	setShadowDOM,
+	whenAllDefined
+} from '../utils.js';
 
 export class PresentationDeckElement extends HTMLElement {
-  constructor() {
-    super();
+	#clockElapsed = 0;
+	#clockStart = null;
+	#clockInterval = null;
 
-    this._clockElapsed = 0;
-    this._clockStart = null;
-    this._keyHandler = this._keyHandler.bind(this);
-    this._computeFontSize = this._computeFontSize.bind(this);
+	#channel = new BroadcastChannel('p-slides');
 
-    createRoot(this, '<slot></slot><aside><header><span></span><span></span> <time></time> <button type="button"></button> <button type="button"></button></header><ul></ul></aside>');
-    attachStyle(this).then(this._computeFontSize);
+	keyCommands = {
+		next: [{ key: 'ArrowRight' }, { key: 'ArrowDown' }],
+		previous: [{ key: 'ArrowLeft' }, { key: 'ArrowUp' }],
+		toggleclock: [{ key: 'P' }, { key: 'p' }],
+		resetclock: [{ key: '0', altKey: true }],
+		toggleMode: [
+			{ key: 'M', altKey: true },
+			{ key: 'm', altKey: true }
+		]
+	};
 
-    this.shadowRoot.querySelector('button').addEventListener('click', () => this.toggleClock());
-    this.shadowRoot.querySelector('button:last-of-type').addEventListener('click', () => this.clock = 0);
+	constructor() {
+		super();
 
-    // Channel for state sync
-    const channel = new BroadcastChannel('p-slides');
-    channel.addEventListener('message', ({ data }) => {
-      // Sending a null state => requesting the state
-      if (data === null) {
-        this.broadcastState();
-      } else this._muteAction(() => {
-        this.state = data;
-      });
-    });
-    this.broadcastState = () => channel.postMessage(this.state);
-    this.requestState = () => channel.postMessage(null);
-  }
+		const html = setShadowDOM.bind(this);
+		html`<slot></slot>
+			<aside>
+				<header><span></span><span></span> <time></time> <button type="button"></button> <button type="button"></button></header>
+				<ul></ul>
+			</aside>`;
+		attachStyle(this).then(this.#computeFontSize);
 
-  _muteAction(fn) {
-    const { broadcastState } = this;
-    this.broadcastState = () => {};
-    fn();
-    this.broadcastState = broadcastState;
-  }
+		this.shadowRoot.querySelector('button').addEventListener('click', this.toggleClock);
+		this.shadowRoot.querySelector('button:last-of-type').addEventListener('click', () => (this.clock = 0));
 
-  connectedCallback() {
-    this.ownerDocument.addEventListener('keydown', this._keyHandler);
-    this.ownerDocument.defaultView.addEventListener('resize', this._computeFontSize, { passive: true });
-    this._clockInterval = this.ownerDocument.defaultView.setInterval(() => this._updateClock(), 1000);
-    this.shadowRoot.querySelector('span:nth-child(2)').textContent = this.slides.length;
-    this._updateClock();
+		// Channel for state sync
+		this.#channel.addEventListener('message', ({ data }) => {
+			// Sending a null state => requesting the state
+			if (data === null) {
+				this.broadcastState();
+			} else
+				this.#muteAction(() => {
+					this.state = data;
+				});
+		});
+	}
 
-    whenAllDefined().then(() => {
-      this._muteAction(() => this._resetCurrentSlide());
-      this.requestState();
-    });
-  }
+	#muteAction(fn) {
+		this.#preventBroadcast = true;
+		fn();
+		this.#preventBroadcast = false;
+	}
 
-  disconnectedCallback() {
-    this.ownerDocument.removeEventListener('keydown', this._keyHandler);
-    this.ownerDocument.defaultView.removeEventListener('resize', this._computeFontSize);
-    this.ownerDocument.defaultView.clearInterval(this._clockInterval);
-    this._clockInterval = null;
-    this.stopClock();
-  }
+	connectedCallback() {
+		this.ownerDocument.addEventListener('keydown', this.#keyHandler);
+		this.ownerDocument.defaultView.addEventListener('resize', this.#computeFontSize, { passive: true });
+		this.#clockInterval = this.ownerDocument.defaultView.setInterval(() => this.#updateClock(), 1000);
+		this.shadowRoot.querySelector('span:nth-child(2)').textContent = this.slides.length;
+		this.#updateClock();
 
-  get mode() {
-    const attrValue = this.getAttribute('mode');
-    return [ this.PRESENTATION_MODE, this.SPEAKER_MODE ].includes(attrValue) ? attrValue : this.PRESENTATION_MODE;
-  }
-  set mode(mode) {
-    if ([ this.PRESENTATION_MODE, this.SPEAKER_MODE ].includes(mode)) {
-      this.setAttribute('mode', mode);
-    }
-  }
+		whenAllDefined().then(() => {
+			this.#muteAction(() => this.#resetCurrentSlide());
+			this.requestState();
+		});
+	}
 
-  _resetCurrentSlide(nextSlide = this.querySelector('p-slide')) {
-    let { currentSlide } = this;
-    if (!currentSlide && nextSlide) {
-      currentSlide = nextSlide;
-    }
-    if (currentSlide) {
-      this.currentSlide = currentSlide;
-    }
-  }
+	disconnectedCallback() {
+		this.ownerDocument.removeEventListener('keydown', this.#keyHandler);
+		this.ownerDocument.defaultView.removeEventListener('resize', this.#computeFontSize);
+		this.ownerDocument.defaultView.clearInterval(this.#clockInterval);
+		this.#clockInterval = null;
+		this.stopClock();
+	}
 
-  _computeFontSize() {
-    const { width } = this.slideSizes;
-    const fontSize = +this.ownerDocument.defaultView.getComputedStyle(this).getPropertyValue('--slide-font-size') || 5;
-    this.style.fontSize = `${width * fontSize / 100}px`;
-  }
+	get mode() {
+		const attrValue = this.getAttribute('mode');
+		return ['presentation', 'speaker'].includes(attrValue) ? attrValue : 'presentation';
+	}
+	set mode(mode) {
+		if (['presentation', 'speaker'].includes(mode)) {
+			this.setAttribute('mode', mode);
+		}
+	}
 
-  get slideSizes() {
-    const { width, height } = this.getBoundingClientRect();
-    const deckRatio = width / height;
-    const aspectRatio = +this.ownerDocument.defaultView.getComputedStyle(this).getPropertyValue('--slide-aspect-ratio') || 1.5;
-    if (deckRatio > aspectRatio) {
-      return { width: height * aspectRatio, height };
-    }
-    return { width, height: width / aspectRatio };
-  }
+	#resetCurrentSlide(nextSlide = this.querySelector('p-slide')) {
+		let { currentSlide } = this;
+		if (!currentSlide && nextSlide) {
+			currentSlide = nextSlide;
+		}
+		if (currentSlide) {
+			this.currentSlide = currentSlide;
+		}
+	}
 
-  get currentSlide() {
-    return this.querySelector('p-slide[active]');
-  }
-  set currentSlide(nextSlide) {
-    const { _currentSlide } = this;
-    if (_currentSlide === nextSlide) {
-      return;
-    }
-    if (!(nextSlide instanceof HTMLElement) || nextSlide.nodeName !== 'P-SLIDE') {
-      throw Error('Current slide can only be a <p-slide> element');
-    }
-    if (!this.contains(nextSlide)) {
-      throw Error('Deck does not contain given slide');
-    }
-    if (!nextSlide.isActive) {
-      nextSlide.isActive = true;
-      return;
-    }
+	#computeFontSize = function () {
+		const { width } = this.slideSizes;
+		const fontSize = +this.ownerDocument.defaultView.getComputedStyle(this).getPropertyValue('--slide-font-size') || 5;
+		this.style.fontSize = `${(width * fontSize) / 100}px`;
+	}.bind(this);
 
-    selectSlide(this.slides, nextSlide);
-    this.shadowRoot.querySelector('span').textContent = this.currentIndex + 1;
-    copyNotes(this.shadowRoot.querySelector('ul'), nextSlide.notes);
+	get slideSizes() {
+		const { width, height } = this.getBoundingClientRect();
+		const deckRatio = width / height;
+		const aspectRatio = +this.ownerDocument.defaultView.getComputedStyle(this).getPropertyValue('--slide-aspect-ratio') || 1.5;
+		if (deckRatio > aspectRatio) {
+			return { width: height * aspectRatio, height };
+		}
+		return { width, height: width / aspectRatio };
+	}
 
-    this._currentSlide = nextSlide;
-    fireEvent(this, 'slidechange', { slide: nextSlide, previous: _currentSlide });
-    if (this.atEnd) {
-      fireEvent(this, 'finish');
-    }
-    this.broadcastState();
-  }
+	get currentSlide() {
+		return this.querySelector('p-slide[aria-current="page"]');
+	}
+	set currentSlide(nextSlide) {
+		const { _currentSlide } = this;
+		if (_currentSlide === nextSlide) {
+			return;
+		}
+		if (!(nextSlide instanceof HTMLElement) || nextSlide.nodeName !== 'P-SLIDE') {
+			throw Error('Current slide can only be a <p-slide> element');
+		}
+		if (!this.contains(nextSlide)) {
+			throw Error('Deck does not contain given slide');
+		}
+		if (!nextSlide.isActive) {
+			nextSlide.isActive = true;
+			return;
+		}
 
-  get currentIndex() {
-    return [ ...this.slides ].findIndex(slide => slide.isActive);
-  }
-  set currentIndex(index) {
-    const { slides } = this;
-    if (slides.lenght === 0 && +index === 0) {
-      return;
-    }
-    const slide = slides[index];
-    if (!slide) {
-      throw Error(`Slide index out of range (must be 0-${slides.length - 1}, ${index} given)`);
-    }
-    this.currentSlide = slide;
-  }
+		selectSlide(this.slides, nextSlide);
+		this.shadowRoot.querySelector('span').textContent = this.currentIndex + 1;
+		copyNotes(this.shadowRoot.querySelector('ul'), nextSlide.notes);
 
-  get slides() {
-    return this.querySelectorAll('p-slide');
-  }
-  get atStart() {
-    if (this.currentIndex > 0) {
-      return false;
-    }
-    const firstSlide = this.slides[0];
-    return !firstSlide || !firstSlide.lastVisibleFragment;
-  }
-  get atEnd() {
-    if (this.currentIndex < this.slides.length - 1) {
-      return false;
-    }
-    const { slides } = this;
-    const lastSlide = slides[slides.length - 1];
-    return !lastSlide || !lastSlide.nextHiddenFragment;
-  }
+		this._currentSlide = nextSlide;
+		fireEvent(this, 'slidechange', { slide: nextSlide, previous: _currentSlide });
+		if (this.atEnd) {
+			fireEvent(this, 'finish');
+		}
+		this.broadcastState();
+	}
 
-  _keyHandler(keyEvent) {
-    const command = matchKey(keyEvent, this.keyCommands);
-    switch (command) {
-      case this.PREVIOUS_COMMAND:
-        this.previous();
-        break;
-      case this.NEXT_COMMAND:
-        this.next();
-        break;
-      case this.TOGGLE_CLOCK_COMMAND:
-        this.toggleClock();
-        break;
-      case this.RESET_CLOCK_COMMAND:
-        this.clock = 0;
-        break;
-    }
-  }
+	get currentIndex() {
+		return [...this.slides].findIndex(slide => slide.isActive);
+	}
+	set currentIndex(index) {
+		const { slides } = this;
+		if (slides.lenght === 0 && +index === 0) {
+			return;
+		}
+		const slide = slides[index];
+		if (!slide) {
+			throw Error(`Slide index out of range (must be 0-${slides.length - 1}, ${index} given)`);
+		}
+		this.currentSlide = slide;
+	}
 
-  next() {
-    if (!this.atEnd) {
-      const { currentIndex, currentSlide } = this;
-      const goToNext = currentSlide.next();
-      if (goToNext) {
-        this.slides[currentIndex + 1].isActive = true;
-      } else {
-        checkNoteActivations(this.shadowRoot.querySelector('ul'), currentSlide.notes);
-        if (this.atEnd) {
-          fireEvent(this, 'finish');
-        }
-      }
-    }
-  }
+	get slides() {
+		return this.querySelectorAll('p-slide');
+	}
+	get atStart() {
+		if (this.currentIndex > 0) {
+			return false;
+		}
+		const firstSlide = this.slides[0];
+		return !firstSlide || !firstSlide.lastVisibleFragment;
+	}
+	get atEnd() {
+		const { slides } = this;
+		if (this.currentIndex < slides.length - 1) return false;
+		const lastSlide = slides[slides.length - 1];
+		return !lastSlide || !lastSlide.nextHiddenFragment;
+	}
 
-  previous() {
-    if (!this.atStart) {
-      const { currentIndex, currentSlide } = this;
-      const goToPrevious = currentSlide.previous();
-      if (goToPrevious) {
-        this.slides[currentIndex - 1].isActive = true;
-      } else {
-        checkNoteActivations(this.shadowRoot.querySelector('ul'), currentSlide.notes);
-      }
-    }
-  }
+	#keyHandler = function (keyEvent) {
+		const command = matchKey(keyEvent, this.keyCommands);
+		switch (command) {
+			case 'previous':
+				this.previous();
+				break;
+			case 'next':
+				this.next();
+				break;
+			case 'toggleclock':
+				this.toggleClock();
+				break;
+			case 'resetclock':
+				this.clock = 0;
+				break;
+			case 'toggleMode':
+				this.mode = this.mode === 'speaker' ? 'presentation' : 'speaker';
+				break;
+		}
+	}.bind(this);
 
-  startClock() {
-    this._clockStart = Date.now();
-    this.shadowRoot.querySelector('time').setAttribute('running', '');
-    fireEvent(this, 'clockstart', { timestamp: this._clockStart, elapsed: this._clockElapsed });
-    this.broadcastState();
-  }
-  stopClock() {
-    if (this.isClockRunning) {
-      this._clockElapsed += Date.now() - this._clockStart;
-    }
-    this._clockStart = null;
-    this.shadowRoot.querySelector('time').removeAttribute('running');
-    fireEvent(this, 'clockstop', { elapsed: this._clockElapsed });
-    this.broadcastState();
-  }
-  toggleClock() {
-    if (this.isClockRunning) {
-      this.stopClock();
-    } else {
-      this.startClock();
-    }
-  }
+	next() {
+		if (!this.atEnd) {
+			const { currentIndex, currentSlide } = this;
+			const goToNext = currentSlide.next();
+			if (goToNext) {
+				this.slides[currentIndex + 1].isActive = true;
+			} else {
+				checkNoteActivations(this.shadowRoot.querySelector('ul'), currentSlide.notes);
+				if (this.atEnd) {
+					fireEvent(this, 'finish');
+				}
+			}
+		}
+	}
 
-  _updateClock() {
-    this.shadowRoot.querySelector('time').textContent = formatClock(this.clock);
-  }
-  get clock() {
-    return this._clockElapsed + (this.isClockRunning ? Date.now() - this._clockStart : 0);
-  }
-  set clock(value) {
-    if (!isNaN(value)) {
-      this._clockElapsed = +value;
-      if (this.isClockRunning) {
-        this._clockStart = Date.now();
-      }
-      fireEvent(this, 'clockset', { elapsed: this._clockElapsed });
-      this.broadcastState();
-    }
-    if (this._clockInterval) {
-      this._updateClock();
-    }
-  }
-  get isClockRunning() {
-    return this._clockStart !== null;
-  }
+	previous() {
+		if (!this.atStart) {
+			const { currentIndex, currentSlide } = this;
+			const goToPrevious = currentSlide.previous();
+			if (goToPrevious) {
+				this.slides[currentIndex - 1].isActive = true;
+			} else {
+				checkNoteActivations(this.shadowRoot.querySelector('ul'), currentSlide.notes);
+			}
+		}
+	}
 
-  get state() {
-    const state = {
-      currentIndex: this.currentIndex,
-      currentSlideFragmentVisibility: this.currentSlide.fragments.map(f => f.isVisible),
-      clockElapsed: this._clockElapsed,
-      clockStart: this._clockStart
-    };
-    return state;
-  }
-  set state(state) {
-    this.currentIndex = state.currentIndex;
-    this._clockElapsed = state.clockElapsed;
-    this._clockStart = state.clockStart;
-    this.currentSlide.fragments.forEach((fragment, index) => {
-      fragment.isVisible = state.currentSlideFragmentVisibility[index];
-    });
-  }
+	startClock() {
+		this.#clockStart = Date.now();
+		this.shadowRoot.querySelector('time').setAttribute('running', '');
+		fireEvent(this, 'clockstart', { timestamp: this.#clockStart, elapsed: this.#clockElapsed });
+		this.broadcastState();
+	}
+
+	stopClock() {
+		if (this.isClockRunning) {
+			this.#clockElapsed += Date.now() - this.#clockStart;
+		}
+		this.#clockStart = null;
+		this.shadowRoot.querySelector('time').removeAttribute('running');
+		fireEvent(this, 'clockstop', { elapsed: this.#clockElapsed });
+		this.broadcastState();
+	}
+
+	toggleClock = function () {
+		if (this.isClockRunning) {
+			this.stopClock();
+		} else {
+			this.startClock();
+		}
+	}.bind(this);
+
+	#updateClock() {
+		this.shadowRoot.querySelector('time').textContent = formatClock(this.clock);
+	}
+
+	get clock() {
+		return this.#clockElapsed + (this.isClockRunning ? Date.now() - this.#clockStart : 0);
+	}
+	set clock(value) {
+		if (!isNaN(value)) {
+			this.#clockElapsed = +value;
+			if (this.isClockRunning) {
+				this.#clockStart = Date.now();
+			}
+			fireEvent(this, 'clockset', { elapsed: this.#clockElapsed });
+			this.broadcastState();
+		}
+		if (this.#clockInterval) {
+			this.#updateClock();
+		}
+	}
+
+	get isClockRunning() {
+		return this.#clockStart !== null;
+	}
+
+	get state() {
+		const state = {
+			currentIndex: this.currentIndex,
+			currentSlideFragmentVisibility: this.currentSlide.fragments.map(f => f.isVisible),
+			clockElapsed: this.#clockElapsed,
+			clockStart: this.#clockStart
+		};
+		return state;
+	}
+	set state(state) {
+		this.currentIndex = state.currentIndex;
+		this.#clockElapsed = state.clockElapsed;
+		this.#clockStart = state.clockStart;
+		this.currentSlide.fragments.forEach((fragment, index) => {
+			fragment.isVisible = state.currentSlideFragmentVisibility[index];
+		});
+	}
+
+	#preventBroadcast = false;
+
+	broadcastState() {
+		if (!this.#preventBroadcast) {
+			this.#channel.postMessage(this.state);
+		}
+	}
+
+	requestState() {
+		this.#channel.postMessage(null);
+	}
 }
-
-const _proto = PresentationDeckElement.prototype;
-defineConstants(_proto, {
-  NEXT_COMMAND: 'next',
-  PREVIOUS_COMMAND: 'previous',
-  TOGGLE_CLOCK_COMMAND: 'toggleclock',
-  RESET_CLOCK_COMMAND: 'resetclock',
-  PRESENTATION_MODE: 'presentation',
-  SPEAKER_MODE: 'speaker'
-});
-_proto.keyCommands = {
-  [_proto.NEXT_COMMAND]: [{ key: 'ArrowRight' }, { key: 'ArrowDown' }],
-  [_proto.PREVIOUS_COMMAND]: [{ key: 'ArrowLeft' }, { key: 'ArrowUp' }],
-  [_proto.TOGGLE_CLOCK_COMMAND]: [{ key: 'P' }, { key: 'p' }],
-  [_proto.RESET_CLOCK_COMMAND]: [{ key: '0', altKey: true }]
-};

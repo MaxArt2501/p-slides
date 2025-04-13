@@ -1,30 +1,43 @@
-export function whenAllDefined() {
-  return Promise.all(
-    [ 'p-deck', 'p-slide', 'p-fragment', 'p-notes' ]
-      .map(tag => customElements.whenDefined(tag))
-  );
-}
+export const whenAllDefined = () => Promise.all(['p-deck', 'p-slide', 'p-fragment', 'p-notes'].map(tag => customElements.whenDefined(tag)));
 
 let styleRoot = 'css/';
-export function setStyleRoot(root) {
-  styleRoot = root;
+/** @param {string} root */
+export const setStyleRoot = root => (styleRoot = root);
+
+/**
+ * @this {HTMLElement}
+ * @param {string[]} strings
+ * @param  {...any} values
+ */
+export function setShadowDOM(strings, ...values) {
+	const root = this.attachShadow({ mode: 'open' });
+	root.innerHTML = String.raw({ raw: strings }, ...values);
+	return root;
 }
 
-export function attachStyle(element) {
+/** @type {Record<string, Promise<CSSStyleSheet>>} */
+const styleMap = {};
+
+/**
+ * @param {HTMLElement} element
+ * @returns {Promise<CSSStyleSheet>}
+ */
+export const attachStyle = element => {
   const name = element.localName.replace(/^p-/, '');
-  const linkEl = element.ownerDocument.createElement('link');
-  linkEl.rel = 'stylesheet';
-  linkEl.href = `${styleRoot}${name}.css`;
-  return new Promise((resolve, reject) => {
-    linkEl.addEventListener('load', () => {
-      resolve(linkEl.sheet);
+	if (!styleMap[name]) {
+		styleMap[name] = fetch(`${styleRoot}${name}.css`)
+			.then(res => res.text())
+			.then(text => {
+				const styleSheet = new CSSStyleSheet();
+				styleSheet.replaceSync(text);
+				return styleSheet;
     });
-    linkEl.addEventListener('error', reject);
-    element.shadowRoot.appendChild(linkEl);
-  });
-}
+	}
+	styleMap[name].then(sheet => element.shadowRoot.adoptedStyleSheets.push(sheet));
+	return styleMap[name];
+};
 
-export function selectSlide(slides, nextSlide) {
+export const selectSlide = (slides, nextSlide) => {
   let isPrevious = true;
   let isNext = false;
   for (const slide of slides) {
@@ -43,9 +56,9 @@ export function selectSlide(slides, nextSlide) {
       slide.setFragmentVisibility(isPrevious);
     }
   }
-}
+};
 
-export function copyNotes(noteContainer, notes) {
+export const copyNotes = (noteContainer, notes) => {
   while (noteContainer.lastChild) {
     noteContainer.removeChild(noteContainer.lastChild);
   }
@@ -55,53 +68,63 @@ export function copyNotes(noteContainer, notes) {
       li.appendChild(child.cloneNode(true));
     }
     noteContainer.appendChild(li);
+	}
+	checkNoteActivations(noteContainer, notes);
   };
-  checkNoteActivations(noteContainer, notes);
-}
 
-export function checkNoteActivations(noteContainer, notes) {
+export const checkNoteActivations = (noteContainer, notes) => {
   notes.forEach((note, index) => {
     noteContainer.children[index].classList.toggle('not-visible', !note.isVisible);
   });
-}
+};
 
-export function defineConstants(target, constantMap) {
-  const propDefinitions = Object.entries(constantMap).reduce((map, [ key, value ]) => {
-    map[key] = { value, writable: false };
-    return map;
-  }, {});
-  Object.defineProperties(target, propDefinitions);
-}
-
-export function matchKey(keyEvent, keyMap) {
-  for (const [ command, keys ] of Object.entries(keyMap)) {
+/**
+ * @param {KeyboardEvent} keyEvent
+ * @param {Record<string, Array<Partial<KeyboardEvent>>>} keyMap
+ */
+export const matchKey = (keyEvent, keyMap) => {
+	for (const [command, keys] of Object.entries(keyMap)) {
     for (const keyDef of keys) {
-      const { key, altKey = false, ctrlKey = false, metaKey = false, shiftKey = false } = keyDef;
-      const normalizedKeyDef = { key, altKey, ctrlKey, metaKey, shiftKey };
-      if (Object.entries(normalizedKeyDef).every(([ prop, value ]) => keyEvent[prop] === value)) {
+			if (Object.entries(keyDef).every(([prop, value]) => keyEvent[prop] === value)) {
         return command;
       }
     }
   }
   return null;
-}
+};
 
-export function createRoot(element, innerHTML) {
-  if (element.shadowRoot) return;
-
-  element.attachShadow({ mode: 'open' });
-  element.shadowRoot.innerHTML = innerHTML;
-}
-
-export function fireEvent(target, eventName, detail = {}) {
+/**
+ * @param {EventTarget} target
+ * @param {string} eventName
+ * @param {*} detail
+ */
+export const fireEvent = (target, eventName, detail = {}) => {
   const event = new CustomEvent(`p-slides.${eventName}`, { bubbles: true, detail });
   target.dispatchEvent(event);
-}
+};
 
-export function formatClock(millis) {
+/**
+ * @param {number} millis
+ * @returns {`${number}:${number}:${number}`}
+ */
+export const formatClock = millis => {
   const secs = Math.floor(millis / 1000);
-  return (secs < 0 ? '-' : '')
-    + Math.floor(secs / 3600).toString().padStart(2, '0')
-    + ':' + Math.floor((secs % 3600) / 60).toString().padStart(2, '0')
-    + ':' + Math.floor(secs % 60).toString().padStart(2, '0');
-}
+	return `${secs < 0 ? '-' : ''}${Math.floor(secs / 3600)
+		.toString()
+		.padStart(2, '0')}:${Math.floor((secs % 3600) / 60)
+		.toString()
+		.padStart(2, '0')}:${Math.floor(secs % 60)
+		.toString()
+		.padStart(2, '0')}`;
+};
+
+/**
+ * @param {Element} element
+ * @returns {number | null}
+ */
+export const getFragmentIndex = element => {
+	const rawValue = element.getAttribute(element.localName === 'p-fragment' ? 'index' : 'p-fragment');
+	if (rawValue === null) return null;
+	const numValue = Number.parseFloat(rawValue);
+	return Number.isFinite(numValue) && numValue >= 0 ? numValue : null;
+};
