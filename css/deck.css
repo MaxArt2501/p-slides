@@ -40,7 +40,8 @@ li:only-child {
 	list-style-type: none;
 	margin-left: -1em;
 }
-li.not-visible {
+li[hidden] {
+	display: revert;
 	opacity: 0.5;
 }
 span:nth-child(2) {

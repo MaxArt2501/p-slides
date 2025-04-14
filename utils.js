@@ -1,6 +1,6 @@
-export const whenAllDefined = () => Promise.all(['p-deck', 'p-slide', 'p-fragment', 'p-notes'].map(tag => customElements.whenDefined(tag)));
+export const whenAllDefined = () => Promise.all(['p-deck', 'p-slide'].map(tag => customElements.whenDefined(tag)));
 
-let styleRoot = 'css/';
+export let styleRoot = 'css/';
 /** @param {string} root */
 export const setStyleRoot = root => (styleRoot = root);
 
@@ -15,28 +15,10 @@ export function setShadowDOM(strings, ...values) {
 	return root;
 }
 
-/** @type {Record<string, Promise<CSSStyleSheet>>} */
-const styleMap = {};
-
 /**
- * @param {HTMLElement} element
- * @returns {Promise<CSSStyleSheet>}
+ * @param {import("./components/slide.js").PresentationSlideElement[]} slides
+ * @param {import("./components/slide.js").PresentationSlideElement} nextSlide
  */
-export const attachStyle = element => {
-  const name = element.localName.replace(/^p-/, '');
-	if (!styleMap[name]) {
-		styleMap[name] = fetch(`${styleRoot}${name}.css`)
-			.then(res => res.text())
-			.then(text => {
-				const styleSheet = new CSSStyleSheet();
-				styleSheet.replaceSync(text);
-				return styleSheet;
-    });
-	}
-	styleMap[name].then(sheet => element.shadowRoot.adoptedStyleSheets.push(sheet));
-	return styleMap[name];
-};
-
 export const selectSlide = (slides, nextSlide) => {
   let isPrevious = true;
   let isNext = false;
@@ -58,6 +40,10 @@ export const selectSlide = (slides, nextSlide) => {
   }
 };
 
+/**
+ * @param {Element} noteContainer
+ * @param {Element[]} notes
+ */
 export const copyNotes = (noteContainer, notes) => {
   while (noteContainer.lastChild) {
     noteContainer.removeChild(noteContainer.lastChild);
@@ -72,9 +58,14 @@ export const copyNotes = (noteContainer, notes) => {
 	checkNoteActivations(noteContainer, notes);
   };
 
+/**
+ *
+ * @param {Element} noteContainer
+ * @param {Element[]} notes
+ */
 export const checkNoteActivations = (noteContainer, notes) => {
   notes.forEach((note, index) => {
-    noteContainer.children[index].classList.toggle('not-visible', !note.isVisible);
+		noteContainer.children[index].hidden = !areNotesVisible(note);
   });
 };
 
@@ -118,13 +109,17 @@ export const formatClock = millis => {
 		.padStart(2, '0')}`;
 };
 
-/**
- * @param {Element} element
- * @returns {number | null}
- */
+/** @param {Element} element */
 export const getFragmentIndex = element => {
 	const rawValue = element.getAttribute(element.localName === 'p-fragment' ? 'index' : 'p-fragment');
 	if (rawValue === null) return null;
 	const numValue = Number.parseFloat(rawValue);
 	return Number.isFinite(numValue) && numValue >= 0 ? numValue : null;
 };
+
+export const isFragmentVisible = element => element.getAttribute('aria-hidden') === 'false';
+
+export const setFragmentVisibility = (element, visible) => element.setAttribute('aria-hidden', visible ? 'false' : 'true');
+
+/** @param {Element} notes */
+export const areNotesVisible = notes => (notes.closest('p-fragment, [p-fragment]')?.getAttribute('aria-hidden') ?? 'false') === 'false';

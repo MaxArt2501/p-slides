@@ -1,14 +1,9 @@
-import { fireEvent, getFragmentIndex, setShadowDOM, whenAllDefined } from '../utils.js';
+import { fireEvent, getFragmentIndex, whenAllDefined } from '../utils.js';
 
 let allDefined = false;
 whenAllDefined().then(() => (allDefined = true));
 
 export class PresentationSlideElement extends HTMLElement {
-	constructor() {
-		super();
-		setShadowDOM.bind(this)`<slot></slot>`;
-	}
-
 	static get observedAttributes() {
 		return ['aria-current'];
 	}
@@ -32,8 +27,9 @@ export class PresentationSlideElement extends HTMLElement {
 
 	connectedCallback() {
 		this.ariaHidden = `${!this.isActive}`;
-		this.querySelectorAll('[p-fragment]').forEach(fragment => {
+		this.querySelectorAll('p-fragment, [p-fragment]').forEach(fragment => {
 			fragment.ariaHidden ??= 'true';
+			fragment.ariaCurrent ??= 'false';
 		});
 	}
 

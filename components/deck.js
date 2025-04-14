@@ -1,14 +1,36 @@
 import {
-	attachStyle,
 	checkNoteActivations,
 	copyNotes,
 	fireEvent,
 	formatClock,
+	isFragmentVisible,
 	matchKey,
 	selectSlide,
+	setFragmentVisibility,
 	setShadowDOM,
+	styleRoot,
 	whenAllDefined
 } from '../utils.js';
+
+/** @type {Promise<CSSStyleSheet>>} */
+let stylesheet;
+
+/**
+ * @param {HTMLElement} element
+ * @returns {Promise<CSSStyleSheet>}
+ */
+export const getStylesheet = () => {
+	if (!stylesheet) {
+		stylesheet = fetch(`${styleRoot}deck.css`)
+			.then(res => res.text())
+			.then(text => {
+				const styleSheet = new CSSStyleSheet();
+				styleSheet.replaceSync(text);
+				return styleSheet;
+			});
+	}
+	return stylesheet;
+};
 
 export class PresentationDeckElement extends HTMLElement {
 	#clockElapsed = 0;
@@ -37,7 +59,10 @@ export class PresentationDeckElement extends HTMLElement {
 				<header><span></span><span></span> <time></time> <button type="button"></button> <button type="button"></button></header>
 				<ul></ul>
 			</aside>`;
-		attachStyle(this).then(this.#computeFontSize);
+		getStylesheet().then(style => {
+			this.shadowRoot.adoptedStyleSheets.push(style);
+			this.#computeFontSize();
+		});
 
 		this.shadowRoot.querySelector('button').addEventListener('click', this.toggleClock);
 		this.shadowRoot.querySelector('button:last-of-type').addEventListener('click', () => (this.clock = 0));
@@ -281,7 +306,7 @@ export class PresentationDeckElement extends HTMLElement {
 	get state() {
 		const state = {
 			currentIndex: this.currentIndex,
-			currentSlideFragmentVisibility: this.currentSlide.fragments.map(f => f.isVisible),
+			currentSlideFragmentVisibility: this.currentSlide.fragments.map(isFragmentVisible),
 			clockElapsed: this.#clockElapsed,
 			clockStart: this.#clockStart
 		};
@@ -292,7 +317,7 @@ export class PresentationDeckElement extends HTMLElement {
 		this.#clockElapsed = state.clockElapsed;
 		this.#clockStart = state.clockStart;
 		this.currentSlide.fragments.forEach((fragment, index) => {
-			fragment.isVisible = state.currentSlideFragmentVisibility[index];
+			setFragmentVisibility(fragment, state.currentSlideFragmentVisibility[index]);
 		});
 	}
 
