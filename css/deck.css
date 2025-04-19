@@ -90,7 +90,8 @@ button:last-of-type::after {
 :host([mode='speaker']) {
 	background: black;
 }
-:host([mode='speaker']) ::slotted(p-slide:not([aria-current='page']):not([next])) {
+/* :not([aria-current='page'] ~ *) doesn't work inside ::slotted(), but we have a workaround */
+:host([mode='speaker']) ::slotted(p-slide:not([aria-current='page']):not(:nth-child(1 of [aria-current='page'] ~ *))) {
 	display: none !important;
 }
 :host([mode='speaker']) ::slotted(p-slide) {
@@ -103,7 +104,7 @@ button:last-of-type::after {
 	left: calc(var(--speaker-next-scale) * 50% - 50%);
 	opacity: calc(1 - var(--speaker-next-scale) / 2);
 }
-:host([mode='speaker']) ::slotted(p-slide[next]) {
+:host([mode='speaker']) ::slotted(p-slide:nth-child(1 of [aria-current='page'] ~ *)) {
 	transform: scale(calc(var(--speaker-next-scale)));
 	position: relative;
 	top: calc(50% - var(--speaker-next-scale) * 50%);

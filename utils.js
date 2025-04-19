@@ -21,17 +21,9 @@ export function setShadowDOM(strings, ...values) {
  */
 export const selectSlide = (slides, nextSlide) => {
   let isPrevious = true;
-  let isNext = false;
   for (const slide of slides) {
-    if (isNext) {
-      slide.setAttribute('next', '');
-      isNext = false;
-    } else {
-      slide.removeAttribute('next');
-    }
     if (slide === nextSlide) {
       isPrevious = false;
-      isNext = true;
     } else {
       slide.isActive = false;
       slide.isPrevious = isPrevious;
