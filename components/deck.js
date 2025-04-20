@@ -8,7 +8,6 @@ import {
 	matchKey,
 	selectSlide,
 	setFragmentVisibility,
-	setShadowDOM,
 	styleRoot,
 	whenAllDefined
 } from '../utils.js';
@@ -33,6 +32,8 @@ export const getStylesheet = () => {
 	return stylesheet;
 };
 
+const html = String.raw;
+
 export class PresentationDeckElement extends HTMLElement {
 	#clockElapsed = 0;
 	#clockStart = null;
@@ -54,8 +55,8 @@ export class PresentationDeckElement extends HTMLElement {
 	constructor() {
 		super();
 
-		const html = setShadowDOM.bind(this);
-		html`<slot></slot>
+		this.attachShadow({ mode: 'open' });
+		this.shadowRoot.innerHTML = html`<slot></slot>
 			<aside>
 				<header><span></span><span></span> <time></time> <button type="button"></button> <button type="button"></button></header>
 				<ul></ul>

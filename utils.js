@@ -5,15 +5,10 @@ export let styleRoot = 'css/';
 export const setStyleRoot = root => (styleRoot = root);
 
 /**
- * @this {HTMLElement}
- * @param {string[]} strings
- * @param  {...any} values
+ * @param {unknown} element
+ * @returns {element is import("./components/slide.js").PresentationSlideElement}
  */
-export function setShadowDOM(strings, ...values) {
-	const root = this.attachShadow({ mode: 'open' });
-	root.innerHTML = String.raw({ raw: strings }, ...values);
-	return root;
-}
+export const isSlide = element => element instanceof Element && element.localName === 'p-slide';
 
 /**
  * @param {import("./components/slide.js").PresentationSlideElement[]} slides
