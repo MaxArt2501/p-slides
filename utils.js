@@ -15,16 +15,16 @@ export const isSlide = element => element instanceof Element && element.localNam
  * @param {import("./components/slide.js").PresentationSlideElement} nextSlide
  */
 export const selectSlide = (slides, nextSlide) => {
-  let isPrevious = true;
-  for (const slide of slides) {
-    if (slide === nextSlide) {
-      isPrevious = false;
-    } else {
-      slide.isActive = false;
-      slide.isPrevious = isPrevious;
+	let isPrevious = true;
+	for (const slide of slides) {
+		if (slide === nextSlide) {
+			isPrevious = false;
+		} else {
+			slide.isActive = false;
+			slide.isPrevious = isPrevious;
 			setFragmentVisibility(isPrevious)(...slide.fragments);
-    }
-  }
+		}
+	}
 };
 
 /**
@@ -32,18 +32,18 @@ export const selectSlide = (slides, nextSlide) => {
  * @param {Element[]} notes
  */
 export const copyNotes = (noteContainer, notes) => {
-  while (noteContainer.lastChild) {
-    noteContainer.removeChild(noteContainer.lastChild);
-  }
-  for (const note of notes) {
-    const li = noteContainer.ownerDocument.createElement('li');
-    for (const child of note.childNodes) {
-      li.appendChild(child.cloneNode(true));
-    }
-    noteContainer.appendChild(li);
+	while (noteContainer.lastChild) {
+		noteContainer.removeChild(noteContainer.lastChild);
+	}
+	for (const note of notes) {
+		const li = noteContainer.ownerDocument.createElement('li');
+		for (const child of note.childNodes) {
+			li.appendChild(child.cloneNode(true));
+		}
+		noteContainer.appendChild(li);
 	}
 	checkNoteActivations(noteContainer, notes);
-  };
+};
 
 /**
  *
@@ -51,9 +51,9 @@ export const copyNotes = (noteContainer, notes) => {
  * @param {Element[]} notes
  */
 export const checkNoteActivations = (noteContainer, notes) => {
-  notes.forEach((note, index) => {
+	notes.forEach((note, index) => {
 		noteContainer.children[index].hidden = !areNotesVisible(note);
-  });
+	});
 };
 
 /**
@@ -62,13 +62,13 @@ export const checkNoteActivations = (noteContainer, notes) => {
  */
 export const matchKey = (keyEvent, keyMap) => {
 	for (const [command, keys] of Object.entries(keyMap)) {
-    for (const keyDef of keys) {
+		for (const keyDef of keys) {
 			if (Object.entries(keyDef).every(([prop, value]) => keyEvent[prop] === value)) {
-        return command;
-      }
-    }
-  }
-  return null;
+				return command;
+			}
+		}
+	}
+	return null;
 };
 
 /**
@@ -77,27 +77,21 @@ export const matchKey = (keyEvent, keyMap) => {
  * @param {*} detail
  */
 export const fireEvent = (target, eventName, detail = {}) => {
-  const event = new CustomEvent(`p-slides.${eventName}`, { bubbles: true, detail });
-  target.dispatchEvent(event);
+	const event = new CustomEvent(`p-slides.${eventName}`, { bubbles: true, detail });
+	target.dispatchEvent(event);
 };
 
 /**
  * @param {number} millis
- * @returns {`${number}:${number}:${number}`}
+ * @returns {[number, number, number]}
  */
 export const formatClock = millis => {
-  const secs = Math.floor(millis / 1000);
-	return `${secs < 0 ? '-' : ''}${Math.floor(secs / 3600)
-		.toString()
-		.padStart(2, '0')}:${Math.floor((secs % 3600) / 60)
-		.toString()
-		.padStart(2, '0')}:${Math.floor(secs % 60)
-		.toString()
-		.padStart(2, '0')}`;
+	const secs = Math.floor(millis / 1000);
+	return [Math.trunc(secs / 3600), Math.trunc((secs % 3600) / 60), Math.trunc(secs % 60)];
 };
 
 /** @param {Element} element */
-export const getFragmentIndex = element => {
+const getFragmentIndex = element => {
 	const rawValue = element.getAttribute(element.localName === 'p-fragment' ? 'index' : 'p-fragment');
 	if (rawValue === null) return null;
 	const numValue = Number.parseFloat(rawValue);

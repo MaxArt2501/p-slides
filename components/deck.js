@@ -276,7 +276,7 @@ export class PresentationDeckElement extends HTMLElement {
 		this.broadcastState();
 	}
 
-	toggleClock = function () {
+	toggleClock = /** @this {PresentationDeckElement} */ function () {
 		if (this.isClockRunning) {
 			this.stopClock();
 		} else {
@@ -285,7 +285,10 @@ export class PresentationDeckElement extends HTMLElement {
 	}.bind(this);
 
 	#updateClock() {
-		this.shadowRoot.querySelector('time').textContent = formatClock(this.clock);
+		const time = this.shadowRoot.querySelector('time');
+		const parts = formatClock(this.clock);
+		time.textContent = parts.map(part => part.toString().padStart(2, '0')).join(':');
+		time.dateTime = `PT${parts[0]}H${parts[1]}M${parts[2]}S`;
 	}
 
 	get clock() {
