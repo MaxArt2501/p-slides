@@ -27,7 +27,7 @@ export const selectSlide = (slides, nextSlide) => {
     } else {
       slide.isActive = false;
       slide.isPrevious = isPrevious;
-      slide.setFragmentVisibility(isPrevious);
+			setFragmentVisibility(isPrevious)(...slide.fragments);
     }
   }
 };
@@ -109,9 +109,48 @@ export const getFragmentIndex = element => {
 	return Number.isFinite(numValue) && numValue >= 0 ? numValue : null;
 };
 
+/** @param {Element} element */
 export const isFragmentVisible = element => element.getAttribute('aria-hidden') === 'false';
 
-export const setFragmentVisibility = (element, visible) => element.setAttribute('aria-hidden', visible ? 'false' : 'true');
+/**
+ * @param {boolean} visible
+ * @return {(...elements: Element[]) => void}
+ */
+export const setFragmentVisibility =
+	visible =>
+	(...elements) =>
+		elements.forEach(element => element.setAttribute('aria-hidden', String(!visible)));
 
 /** @param {Element} notes */
 export const areNotesVisible = notes => (notes.closest('p-fragment, [p-fragment]')?.getAttribute('aria-hidden') ?? 'false') === 'false';
+
+/**
+ * @param {Iterable<Element>} fragments
+ * @returns {Element[][]}
+ */
+export const getSequencedFragments = fragments => {
+	const nullIndexes = [];
+	const indexMap = new Map();
+	for (const fragment of fragments) {
+		const index = getFragmentIndex(fragment);
+		if (index === null) nullIndexes.push(fragment);
+		else if (indexMap.has(index)) indexMap.get(index).push(fragment);
+		else indexMap.set(index, [fragment]);
+	}
+	const sorted = [];
+	let indexes = Array.from(indexMap.keys()).sort((a, b) => a - b);
+	let nextIndex = indexes.shift();
+	let count = 0;
+	while (count < fragments.length) {
+		if ((nextIndex === undefined || nextIndex > count) && nullIndexes.length) {
+			sorted.push([nullIndexes.shift()]);
+			count++;
+		} else if (nextIndex <= sorted.length || !nullIndexes.length) {
+			const block = indexMap.get(nextIndex);
+			sorted.push(block);
+			count += block.length;
+			nextIndex = indexes.shift();
+		}
+	}
+	return sorted;
+};

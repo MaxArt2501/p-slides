@@ -1,4 +1,4 @@
-import { fireEvent, getFragmentIndex, whenAllDefined } from '../utils.js';
+import { fireEvent, getSequencedFragments, isFragmentVisible, setFragmentVisibility, whenAllDefined } from '../utils.js';
 
 let allDefined = false;
 whenAllDefined().then(() => (allDefined = true));
@@ -8,9 +8,11 @@ export class PresentationSlideElement extends HTMLElement {
 		return ['aria-current'];
 	}
 
-	#setCurrentFragment() {
-		this.fragments.forEach((fragment, index, fragments) => {
-			fragment.isCurrent = fragment.ariaHidden === 'false' && (!fragments[index + 1] || fragments[index + 1].ariaHidden === 'true');
+	#setCurrentFragments() {
+		this.fragmentSequence.forEach((fragments, index, lists) => {
+			const areCurrent = fragments.every(isFragmentVisible) && !lists[index + 1]?.every(isFragmentVisible);
+			// Only the last fragment of a block should be set as the current fragment
+			fragments.forEach((fragment, index) => (fragment.ariaCurrent = areCurrent && index === fragments.length - 1 ? 'step' : 'false'));
 		});
 	}
 
@@ -19,7 +21,7 @@ export class PresentationSlideElement extends HTMLElement {
 			const isActive = value === 'page';
 			this.ariaHidden = `${!isActive}`;
 			if (isActive) {
-				this.#setCurrentFragment();
+				this.#setCurrentFragments();
 				if (this.deck) this.deck.currentSlide = this;
 			}
 		}
@@ -33,6 +35,7 @@ export class PresentationSlideElement extends HTMLElement {
 		});
 	}
 
+	/** @type {import('./deck.js').PresentationDeckElement | null} */
 	get deck() {
 		return allDefined ? this.closest('p-deck') : null;
 	}
@@ -42,6 +45,7 @@ export class PresentationSlideElement extends HTMLElement {
 	}
 	set isActive(isActive) {
 		this.ariaCurrent = isActive ? 'page' : 'false';
+		if (isActive) this.#setCurrentFragments();
 	}
 
 	get isPrevious() {
@@ -52,17 +56,19 @@ export class PresentationSlideElement extends HTMLElement {
 	}
 
 	get fragments() {
-		const fragments = this.querySelectorAll('p-fragment, [p-fragment]');
-		const indexes = new Map(Array.from(fragments, fragment => [fragment, getFragmentIndex(fragment)]));
-		return [...fragments].sort((f1, f2) => indexes.get(f1) - indexes.get(f2));
+		return this.querySelectorAll('p-fragment, [p-fragment]');
 	}
 
-	get nextHiddenFragment() {
-		return this.fragments.find(fragment => fragment.ariaHidden === 'true');
+	get fragmentSequence() {
+		return getSequencedFragments(this.fragments);
 	}
 
-	get lastVisibleFragment() {
-		return this.fragments.findLast(fragment => fragment.ariaHidden === 'false');
+	get nextHiddenFragments() {
+		return this.fragmentSequence.find(fragments => !fragments.every(isFragmentVisible));
+	}
+
+	get lastVisibleFragments() {
+		return this.fragmentSequence.findLast(fragments => fragments.every(isFragmentVisible));
 	}
 
 	get notes() {
@@ -70,13 +76,13 @@ export class PresentationSlideElement extends HTMLElement {
 	}
 
 	next() {
-		const hiddenFragment = this.nextHiddenFragment;
-		if (hiddenFragment) {
-			hiddenFragment.ariaHidden = 'false';
-			this.#setCurrentFragment();
+		const hiddenFragments = this.nextHiddenFragments;
+		if (hiddenFragments) {
+			setFragmentVisibility(true)(...hiddenFragments);
+			this.#setCurrentFragments();
 			fireEvent(this, 'fragmenttoggle', {
-				fragment: hiddenFragment,
-				isVisible: false
+				fragments: hiddenFragments,
+				areVisible: false
 			});
 			this.deck?.broadcastState();
 			return false;
@@ -85,14 +91,15 @@ export class PresentationSlideElement extends HTMLElement {
 		this.isActive = false;
 		return true;
 	}
+
 	previous() {
-		const visibleFragment = this.lastVisibleFragment;
-		if (visibleFragment) {
-			visibleFragment.ariaHidden = 'true';
-			this.#setCurrentFragment();
+		const visibleFragments = this.lastVisibleFragments;
+		if (visibleFragments) {
+			setFragmentVisibility(false)(...visibleFragments);
+			this.#setCurrentFragments();
 			fireEvent(this, 'fragmenttoggle', {
-				fragment: visibleFragment,
-				isVisible: true
+				fragments: visibleFragments,
+				areVisible: true
 			});
 			this.deck?.broadcastState();
 			return false;
@@ -100,11 +107,5 @@ export class PresentationSlideElement extends HTMLElement {
 		this.isPrevious = false;
 		this.isActive = false;
 		return true;
-	}
-
-	setFragmentVisibility(visible) {
-		for (const fragment of this.fragments) {
-			fragment.ariaHidden = `${!visible}`;
-		}
 	}
 }

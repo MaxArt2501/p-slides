@@ -4,6 +4,7 @@ import {
 	fireEvent,
 	formatClock,
 	isFragmentVisible,
+	isSlide,
 	matchKey,
 	selectSlide,
 	setFragmentVisibility,
@@ -142,22 +143,26 @@ export class PresentationDeckElement extends HTMLElement {
 		return { width, height: width / aspectRatio };
 	}
 
+	/** @type {import('./slide.js').PresentationSlideElement | undefined} */
+	#currentSlide;
+
+	/** @type {import('./slide.js').PresentationSlideElement | null} */
 	get currentSlide() {
 		return this.querySelector('p-slide[aria-current="page"]');
 	}
 	set currentSlide(nextSlide) {
-		const { _currentSlide } = this;
-		if (_currentSlide === nextSlide) {
+		if (this.#currentSlide === nextSlide) {
 			return;
 		}
-		if (!(nextSlide instanceof HTMLElement) || nextSlide.nodeName !== 'P-SLIDE') {
+		if (!isSlide(nextSlide)) {
 			throw Error('Current slide can only be a <p-slide> element');
 		}
 		if (!this.contains(nextSlide)) {
-			throw Error('Deck does not contain given slide');
+			throw Error('Deck does not contain the given slide');
 		}
 		if (!nextSlide.isActive) {
 			nextSlide.isActive = true;
+			// We return early because setting isActive will end up setting currentSlide again
 			return;
 		}
 
@@ -165,8 +170,8 @@ export class PresentationDeckElement extends HTMLElement {
 		this.shadowRoot.querySelector('span').textContent = this.currentIndex + 1;
 		copyNotes(this.shadowRoot.querySelector('ul'), nextSlide.notes);
 
-		this._currentSlide = nextSlide;
-		fireEvent(this, 'slidechange', { slide: nextSlide, previous: _currentSlide });
+		this.#currentSlide = nextSlide;
+		fireEvent(this, 'slidechange', { slide: nextSlide, previous: this.#currentSlide });
 		if (this.atEnd) {
 			fireEvent(this, 'finish');
 		}
@@ -188,6 +193,7 @@ export class PresentationDeckElement extends HTMLElement {
 		this.currentSlide = slide;
 	}
 
+	/** @type {NodeListOf<import('./slide.js').PresentationSlideElement>} */
 	get slides() {
 		return this.querySelectorAll('p-slide');
 	}
@@ -195,14 +201,13 @@ export class PresentationDeckElement extends HTMLElement {
 		if (this.currentIndex > 0) {
 			return false;
 		}
-		const firstSlide = this.slides[0];
-		return !firstSlide || !firstSlide.lastVisibleFragment;
+		return !this.slides[0]?.lastVisibleFragments;
 	}
 	get atEnd() {
 		const { slides } = this;
 		if (this.currentIndex < slides.length - 1) return false;
 		const lastSlide = slides[slides.length - 1];
-		return !lastSlide || !lastSlide.nextHiddenFragment;
+		return !lastSlide?.nextHiddenFragments;
 	}
 
 	#keyHandler = function (keyEvent) {
@@ -306,7 +311,7 @@ export class PresentationDeckElement extends HTMLElement {
 	get state() {
 		const state = {
 			currentIndex: this.currentIndex,
-			currentSlideFragmentVisibility: this.currentSlide.fragments.map(isFragmentVisible),
+			currentSlideFragmentVisibility: Array.from(this.currentSlide.fragments, isFragmentVisible),
 			clockElapsed: this.#clockElapsed,
 			clockStart: this.#clockStart
 		};
@@ -317,7 +322,7 @@ export class PresentationDeckElement extends HTMLElement {
 		this.#clockElapsed = state.clockElapsed;
 		this.#clockStart = state.clockStart;
 		this.currentSlide.fragments.forEach((fragment, index) => {
-			setFragmentVisibility(fragment, state.currentSlideFragmentVisibility[index]);
+			setFragmentVisibility(state.currentSlideFragmentVisibility[index])(fragment);
 		});
 	}
 
