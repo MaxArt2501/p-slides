@@ -1,4 +1,11 @@
-import { fireEvent, getSequencedFragments, isFragmentVisible, setFragmentVisibility, whenAllDefined } from '../utils.js';
+import {
+	fireEvent,
+	getSequencedFragments,
+	isFragmentVisible,
+	setCurrentFragments,
+	setFragmentVisibility,
+	whenAllDefined
+} from '../utils.js';
 
 let allDefined = false;
 whenAllDefined().then(() => (allDefined = true));
@@ -8,20 +15,12 @@ export class PresentationSlideElement extends HTMLElement {
 		return ['aria-current'];
 	}
 
-	#setCurrentFragments() {
-		this.fragmentSequence.forEach((fragments, index, lists) => {
-			const areCurrent = fragments.every(isFragmentVisible) && !lists[index + 1]?.every(isFragmentVisible);
-			// Only the last fragment of a block should be set as the current fragment
-			fragments.forEach((fragment, index) => (fragment.ariaCurrent = areCurrent && index === fragments.length - 1 ? 'step' : 'false'));
-		});
-	}
-
 	attributeChangedCallback(attribute, _, value) {
 		if (attribute === 'aria-current') {
 			const isActive = value === 'page';
 			this.ariaHidden = `${!isActive}`;
 			if (isActive) {
-				this.#setCurrentFragments();
+				setCurrentFragments(this);
 				if (this.deck) this.deck.currentSlide = this;
 			}
 		}
@@ -45,7 +44,7 @@ export class PresentationSlideElement extends HTMLElement {
 	}
 	set isActive(isActive) {
 		this.ariaCurrent = isActive ? 'page' : 'false';
-		if (isActive) this.#setCurrentFragments();
+		if (isActive) setCurrentFragments(this);
 	}
 
 	get isPrevious() {
@@ -79,7 +78,7 @@ export class PresentationSlideElement extends HTMLElement {
 		const hiddenFragments = this.nextHiddenFragments;
 		if (hiddenFragments) {
 			setFragmentVisibility(true)(...hiddenFragments);
-			this.#setCurrentFragments();
+			setCurrentFragments(this);
 			fireEvent(this, 'fragmenttoggle', {
 				fragments: hiddenFragments,
 				areVisible: false
@@ -96,7 +95,7 @@ export class PresentationSlideElement extends HTMLElement {
 		const visibleFragments = this.lastVisibleFragments;
 		if (visibleFragments) {
 			setFragmentVisibility(false)(...visibleFragments);
-			this.#setCurrentFragments();
+			setCurrentFragments(this);
 			fireEvent(this, 'fragmenttoggle', {
 				fragments: visibleFragments,
 				areVisible: true

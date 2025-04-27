@@ -7,10 +7,13 @@ import {
 	isSlide,
 	matchKey,
 	selectSlide,
+	setCurrentFragments,
 	setFragmentVisibility,
 	styleRoot,
 	whenAllDefined
 } from '../utils.js';
+
+/** @typedef {import('./slide.js').PresentationSlideElement} PresentationSlideElement */
 
 /** @type {Promise<CSSStyleSheet>>} */
 let stylesheet;
@@ -144,12 +147,12 @@ export class PresentationDeckElement extends HTMLElement {
 		return { width, height: width / aspectRatio };
 	}
 
-	/** @type {import('./slide.js').PresentationSlideElement | undefined} */
-	#currentSlide;
+	/** @type {PresentationSlideElement | null} */
+	#currentSlide = null;
 
-	/** @type {import('./slide.js').PresentationSlideElement | null} */
+	/** @type {PresentationSlideElement | null} */
 	get currentSlide() {
-		return this.querySelector('p-slide[aria-current="page"]');
+		return this.#currentSlide;
 	}
 	set currentSlide(nextSlide) {
 		if (this.#currentSlide === nextSlide) {
@@ -194,7 +197,7 @@ export class PresentationDeckElement extends HTMLElement {
 		this.currentSlide = slide;
 	}
 
-	/** @type {NodeListOf<import('./slide.js').PresentationSlideElement>} */
+	/** @type {NodeListOf<PresentationSlideElement>} */
 	get slides() {
 		return this.querySelectorAll('p-slide');
 	}
@@ -325,9 +328,11 @@ export class PresentationDeckElement extends HTMLElement {
 		this.currentIndex = state.currentIndex;
 		this.#clockElapsed = state.clockElapsed;
 		this.#clockStart = state.clockStart;
-		this.currentSlide.fragments.forEach((fragment, index) => {
+		const { currentSlide } = this;
+		currentSlide.fragments.forEach((fragment, index) => {
 			setFragmentVisibility(state.currentSlideFragmentVisibility[index])(fragment);
 		});
+		setCurrentFragments(currentSlide);
 	}
 
 	#preventBroadcast = false;

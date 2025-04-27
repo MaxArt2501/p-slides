@@ -1,18 +1,20 @@
 export const whenAllDefined = () => Promise.all(['p-deck', 'p-slide'].map(tag => customElements.whenDefined(tag)));
 
+/** @typedef {import('./components/slide.js').PresentationSlideElement} PresentationSlideElement */
+
 export let styleRoot = 'css/';
 /** @param {string} root */
 export const setStyleRoot = root => (styleRoot = root);
 
 /**
  * @param {unknown} element
- * @returns {element is import("./components/slide.js").PresentationSlideElement}
+ * @returns {element is PresentationSlideElement}
  */
 export const isSlide = element => element instanceof Element && element.localName === 'p-slide';
 
 /**
- * @param {import("./components/slide.js").PresentationSlideElement[]} slides
- * @param {import("./components/slide.js").PresentationSlideElement} nextSlide
+ * @param {PresentationSlideElement[]} slides
+ * @param {PresentationSlideElement} nextSlide
  */
 export const selectSlide = (slides, nextSlide) => {
 	let isPrevious = true;
@@ -23,6 +25,7 @@ export const selectSlide = (slides, nextSlide) => {
 			slide.isActive = false;
 			slide.isPrevious = isPrevious;
 			setFragmentVisibility(isPrevious)(...slide.fragments);
+			setCurrentFragments(slide);
 		}
 	}
 };
@@ -46,7 +49,6 @@ export const copyNotes = (noteContainer, notes) => {
 };
 
 /**
- *
  * @param {Element} noteContainer
  * @param {Element[]} notes
  */
@@ -109,6 +111,19 @@ export const setFragmentVisibility =
 	visible =>
 	(...elements) =>
 		elements.forEach(element => element.setAttribute('aria-hidden', String(!visible)));
+
+/** @param {PresentationSlideElement} slide */
+export const setCurrentFragments = slide => {
+	slide.fragmentSequence.forEach((fragments, index, blocks) => {
+		const areVisible = fragments.every(isFragmentVisible);
+		const areCurrent = areVisible && !blocks[index + 1]?.every(isFragmentVisible);
+		fragments.forEach((fragment, index) => {
+			fragment.toggleAttribute('previous', areVisible && !areCurrent);
+			// Only the last fragment of a block should be set as the current fragment
+			fragment.ariaCurrent = areCurrent && index === fragments.length - 1 ? 'step' : 'false';
+		});
+	});
+};
 
 /** @param {Element} notes */
 export const areNotesVisible = notes => (notes.closest('p-fragment, [p-fragment]')?.getAttribute('aria-hidden') ?? 'false') === 'false';
