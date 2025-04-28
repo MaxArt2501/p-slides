@@ -61,7 +61,7 @@ export class PresentationDeckElement extends HTMLElement {
 		this.attachShadow({ mode: 'open' });
 		this.shadowRoot.innerHTML = html`<slot></slot>
 			<aside>
-				<header><span></span><span></span> <time></time> <button type="button"></button> <button type="button"></button></header>
+				<header><span></span> <time></time> <button type="button"></button> <button type="button"></button></header>
 				<ul></ul>
 			</aside>`;
 		getStylesheet().then(style => {
@@ -69,8 +69,9 @@ export class PresentationDeckElement extends HTMLElement {
 			this.#computeFontSize();
 		});
 
-		this.shadowRoot.querySelector('button').addEventListener('click', this.toggleClock);
-		this.shadowRoot.querySelector('button:last-of-type').addEventListener('click', () => (this.clock = 0));
+		const [playButton, resetButton] = this.shadowRoot.querySelectorAll('button');
+		playButton.addEventListener('click', this.toggleClock);
+		resetButton.addEventListener('click', () => (this.clock = 0));
 
 		// Channel for state sync
 		this.#channel.addEventListener('message', ({ data }) => {
@@ -94,7 +95,7 @@ export class PresentationDeckElement extends HTMLElement {
 		this.ownerDocument.addEventListener('keydown', this.#keyHandler);
 		this.ownerDocument.defaultView.addEventListener('resize', this.#computeFontSize, { passive: true });
 		this.#clockInterval = this.ownerDocument.defaultView.setInterval(() => this.#updateClock(), 1000);
-		this.shadowRoot.querySelector('span:nth-child(2)').textContent = this.slides.length;
+		this.shadowRoot.querySelector('span').setAttribute('data-total', this.slides.length);
 		this.#updateClock();
 
 		whenAllDefined().then(() => {

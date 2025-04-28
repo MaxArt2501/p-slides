@@ -44,11 +44,9 @@ li[hidden] {
 	display: revert;
 	opacity: 0.5;
 }
-span:nth-child(2) {
+span::after {
 	font-size: 70%;
-}
-span:nth-child(2)::before {
-	content: '/';
+	content: '/' attr(data-total);
 }
 button {
 	background: none;
