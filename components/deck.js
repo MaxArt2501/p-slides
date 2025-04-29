@@ -50,7 +50,7 @@ export class PresentationDeckElement extends HTMLElement {
 		previous: [{ key: 'ArrowLeft' }, { key: 'ArrowUp' }],
 		toggleclock: [{ key: 'P' }, { key: 'p' }],
 		resetclock: [{ key: '0', altKey: true }],
-		toggleMode: [
+		togglemode: [
 			{ key: 'M', altKey: true },
 			{ key: 'm', altKey: true }
 		]
@@ -249,7 +249,7 @@ export class PresentationDeckElement extends HTMLElement {
 			case 'resetclock':
 				this.clock = 0;
 				break;
-			case 'toggleMode':
+			case 'togglemode':
 				this.mode = this.mode === 'speaker' ? 'presentation' : 'speaker';
 				break;
 		}
