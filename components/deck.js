@@ -355,6 +355,7 @@ export class PresentationDeckElement extends HTMLElement {
 			setFragmentVisibility(state.currentSlideFragmentVisibility[index])(fragment);
 		});
 		setCurrentFragments(currentSlide);
+		this.#updateClock();
 	}
 
 	#preventBroadcast = false;
