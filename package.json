@@ -1,15 +1,16 @@
 {
-  "name": "p-slides",
-  "version": "0.2.0",
-  "description": "Presentation framework using Web Components",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": {
-    "name": "Massimo Artizzu",
-    "email": "maxart.x@gmail.com"
-  },
-  "license": "MIT"
+	"name": "p-slides",
+	"version": "0.2.0",
+	"description": "Presentation framework using Web Components",
+	"main": "index.js",
+	"type": "module",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"keywords": [],
+	"author": {
+		"name": "Massimo Artizzu",
+		"email": "maxart.x@gmail.com"
+	},
+	"license": "MIT"
 }

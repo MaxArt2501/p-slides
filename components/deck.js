@@ -3,6 +3,7 @@ import {
 	copyNotes,
 	fireEvent,
 	formatClock,
+	getLabel,
 	isFragmentVisible,
 	isSlide,
 	matchKey,
@@ -55,13 +56,27 @@ export class PresentationDeckElement extends HTMLElement {
 		]
 	};
 
+	labels = {
+		ELAPSED_TIME: 'Elapsed time',
+		TIMER_START: 'Start the timer',
+		TIMER_PAUSE: 'Pause the timer',
+		TIMER_RESET: 'Reset the timer',
+		/** @param {PresentationDeckElement} deck */
+		SLIDE_COUNTER: deck => `Slide ${deck.currentIndex + 1} of ${deck.slides.length}`
+	};
+
 	constructor() {
 		super();
 
 		this.attachShadow({ mode: 'open' });
 		this.shadowRoot.innerHTML = html`<slot></slot>
 			<aside>
-				<header><span></span> <time></time> <button type="button"></button> <button type="button"></button></header>
+				<header>
+					<span></span>
+					<time role="timer" aria-label="${getLabel(this, 'ELAPSED_TIME')}" aria-atomic="true" aria-busy="false"></time>
+					<button type="button" aria-label="${getLabel(this, 'TIMER_START')}"></button>
+					<button type="button" aria-label="${getLabel(this, 'TIMER_RESET')}"></button>
+				</header>
 				<ul></ul>
 			</aside>`;
 		getStylesheet().then(style => {
@@ -94,7 +109,9 @@ export class PresentationDeckElement extends HTMLElement {
 	connectedCallback() {
 		this.ownerDocument.addEventListener('keydown', this.#keyHandler);
 		this.ownerDocument.defaultView.addEventListener('resize', this.#computeFontSize, { passive: true });
-		this.#clockInterval = this.ownerDocument.defaultView.setInterval(() => this.#updateClock(), 1000);
+		this.#clockInterval = this.ownerDocument.defaultView.setInterval(() => {
+			if (this.isClockRunning) this.#updateClock();
+		}, 1000);
 		this.shadowRoot.querySelector('span').setAttribute('data-total', this.slides.length);
 		this.#updateClock();
 
@@ -172,7 +189,9 @@ export class PresentationDeckElement extends HTMLElement {
 		}
 
 		selectSlide(this.slides, nextSlide);
-		this.shadowRoot.querySelector('span').textContent = this.currentIndex + 1;
+		const counter = this.shadowRoot.querySelector('span');
+		counter.textContent = this.currentIndex + 1;
+		counter.ariaLabel = getLabel(this, 'SLIDE_COUNTER');
 		copyNotes(this.shadowRoot.querySelector('ul'), nextSlide.notes);
 
 		this.#currentSlide = nextSlide;
@@ -265,7 +284,8 @@ export class PresentationDeckElement extends HTMLElement {
 
 	startClock() {
 		this.#clockStart = Date.now();
-		this.shadowRoot.querySelector('time').setAttribute('running', '');
+		this.shadowRoot.querySelector('time').ariaBusy = 'true';
+		this.shadowRoot.querySelector('button').ariaLabel = getLabel(this, 'TIMER_PAUSE');
 		fireEvent(this, 'clockstart', { timestamp: this.#clockStart, elapsed: this.#clockElapsed });
 		this.broadcastState();
 	}
@@ -275,7 +295,8 @@ export class PresentationDeckElement extends HTMLElement {
 			this.#clockElapsed += Date.now() - this.#clockStart;
 		}
 		this.#clockStart = null;
-		this.shadowRoot.querySelector('time').removeAttribute('running');
+		this.shadowRoot.querySelector('time').ariaBusy = 'false';
+		this.shadowRoot.querySelector('button').ariaLabel = getLabel(this, 'TIMER_START');
 		fireEvent(this, 'clockstop', { elapsed: this.#clockElapsed });
 		this.broadcastState();
 	}

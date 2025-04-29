@@ -158,3 +158,12 @@ export const getSequencedFragments = fragments => {
 	}
 	return sorted;
 };
+
+/**
+ * @param {C} context
+ * @param {keyof T} name
+ * @template {{ labels: T}} C
+ * @template {Record<string, string | (context: C) => string>} T
+ */
+export const getLabel = (context, name) =>
+	typeof context.labels[name] === 'string' ? context.labels[name] : context.labels[name](context);
