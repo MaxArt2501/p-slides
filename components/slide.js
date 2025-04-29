@@ -81,7 +81,7 @@ export class PresentationSlideElement extends HTMLElement {
 			setCurrentFragments(this);
 			fireEvent(this, 'fragmenttoggle', {
 				fragments: hiddenFragments,
-				areVisible: false
+				areVisible: true
 			});
 			this.deck?.broadcastState();
 			return false;
@@ -98,7 +98,7 @@ export class PresentationSlideElement extends HTMLElement {
 			setCurrentFragments(this);
 			fireEvent(this, 'fragmenttoggle', {
 				fragments: visibleFragments,
-				areVisible: true
+				areVisible: false
 			});
 			this.deck?.broadcastState();
 			return false;
