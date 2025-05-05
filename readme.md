@@ -223,14 +223,13 @@ All of the following can be `import`ed from `index.js`.
 
 ### `registerElements(): Promise<void[]>`
 
-Register the library's custom elements, i.e. calls `customElements.define` on each of them, and returns a promise which
-is resolved when the registration is complete (should be immediate).
+Register the library's custom elements, i.e. calls `customElements.define` on each of them, and returns a promise that
+resolves when the registration is complete (should be immediate).
 
 ### `setStyleRoot(root: string): void`
 
-The custom elements will start loading their stylesheet at the default location of `css/`. For example, the deck will
-load `css/deck.css`, the slide `css/slide.css` and so on. You can change that _before instantiating them_ using this
-method.
+The `<p-deck>` element will start loading its stylesheet at the default location of `css/`, if nothing has been set on
+`PresentationDeckElement.styles`. You can change that _before defining or instantiating_ a `<p-deck>` element.
 
 Don't forget the final slash! Or do, if you want to provide a prefix for the file names.
 
@@ -384,7 +383,7 @@ backward in the presentation.
 
 It's discouraged to set it manually.
 
-##### `readonly fragments: Element[]`
+##### `readonly fragments: NodeListOf<Element>`
 
 The list of the fragment elements as they appear in the slide's markup.
 
@@ -400,7 +399,7 @@ The next group of fragments that will be shown when advancing the presentation, 
 
 The last group of fragments that has been shown when advancing the presentation, if any.
 
-##### `readonly notes: Element[]`
+##### `readonly notes: NodeListOf<Element>`
 
 The list of the speaker notes as they appear in the slide's markup.
 

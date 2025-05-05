@@ -12,5 +12,9 @@
 		"name": "Massimo Artizzu",
 		"email": "maxart.x@gmail.com"
 	},
-	"license": "MIT"
+	"license": "MIT",
+	"types": "lib.d.ts",
+	"devDependencies": {
+		"typescript": "^5.8.3"
+	}
 }

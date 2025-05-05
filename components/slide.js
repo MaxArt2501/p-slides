@@ -10,11 +10,18 @@ import {
 let allDefined = false;
 whenAllDefined().then(() => (allDefined = true));
 
+/** @typedef {import('../declarations.js').PresentationFragmentToggleEvent} PresentationFragmentToggleEvent */
+
+/**
+ * The class corresponding to the `<p-slide>` element.
+ */
 export class PresentationSlideElement extends HTMLElement {
+	/** @internal */
 	static get observedAttributes() {
 		return ['aria-current'];
 	}
 
+	/** @internal */
 	attributeChangedCallback(attribute, _, value) {
 		if (attribute === 'aria-current') {
 			const isActive = value === 'page';
@@ -26,6 +33,7 @@ export class PresentationSlideElement extends HTMLElement {
 		}
 	}
 
+	/** @internal */
 	connectedCallback() {
 		this.ariaHidden = `${!this.isActive}`;
 		this.querySelectorAll('p-fragment, [p-fragment]').forEach(fragment => {
@@ -34,11 +42,20 @@ export class PresentationSlideElement extends HTMLElement {
 		});
 	}
 
-	/** @type {import('./deck.js').PresentationDeckElement | null} */
+	/**
+	 * The parent presentation deck.
+	 * @type {import('./deck.js').PresentationDeckElement | null}
+	 */
 	get deck() {
 		return allDefined ? this.closest('p-deck') : null;
 	}
 
+	/**
+	 * Whether the slide is the current one in the presentation. This will set the `aria-current` attribute to either
+	 * `'page'` or `'false'`.
+	 *
+	 * It's discouraged to set it manually.
+	 */
 	get isActive() {
 		return this.ariaCurrent === 'page';
 	}
@@ -47,6 +64,13 @@ export class PresentationSlideElement extends HTMLElement {
 		if (isActive) setCurrentFragments(this);
 	}
 
+	/**
+	 * Whether the slide is past the current one in the presentation. This will set a `previous` attribute on the
+	 * `<p-slide>` element, that can be used for styling purposes. A slide can be the current one _and_ marked as
+	 * "previous" when going backward in the presentation.
+	 *
+	 * It's discouraged to set it manually.
+	 */
 	get isPrevious() {
 		return this.hasAttribute('previous');
 	}
@@ -54,26 +78,48 @@ export class PresentationSlideElement extends HTMLElement {
 		this.toggleAttribute('previous', isPrevious);
 	}
 
+	/**
+	 * The list of the fragment elements as they appear in the slide's markup.
+	 */
 	get fragments() {
 		return this.querySelectorAll('p-fragment, [p-fragment]');
 	}
 
+	/**
+	 * The fragments grouped using their indexes.
+	 */
 	get fragmentSequence() {
 		return getSequencedFragments(this.fragments);
 	}
 
+	/**
+	 * The next group of fragments that will be shown when advancing the presentation, if any.
+	 * @type {Element[] | undefined}
+	 */
 	get nextHiddenFragments() {
 		return this.fragmentSequence.find(fragments => !fragments.every(isFragmentVisible));
 	}
 
+	/**
+	 * The last group of fragments that has been shown when advancing the presentation, if any.
+	 * @type {Element[] | undefined}
+	 */
 	get lastVisibleFragments() {
 		return this.fragmentSequence.findLast(fragments => fragments.every(isFragmentVisible));
 	}
 
+	/**
+	 * The list of the speaker notes as they appear in the slide's markup.
+	 */
 	get notes() {
 		return this.querySelectorAll('p-notes, [p-notes]');
 	}
 
+	/**
+	 * Attempts to advance the presentation by showing a new block of fragments on the current slide. It returns `true` if
+	 * no fragments are left to show in the current slide (the deck will advance to the next slide).
+	 * @fires {PresentationFragmentToggleEvent} p-slides.fragmenttoggle - If a set of fragments has been toggled
+	 */
 	next() {
 		const hiddenFragments = this.nextHiddenFragments;
 		if (hiddenFragments) {
@@ -91,6 +137,11 @@ export class PresentationSlideElement extends HTMLElement {
 		return true;
 	}
 
+	/**
+	 * Attempts to bring the presentation back by hiding the last shown block of fragments on the current slide. It
+	 * returns `true` if no fragments are left to hide in the current slide (the deck will go back to the previous slide).
+	 * @fires {PresentationFragmentToggleEvent} p-slides.fragmenttoggle - If a set of fragments has been toggled
+	 */
 	previous() {
 		const visibleFragments = this.lastVisibleFragments;
 		if (visibleFragments) {

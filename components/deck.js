@@ -15,6 +15,11 @@ import {
 } from '../utils.js';
 
 /** @typedef {import('./slide.js').PresentationSlideElement} PresentationSlideElement */
+/** @typedef {import('../declarations.js').PresentationSlideChangeEvent} PresentationSlideChangeEvent */
+/** @typedef {import('../declarations.js').PresentationFinishEvent} PresentationFinishEvent */
+/** @typedef {import('../declarations.js').PresentationClockStartEvent} PresentationClockStartEvent */
+/** @typedef {import('../declarations.js').PresentationClockStopEvent} PresentationClockStopEvent */
+/** @typedef {import('../declarations.js').PresentationClockSetEvent} PresentationClockSetEvent */
 
 /** @type {Promise<CSSStyleSheet>>} */
 let stylesheet;
@@ -38,6 +43,10 @@ export const getStylesheet = () => {
 
 const html = String.raw;
 
+/**
+ * The class corresponding to the `<p-deck>` element wrapper. You'll mostly have to interact with this to manage the
+ * presentation.
+ */
 export class PresentationDeckElement extends HTMLElement {
 	#clockElapsed = 0;
 	#clockStart = null;
@@ -45,6 +54,10 @@ export class PresentationDeckElement extends HTMLElement {
 
 	#channel = new BroadcastChannel('p-slides');
 
+	/**
+	 * Deck commands mapped to their key bindings.
+	 * @type {Record<import('../declarations.js').KeyCommand, Array<Partial<KeyboardEvent>>>}
+	 */
 	keyCommands = {
 		next: [{ key: 'ArrowRight' }, { key: 'ArrowDown' }],
 		previous: [{ key: 'ArrowLeft' }, { key: 'ArrowUp' }],
@@ -56,6 +69,10 @@ export class PresentationDeckElement extends HTMLElement {
 		]
 	};
 
+	/**
+	 * Labels used in speaker mode for accessibility.
+	 * @type {Record<import('../declarations.js').PresentationDeckLabelName, import('../declarations.js').PresentationLabel<PresentationDeckElement>>>}
+	 */
 	labels = {
 		ELAPSED_TIME: 'Elapsed time',
 		TIMER_START: 'Start the timer',
@@ -106,6 +123,7 @@ export class PresentationDeckElement extends HTMLElement {
 		this.#preventBroadcast = false;
 	}
 
+	/** @internal */
 	connectedCallback() {
 		this.ownerDocument.addEventListener('keydown', this.#keyHandler);
 		this.ownerDocument.defaultView.addEventListener('resize', this.#computeFontSize, { passive: true });
@@ -121,6 +139,7 @@ export class PresentationDeckElement extends HTMLElement {
 		});
 	}
 
+	/** @internal */
 	disconnectedCallback() {
 		this.ownerDocument.removeEventListener('keydown', this.#keyHandler);
 		this.ownerDocument.defaultView.removeEventListener('resize', this.#computeFontSize);
@@ -129,6 +148,14 @@ export class PresentationDeckElement extends HTMLElement {
 		this.stopClock();
 	}
 
+	/**
+	 * Getter/setter of current deck mode. It reflects the same named attribute value _if_ it's either `'presentation'` or
+	 * `'speaker'` (defaults to the former). Also sets it when assigning.
+	 *
+	 * Operatively speaking, changing the deck mode does _nothing_. Its only purpose is to apply a different style to the
+	 * presentation, i.e. either the 'normal' or the 'speaker' mode. If you provide your own stylesheet without a specific
+	 * style for the speaker mode then eh, you're on your own.
+	 */
 	get mode() {
 		const attrValue = this.getAttribute('mode');
 		return ['presentation', 'speaker'].includes(attrValue) ? attrValue : 'presentation';
@@ -168,7 +195,12 @@ export class PresentationDeckElement extends HTMLElement {
 	/** @type {PresentationSlideElement | null} */
 	#currentSlide = null;
 
-	/** @type {PresentationSlideElement | null} */
+	/**
+	 * Getter/setter for the slide element marked as 'current'. When setting, it _must_ be a `<p-slide>` elements descendant
+	 * of the deck.
+	 * @fires {PresentationSlideChangeEvent} p-slides.slidechange - When setting the value
+	 * @fires {PresentationFinishEvent} p-slides.finish - When reaching the end of the presentation
+	 */
 	get currentSlide() {
 		return this.#currentSlide;
 	}
@@ -202,6 +234,10 @@ export class PresentationDeckElement extends HTMLElement {
 		this.broadcastState();
 	}
 
+	/**
+	 * Getter/setter of index of the current slide.
+	 * @type {number}
+	 */
 	get currentIndex() {
 		return [...this.slides].findIndex(slide => slide.isActive);
 	}
@@ -217,16 +253,26 @@ export class PresentationDeckElement extends HTMLElement {
 		this.currentSlide = slide;
 	}
 
-	/** @type {NodeListOf<PresentationSlideElement>} */
+	/**
+	 * At the moment, it's just a `querySelectorAll('p-slide')` executed on the deck's host element.
+	 * @type {NodeListOf<PresentationSlideElement>}
+	 */
 	get slides() {
 		return this.querySelectorAll('p-slide');
 	}
+
+	/**
+	 * It's `true` if and only if the presentation is at the start.
+	 */
 	get atStart() {
 		if (this.currentIndex > 0) {
 			return false;
 		}
 		return !this.slides[0]?.lastVisibleFragments;
 	}
+	/**
+	 * It's `true` if and only if the presentation is at the end.
+	 */
 	get atEnd() {
 		const { slides } = this;
 		if (this.currentIndex < slides.length - 1) return false;
@@ -255,6 +301,10 @@ export class PresentationDeckElement extends HTMLElement {
 		}
 	}.bind(this);
 
+	/**
+	 * Advances the presentation, either by showing a new fragment on the current slide, or switching to the next slide.
+	 * @fires {PresentationFinishEvent} p-slides.finish - When reaching the end of the presentation
+	 */
 	next() {
 		if (!this.atEnd) {
 			const { currentIndex, currentSlide } = this;
@@ -270,6 +320,10 @@ export class PresentationDeckElement extends HTMLElement {
 		}
 	}
 
+	/**
+	 * Brings the presentation back, either by hiding the last shown fragment on the current slide, or switching to the
+	 * previous slide.
+	 */
 	previous() {
 		if (!this.atStart) {
 			const { currentIndex, currentSlide } = this;
@@ -282,6 +336,10 @@ export class PresentationDeckElement extends HTMLElement {
 		}
 	}
 
+	/**
+	 * Starts the timer.
+	 * @fires {PresentationClockStartEvent} p-slides.clockstart
+	 */
 	startClock() {
 		this.#clockStart = Date.now();
 		this.shadowRoot.querySelector('time').ariaBusy = 'true';
@@ -290,6 +348,10 @@ export class PresentationDeckElement extends HTMLElement {
 		this.broadcastState();
 	}
 
+	/**
+	 * Stops the timer.
+	 * @fires {PresentationClockStopEvent} p-slides.clockstop
+	 */
 	stopClock() {
 		if (this.isClockRunning) {
 			this.#clockElapsed += Date.now() - this.#clockStart;
@@ -301,6 +363,11 @@ export class PresentationDeckElement extends HTMLElement {
 		this.broadcastState();
 	}
 
+	/**
+	 * Toggles the timer.
+	 * @fires {PresentationClockStartEvent} p-slides.clockstart - If the timer starts
+	 * @fires {PresentationClockStopEvent} p-slides.clockstop - If the timer stops
+	 */
 	toggleClock = /** @this {PresentationDeckElement} */ function () {
 		if (this.isClockRunning) {
 			this.stopClock();
@@ -316,6 +383,10 @@ export class PresentationDeckElement extends HTMLElement {
 		time.dateTime = `PT${parts[0]}H${parts[1]}M${parts[2]}S`;
 	}
 
+	/**
+	 * The amount of milliseconds on the timer.
+	 * @fires {PresentationClockSetEvent} p-slides.clockset
+	 */
 	get clock() {
 		return this.#clockElapsed + (this.isClockRunning ? Date.now() - this.#clockStart : 0);
 	}
@@ -333,10 +404,19 @@ export class PresentationDeckElement extends HTMLElement {
 		}
 	}
 
+	/**
+	 * It's `true` if and only if the timer is not paused.
+	 */
 	get isClockRunning() {
 		return this.#clockStart !== null;
 	}
 
+	/**
+	 * An object that represents the presentation's state. Although exposed, handle it with caution, as changes may not be
+	 * reflected on the view or a second window. Use the method `broadcastState()` to send an updated state to a second
+	 * view.
+	 * @type {import('../declarations.js').PresentationState}
+	 */
 	get state() {
 		const state = {
 			currentIndex: this.currentIndex,
@@ -360,12 +440,18 @@ export class PresentationDeckElement extends HTMLElement {
 
 	#preventBroadcast = false;
 
+	/**
+	 * Sends the current presentation's state to other windows/tabs open on the presentation.
+	 */
 	broadcastState() {
 		if (!this.#preventBroadcast) {
 			this.#channel.postMessage(this.state);
 		}
 	}
 
+	/**
+	 * Retrieves the presentation's state from other windows/tabs open on the presentation.
+	 */
 	requestState() {
 		this.#channel.postMessage(null);
 	}

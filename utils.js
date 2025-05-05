@@ -3,8 +3,17 @@ export const whenAllDefined = () => Promise.all(['p-deck', 'p-slide'].map(tag =>
 /** @typedef {import('./components/slide.js').PresentationSlideElement} PresentationSlideElement */
 
 export let styleRoot = 'css/';
-/** @param {string} root */
-export const setStyleRoot = root => (styleRoot = root);
+
+/**
+ * The `<p-deck>` element will start loading its stylesheet at the default location of `css/`, if nothing has been set
+ * on `PresentationDeckElement.styles`. You can change that _before defining or instantiating_ a `<p-deck>` element.
+ *
+ * Don't forget the final slash! Or do, if you want to provide a prefix for the file names.
+ * @param {string} root
+ */
+export function setStyleRoot(root) {
+	styleRoot = root;
+}
 
 /**
  * @param {unknown} element
@@ -74,9 +83,15 @@ export const matchKey = (keyEvent, keyMap) => {
 };
 
 /**
+ * @typedef {{
+ * 	[E in keyof HTMLElementEventMap]: E extends `p-slides.${infer N}` ? N : never;
+ * }[keyof HTMLElementEventMap]} PresentationEventSimpleName
+ */
+/**
  * @param {EventTarget} target
- * @param {string} eventName
- * @param {*} detail
+ * @param {N} eventName
+ * @param {HTMLElementEventMap[`p-slides.${N}`]['detail']} detail
+ * @template {PresentationEventSimpleName} N
  */
 export const fireEvent = (target, eventName, detail = {}) => {
 	const event = new CustomEvent(`p-slides.${eventName}`, { bubbles: true, detail });
@@ -129,7 +144,7 @@ export const setCurrentFragments = slide => {
 export const areNotesVisible = notes => (notes.closest('p-fragment, [p-fragment]')?.getAttribute('aria-hidden') ?? 'false') === 'false';
 
 /**
- * @param {Iterable<Element>} fragments
+ * @param {ArrayLike<Element>} fragments
  * @returns {Element[][]}
  */
 export const getSequencedFragments = fragments => {

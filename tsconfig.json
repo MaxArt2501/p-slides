@@ -1,0 +1,12 @@
+{
+	"include": ["./index.js"],
+	"compilerOptions": {
+		"allowJs": true,
+		"declaration": true,
+		"emitDeclarationOnly": true,
+		"strict": true,
+		"stripInternal": true,
+		"target": "ESNext",
+		"lib": ["DOM", "DOM.Iterable", "Es2023"]
+	}
+}
