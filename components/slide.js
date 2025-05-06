@@ -1,5 +1,6 @@
 import {
 	fireEvent,
+getNotes,
 	getSequencedFragments,
 	isFragmentVisible,
 	setCurrentFragments,
@@ -112,7 +113,7 @@ export class PresentationSlideElement extends HTMLElement {
 	 * The list of the speaker notes as they appear in the slide's markup.
 	 */
 	get notes() {
-		return this.querySelectorAll('p-notes, [p-notes]');
+		return getNotes(this);
 	}
 
 	/**

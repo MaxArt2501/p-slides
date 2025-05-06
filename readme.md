@@ -160,18 +160,20 @@ The timer can be started and paused using the key <kbd>P</kbd>, and reset with <
 ### Notes
 
 You can set up speaker notes for each slide. They will appear on the right of the speaker mode. In order to define them
-you need to either use the `<p-notes>` element or the `p-notes` attribute. Notes in a fragment will initially appear as
-hidden/faded:
+you need to either use the `<p-notes>` element, an element with the `p-notes` attribute set, or a HTML comment starting
+with `<!---` (meaning `<!` followed by _three_ dashes). Notes inside a fragment will initially appear as hidden/faded:
 
 ```html
 <p-slide>
 	<p>This will have some notes</p>
 	<p-notes>Notes are a help for the speaker</p-notes>
-	<div p-notes>Don't write too much in them</div>
+	<div p-notes>Don't write too much in them (but you <em>can</em> use HTML inside)</div>
 	<div p-fragment>
 		Switch to the spearker mode to see them
 		<p p-notes>The key combination is Alt-M by default</p>
 	</div>
+	<!--- Comment notes can only hold simple text -->
+	<!-- This is a regular HTML comment and won't appear as a speaker note -->
 </p-slide>
 ```
 
@@ -411,7 +413,7 @@ The next group of fragments that will be shown when advancing the presentation, 
 
 The last group of fragments that has been shown when advancing the presentation, if any.
 
-##### `readonly notes: NodeListOf<Element>`
+##### `readonly notes: Array<Element | Comment>`
 
 The list of the speaker notes as they appear in the slide's markup.
 

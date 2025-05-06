@@ -47,8 +47,22 @@ export const selectSlide = (slides, nextSlide) => {
 };
 
 /**
+ * @param {Node} root
+ * @returns {Array<Element | Comment>}
+ */
+export function getNotes(root) {
+	if (root instanceof Element) {
+		return root.matches('p-notes, [p-notes]') ? [root] : Array.from(root.childNodes).flatMap(getNotes);
+	}
+	if (root instanceof Comment) {
+		return root.nodeValue.startsWith('-') ? [root] : [];
+	}
+	return [];
+}
+
+/**
  * @param {Element} noteContainer
- * @param {Element[]} notes
+ * @param {Array<Element | Comment>} notes
  */
 export const copyNotes = (noteContainer, notes) => {
 	while (noteContainer.lastChild) {
@@ -56,9 +70,11 @@ export const copyNotes = (noteContainer, notes) => {
 	}
 	for (const note of notes) {
 		const li = noteContainer.ownerDocument.createElement('li');
-		for (const child of note.childNodes) {
-			li.appendChild(child.cloneNode(true));
-		}
+		if (note instanceof Element)
+			for (const child of note.childNodes) {
+				li.appendChild(child.cloneNode(true));
+			}
+		else li.textContent = note.nodeValue.slice(1);
 		noteContainer.appendChild(li);
 	}
 	checkNoteActivations(noteContainer, notes);
@@ -66,11 +82,11 @@ export const copyNotes = (noteContainer, notes) => {
 
 /**
  * @param {Element} noteContainer
- * @param {Element[]} notes
+ * @param {Array<Element | Comment>} notes
  */
 export const checkNoteActivations = (noteContainer, notes) => {
 	notes.forEach((note, index) => {
-		noteContainer.children[index].hidden = !areNotesVisible(note);
+		noteContainer.children[index].hidden = !isNoteVisible(note);
 	});
 };
 
@@ -147,8 +163,10 @@ export const setCurrentFragments = slide => {
 	});
 };
 
-/** @param {Element} notes */
-export const areNotesVisible = notes => (notes.closest('p-fragment, [p-fragment]')?.getAttribute('aria-hidden') ?? 'false') === 'false';
+/** @param {Element | Comment} note */
+const isNoteVisible = note =>
+	((note instanceof Element ? note : note.parentElement).closest('p-fragment, [p-fragment]')?.getAttribute('aria-hidden') ?? 'false') ===
+	'false';
 
 /**
  * @param {ArrayLike<Element>} fragments
