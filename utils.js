@@ -21,6 +21,13 @@ export function setStyleRoot(root) {
  */
 export const isSlide = element => element instanceof Element && element.localName === 'p-slide';
 
+/** @param {string} source */
+export const parseStylesheet = source => {
+	const styleSheet = new CSSStyleSheet();
+	styleSheet.replaceSync(source);
+	return styleSheet.cssRules.length || source.includes('\n') ? styleSheet : null;
+};
+
 /**
  * @param {PresentationSlideElement[]} slides
  * @param {PresentationSlideElement} nextSlide
