@@ -258,6 +258,8 @@ export class PresentationDeckElement extends HTMLElement {
 
 	/**
 	 * Getter/setter of index of the current slide.
+	 * @fires {PresentationSlideChangeEvent} p-slides.slidechange - When setting the value
+	 * @fires {PresentationFinishEvent} p-slides.finish - When reaching the end of the presentation
 	 */
 	get currentIndex() {
 		return [...this.slides].findIndex(slide => slide.isActive);

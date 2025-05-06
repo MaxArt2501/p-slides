@@ -1,6 +1,7 @@
+/// <reference lib="es2023.array" />
 import {
 	fireEvent,
-getNotes,
+	getNotes,
 	getSequencedFragments,
 	isFragmentVisible,
 	setCurrentFragments,
@@ -45,7 +46,6 @@ export class PresentationSlideElement extends HTMLElement {
 
 	/**
 	 * The parent presentation deck.
-	 * @type {import('./deck.js').PresentationDeckElement | null}
 	 */
 	get deck() {
 		return allDefined ? this.closest('p-deck') : null;
@@ -95,7 +95,6 @@ export class PresentationSlideElement extends HTMLElement {
 
 	/**
 	 * The next group of fragments that will be shown when advancing the presentation, if any.
-	 * @type {Element[] | undefined}
 	 */
 	get nextHiddenFragments() {
 		return this.fragmentSequence.find(fragments => !fragments.every(isFragmentVisible));
@@ -103,7 +102,6 @@ export class PresentationSlideElement extends HTMLElement {
 
 	/**
 	 * The last group of fragments that has been shown when advancing the presentation, if any.
-	 * @type {Element[] | undefined}
 	 */
 	get lastVisibleFragments() {
 		return this.fragmentSequence.findLast(fragments => fragments.every(isFragmentVisible));
