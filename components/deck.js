@@ -306,7 +306,12 @@ export class PresentationDeckElement extends HTMLElement {
 		return !lastSlide?.nextHiddenFragments;
 	}
 
-	#keyHandler = /** @this {PresentationDeckElement} */ function (keyEvent) {
+	#keyHandler = /**
+	 * @this {PresentationDeckElement}
+	 * @param {KeyboardEvent} keyEvent
+	 */ function (keyEvent) {
+		const [realTarget] = /** @type {Element[]} */ (keyEvent.composedPath());
+		if (realTarget.isContentEditable || ['input', 'select', 'textarea'].includes(realTarget.localName)) return;
 		const command = matchKey(keyEvent, this.keyCommands);
 		switch (command) {
 			case 'previous':
