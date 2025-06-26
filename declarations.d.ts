@@ -2,7 +2,16 @@ import { PresentationDeckElement } from './components/deck.js';
 import { PresentationSlideElement } from './components/slide.js';
 
 export type KeyMatcher = Partial<KeyboardEvent>;
-export type KeyCommand = 'next' | 'previous' | 'toggleclock' | 'resetclock' | 'togglemode';
+export type KeyCommand =
+	| 'next'
+	| 'previous'
+	| 'nextslide'
+	| 'previousslide'
+	| 'gotostart'
+	| 'gotoend'
+	| 'toggleclock'
+	| 'resetclock'
+	| 'togglemode';
 
 export interface PresentationState {
 	currentIndex: number;

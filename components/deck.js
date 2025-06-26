@@ -82,6 +82,10 @@ export class PresentationDeckElement extends HTMLElement {
 	keyCommands = {
 		next: [{ key: 'ArrowRight' }, { key: 'ArrowDown' }],
 		previous: [{ key: 'ArrowLeft' }, { key: 'ArrowUp' }],
+		nextslide: [{ key: 'PageDown' }],
+		previousslide: [{ key: 'PageUp' }],
+		gotostart: [{ key: 'Home' }],
+		gotoend: [{ key: 'End' }],
 		toggleclock: [{ key: 'P' }, { key: 'p' }],
 		resetclock: [{ key: '0', altKey: true }],
 		togglemode: [
@@ -302,7 +306,7 @@ export class PresentationDeckElement extends HTMLElement {
 		return !lastSlide?.nextHiddenFragments;
 	}
 
-	#keyHandler = function (keyEvent) {
+	#keyHandler = /** @this {PresentationDeckElement} */ function (keyEvent) {
 		const command = matchKey(keyEvent, this.keyCommands);
 		switch (command) {
 			case 'previous':
@@ -310,6 +314,20 @@ export class PresentationDeckElement extends HTMLElement {
 				break;
 			case 'next':
 				this.next();
+				break;
+			case 'previousslide':
+				this.previousSlide();
+				break;
+			case 'nextslide':
+				this.nextSlide();
+				break;
+			case 'gotostart':
+				this.currentIndex = 0;
+				this.previousSlide();
+				break;
+			case 'gotoend':
+				this.currentIndex = this.slides.length - 1;
+				this.nextSlide();
 				break;
 			case 'toggleclock':
 				this.toggleClock();
@@ -326,18 +344,18 @@ export class PresentationDeckElement extends HTMLElement {
 	/**
 	 * Advances the presentation, either by showing a new fragment on the current slide, or switching to the next slide.
 	 * @fires {PresentationFinishEvent} p-slides.finish - When reaching the end of the presentation
+	 * @fires {PresentationSlideChangeEvent} p-slides.slidechange - If the presentation advances to the next slide.
 	 */
 	next() {
-		if (!this.atEnd) {
-			const { currentIndex, currentSlide } = this;
-			const goToNext = currentSlide.next();
-			if (goToNext) {
-				this.slides[currentIndex + 1].isActive = true;
-			} else {
-				checkNoteActivations(this.shadowRoot.querySelector('ul'), currentSlide.notes);
-				if (this.atEnd) {
-					fireEvent(this, 'finish');
-				}
+		if (this.atEnd) return;
+		const { currentIndex, currentSlide } = this;
+		const goToNext = currentSlide.next();
+		if (goToNext) {
+			this.slides[currentIndex + 1].isActive = true;
+		} else {
+			this.#checkNotes();
+			if (this.atEnd) {
+				fireEvent(this, 'finish');
 			}
 		}
 	}
@@ -345,17 +363,52 @@ export class PresentationDeckElement extends HTMLElement {
 	/**
 	 * Brings the presentation back, either by hiding the last shown fragment on the current slide, or switching to the
 	 * previous slide.
+	 * @fires {PresentationSlideChangeEvent} p-slides.slidechange - If the presentation returns to the previous slide.
 	 */
 	previous() {
-		if (!this.atStart) {
-			const { currentIndex, currentSlide } = this;
-			const goToPrevious = currentSlide.previous();
-			if (goToPrevious) {
-				this.slides[currentIndex - 1].isActive = true;
-			} else {
-				checkNoteActivations(this.shadowRoot.querySelector('ul'), currentSlide.notes);
-			}
+		if (this.atStart) return;
+		const { currentIndex, currentSlide } = this;
+		const goToPrevious = currentSlide.previous();
+		if (goToPrevious) {
+			this.slides[currentIndex - 1].isActive = true;
+		} else {
+			this.#checkNotes();
 		}
+	}
+
+	/**
+	 * Advances the presentation to the next slide, if possible.
+	 * @fires {PresentationSlideChangeEvent} p-slides.slidechange - If the current slide isn't the last one
+	 * @fires {PresentationFinishEvent} p-slides.finish - When reaching the end of the presentation
+	 */
+	nextSlide() {
+		const { currentIndex, slides } = this;
+		if (currentIndex < slides.length - 1) {
+			this.currentSlide = slides[currentIndex + 1];
+			if (this.atEnd) fireEvent(this, 'finish');
+		} else if (!this.atEnd) {
+			setFragmentVisibility(true)(...this.currentSlide.fragments);
+			this.#checkNotes();
+			fireEvent(this, 'finish');
+		}
+	}
+
+	/**
+	 * Brings the presentation back to the previous slide, if possible.
+	 * @fires {PresentationSlideChangeEvent} p-slides.slidechange - If the current slide isn't the first one
+	 */
+	previousSlide() {
+		const { currentIndex } = this;
+		if (currentIndex > 0) {
+			this.currentSlide = this.slides[currentIndex - 1];
+		} else if (!this.atStart) {
+			setFragmentVisibility(false)(...this.currentSlide.fragments);
+			this.#checkNotes();
+		}
+	}
+
+	#checkNotes() {
+		checkNoteActivations(this.shadowRoot.querySelector('ul'), this.currentSlide.notes);
 	}
 
 	/**

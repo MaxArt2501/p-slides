@@ -92,9 +92,11 @@ export const checkNoteActivations = (noteContainer, notes) => {
 
 /**
  * @param {KeyboardEvent} keyEvent
- * @param {Record<string, Array<Partial<KeyboardEvent>>>} keyMap
+ * @param {Record<T, Array<Partial<KeyboardEvent>>>} keyMap
+ * @return {T | null}
+ * @template {string} T
  */
-export const matchKey = (keyEvent, keyMap) => {
+export function matchKey(keyEvent, keyMap) {
 	for (const [command, keys] of Object.entries(keyMap)) {
 		for (const keyDef of keys) {
 			if (Object.entries(keyDef).every(([prop, value]) => keyEvent[prop] === value)) {
@@ -103,7 +105,7 @@ export const matchKey = (keyEvent, keyMap) => {
 		}
 	}
 	return null;
-};
+}
 
 /**
  * @typedef {{
