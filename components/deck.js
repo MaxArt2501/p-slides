@@ -3,6 +3,8 @@ import {
 	copyNotes,
 	fireEvent,
 	formatClock,
+	getHighlightIndex,
+	getHoverIndex,
 	getLabel,
 	isFragmentVisible,
 	isSlide,
@@ -21,6 +23,10 @@ import {
 /** @typedef {import('../declarations.js').PresentationClockStartEvent} PresentationClockStartEvent */
 /** @typedef {import('../declarations.js').PresentationClockStopEvent} PresentationClockStopEvent */
 /** @typedef {import('../declarations.js').PresentationClockSetEvent} PresentationClockSetEvent */
+/** @typedef {'presentation' | 'speaker' | 'grid'} PresentationMode */
+
+/** @type {PresentationMode} */
+const MODES = ['presentation', 'speaker', 'grid'];
 
 /** @type {Record<string, Promise<CSSStyleSheet>>} */
 const stylesheets = {};
@@ -89,8 +95,12 @@ export class PresentationDeckElement extends HTMLElement {
 		toggleclock: [{ key: 'P' }, { key: 'p' }],
 		resetclock: [{ key: '0', altKey: true }],
 		togglemode: [
-			{ key: 'M', altKey: true },
-			{ key: 'm', altKey: true }
+			{ key: 'M', altKey: true, shiftKey: false },
+			{ key: 'm', altKey: true, shiftKey: false }
+		],
+		previousmode: [
+			{ key: 'M', altKey: true, shiftKey: true },
+			{ key: 'm', altKey: true, shiftKey: true }
 		]
 	};
 
@@ -112,6 +122,7 @@ export class PresentationDeckElement extends HTMLElement {
 
 		this.attachShadow({ mode: 'open' });
 		this.shadowRoot.innerHTML = html`<slot></slot>
+			<a></a>
 			<aside>
 				<header>
 					<span></span>
@@ -130,6 +141,14 @@ export class PresentationDeckElement extends HTMLElement {
 		const [playButton, resetButton] = this.shadowRoot.querySelectorAll('button');
 		playButton.addEventListener('click', this.toggleClock);
 		resetButton.addEventListener('click', () => (this.clock = 0));
+
+		this.#gridLink = this.shadowRoot.querySelector('a');
+		this.#gridLink.addEventListener('click', () => {
+			this.currentIndex = this.#hoveredSlideIndex >= 0 ? this.#hoveredSlideIndex : this.#highlightedSlideIndex;
+			this.mode = this.#previousMode;
+		});
+
+		this.addEventListener('pointermove', this.#handleGridPointer);
 
 		// Channel for state sync
 		this.#channel.addEventListener('message', ({ data }) => {
@@ -174,6 +193,9 @@ export class PresentationDeckElement extends HTMLElement {
 		this.stopClock();
 	}
 
+	/** @type {PresentationMode} */
+	#previousMode = 'presentation';
+
 	/**
 	 * Getter/setter of current deck mode. It reflects the same named attribute value _if_ it's either `'presentation'` or
 	 * `'speaker'` (defaults to the former). Also sets it when assigning.
@@ -181,14 +203,20 @@ export class PresentationDeckElement extends HTMLElement {
 	 * Operatively speaking, changing the deck mode does _nothing_. Its only purpose is to apply a different style to the
 	 * presentation, i.e. either the 'normal' or the 'speaker' mode. If you provide your own stylesheet without a specific
 	 * style for the speaker mode then eh, you're on your own.
+	 * @type {PresentationMode}
 	 */
 	get mode() {
 		const attrValue = this.getAttribute('mode');
-		return ['presentation', 'speaker'].includes(attrValue) ? attrValue : 'presentation';
+		return MODES.includes(attrValue) ? attrValue : 'presentation';
 	}
 	set mode(mode) {
-		if (['presentation', 'speaker'].includes(mode)) {
-			this.setAttribute('mode', mode);
+		if (!MODES.includes(mode) || mode === this.mode) return;
+		this.#previousMode = this.mode;
+		this.setAttribute('mode', mode);
+		this.slides.forEach(slide => (slide.inert = mode === 'grid'));
+		if (mode === 'grid') {
+			this.#hoveredSlideIndex = -1;
+			this.#gridLink.scrollIntoView({ block: 'center' });
 		}
 	}
 
@@ -251,6 +279,7 @@ export class PresentationDeckElement extends HTMLElement {
 		counter.textContent = this.currentIndex + 1;
 		counter.ariaLabel = getLabel(this, 'SLIDE_COUNTER');
 		copyNotes(this.shadowRoot.querySelector('ul'), nextSlide.notes);
+		this.#highlightedSlideIndex = this.currentIndex;
 
 		this.#currentSlide = nextSlide;
 		fireEvent(this, 'slidechange', { slide: nextSlide, previous: this.#currentSlide });
@@ -306,12 +335,59 @@ export class PresentationDeckElement extends HTMLElement {
 		return !lastSlide?.nextHiddenFragments;
 	}
 
+	/** @type {HTMLAnchorElement} */
+	#gridLink;
+
+	get #highlightedSlideIndex() {
+		return parseInt(this.#gridLink.style.getPropertyValue('--highlighted-slide-index'), 10);
+	}
+	set #highlightedSlideIndex(value) {
+		this.#gridLink.style.setProperty('--highlighted-slide-index', value);
+		this.#gridLink.href = `#${value}`;
+		this.#hoveredSlideIndex = -1;
+		if (this.mode === 'grid') {
+			if (this.shadowRoot.activeElement !== this.#gridLink) this.#gridLink.focus();
+			this.#gridLink.scrollIntoView({
+				block: 'center',
+				behavior: matchMedia('(prefers-reduced-motion: no-preference)').matches ? 'smooth' : 'auto'
+			});
+		}
+	}
+
+	get #hoveredSlideIndex() {
+		const value = parseInt(this.#gridLink.style.getPropertyValue('--hovered-slide-index'), 10);
+		return isNaN(value) ? -1 : value;
+	}
+	set #hoveredSlideIndex(value) {
+		if (value >= 0) {
+			this.#gridLink.style.setProperty('--hovered-slide-index', value);
+			this.#gridLink.href = `#${value}`;
+		} else {
+			this.#gridLink.style.removeProperty('--hovered-slide-index');
+		}
+	}
+
 	#keyHandler = /**
 	 * @this {PresentationDeckElement}
 	 * @param {KeyboardEvent} keyEvent
 	 */ function (keyEvent) {
 		const [realTarget] = /** @type {Element[]} */ (keyEvent.composedPath());
 		if (realTarget.isContentEditable || ['input', 'select', 'textarea'].includes(realTarget.localName)) return;
+		if (this.mode === 'grid' && ['altKey', 'shiftKey', 'metaKey', 'ctrlKey'].every(modifier => !keyEvent[modifier])) {
+			if (['altKey', 'shiftKey', 'metaKey', 'ctrlKey'].some(modifier => keyEvent[modifier])) return;
+			if (keyEvent.key === 'Escape') {
+				this.mode = this.#previousMode;
+				return;
+			}
+			const gridColumns = parseInt(this.ownerDocument.defaultView.getComputedStyle(this).getPropertyValue('--grid-columns'), 10);
+			const newIndex = getHighlightIndex(keyEvent.key, this.#highlightedSlideIndex, gridColumns, this.slides.length);
+			if (!isNaN(newIndex)) {
+				this.#hoveredSlideIndex = -1;
+				this.#highlightedSlideIndex = newIndex;
+				keyEvent.preventDefault();
+			}
+			return;
+		}
 		const command = matchKey(keyEvent, this.keyCommands);
 		switch (command) {
 			case 'previous':
@@ -341,8 +417,20 @@ export class PresentationDeckElement extends HTMLElement {
 				this.clock = 0;
 				break;
 			case 'togglemode':
-				this.mode = this.mode === 'speaker' ? 'presentation' : 'speaker';
+				this.mode = MODES[(MODES.indexOf(this.mode) + 1) % MODES.length];
 				break;
+			case 'previousmode':
+				this.mode = MODES[(MODES.indexOf(this.mode) + MODES.length - 1) % MODES.length];
+				break;
+		}
+	}.bind(this);
+
+	#handleGridPointer = /**
+	 * @this {PresentationDeckElement}
+	 * @param {PointerEvent} event
+	 */ function ({ pageX, pageY }) {
+		if (this.mode === 'grid') {
+			this.#hoveredSlideIndex = getHoverIndex(pageX, pageY, this.slides);
 		}
 	}.bind(this);
 

@@ -209,3 +209,46 @@ export const getSequencedFragments = fragments => {
  */
 export const getLabel = (context, name) =>
 	typeof context.labels[name] === 'string' ? context.labels[name] : context.labels[name](context);
+
+/** @type {Record<string, (index: number, gridColumns: number, slides: number) => number>} */
+const indexMoveMap = {
+	ArrowUp: (index, gridColumns) => Math.max(index % gridColumns, index - gridColumns),
+	ArrowDown: (index, gridColumns, slides) => index + (index + gridColumns >= slides ? 0 : gridColumns),
+	ArrowLeft: index => Math.max(0, index - 1),
+	ArrowRight: (index, _, slides) => Math.min(slides - 1, index + 1),
+	Home: () => 0,
+	End: (_, __, slides) => slides - 1,
+	PageUp: (index, gridColumns) => Math.max(0, index - gridColumns * 3),
+	PageDown: (index, gridColumns, slides) => Math.min(slides - 1, index + gridColumns * 3)
+};
+/**
+ * @param {string} key
+ * @param {number} current
+ * @param {number} columns
+ * @param {number} slides
+ */
+export const getHighlightIndex = (key, current, columns, slides) =>
+	key in indexMoveMap ? indexMoveMap[key](current, columns, slides) : NaN;
+
+/**
+ * @param {number} pageX
+ * @param {number} pageY
+ * @param {PresentationSlideElement[]} slides
+ */
+export const getHoverIndex = (pageX, pageY, slides) => {
+	let start = 0;
+	let end = slides.length;
+	while (end > start) {
+		const midIndex = (start + end) >> 1;
+		const midRect = slides[midIndex].getBoundingClientRect();
+		if (pageX >= midRect.left && pageY >= midRect.top && pageX < midRect.right && pageY < midRect.bottom) {
+			return midIndex;
+		}
+		if (pageY >= midRect.bottom || (pageY >= midRect.top && pageX >= midRect.right)) {
+			start = midIndex + 1;
+		} else {
+			end = midIndex;
+		}
+	}
+	return -1;
+};

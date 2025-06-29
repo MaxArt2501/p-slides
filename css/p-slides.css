@@ -18,6 +18,16 @@
 	inherits: true;
 	initial-value: calc(2 / 3);
 }
+@property --grid-columns {
+	syntax: '<integer>';
+	inherits: true;
+	initial-value: 4;
+}
+@property --grid-gap {
+	syntax: '<length>';
+	inherits: true;
+	initial-value: 1px;
+}
 
 p-slide {
 	display: flex;
@@ -33,6 +43,7 @@ p-slide {
 	padding: 1em;
 	position: relative;
 	contain: paint;
+	counter-increment: slide;
 
 	/* Transition-specific styles */
 	animation: slide-out-right var(--sliding-duration) 1 forwards;
