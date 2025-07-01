@@ -88,9 +88,13 @@ attribute set.
 In order to navigate among the slides, you can use the following keys:
 
 - **Right arrow** <kbd>→</kbd>, **down arrow** <kbd>↓</kbd>: next slide/fragment;
-- **Left arrow** <kbd>←</kbd>, **up arrow** <kbd>↑</kbd>: previous slide/fragment.
+- **Left arrow** <kbd>←</kbd>, **up arrow** <kbd>↑</kbd>: previous slide/fragment;
+- **Page down** <kbd>PgDn</kbd>: next slide;
+- **Page up** <kbd>PgUp</kbd>: previous slide;
+- <kbd>Home</kbd>: start of the presentation;
+- <kbd>End</kbd>: end of the presentation.
 
-These keys compatible with most presentation pointers that are registered as external keyboards.
+These keys are compatible with most presentation pointers that are registered as external keyboards.
 
 ### Fragments
 
@@ -141,9 +145,18 @@ This table will explain how the order is created:
 |     -      |     2      | This will be the 5th                                                               |
 |     5      |     5      | This will appear last                                                              |
 
-### Speaker mode
+### Deck modes
 
-P-Slides provide a "speaker mode" that can be enabled pressing <kbd>Alt-M</kbd> (by default). It will show:
+P-Slides has three visualization modes, which can be cycled using <kbd>Alt-M</kbd> and <kbd>Alt-Shift-M</kbd> (by
+default). The modes are:
+
+- presentation: the usual presentation mode;
+- speaker: with additional hints for the speaker's eyes only;
+- grid: for quick navigation among the slides.
+
+#### Speaker mode
+
+Speaker mode will show:
 
 - the current slide, with the current fragment internal progress;
 - the next slide, with all the fragments enabled;
@@ -155,7 +168,19 @@ If you want to take advantage of the speaker mode, open two tabs of the presenta
 while showing the other on the other screen for all the viewers. They will be kept in sync as long as they're from the
 same browser session.
 
-The timer can be started and paused using the key <kbd>P</kbd>, and reset with <kbd>0</kbd>.
+The timer can be started and paused using the key <kbd>P</kbd>, and reset with <kbd>Alt-0</kbd> (this works in other
+modes too).
+
+#### Grid mode
+
+Grid mode is meant to quick navigation among the deck's slides. The slides are all visible in a grid of 4 columns (by
+default). When setting the grid mode from another mode, the current slide is highlighted, then the selection can be moved
+using the arrow keys, plus <kbd>Page Up</kbd> (back 3 rows), <kbd>Page Down</kbd> (ahead 3 rows), <kbd>Home</kbd> (to
+the first slide) and <kbd>End</kbd> (to the last slide).
+
+Pressing <kbd>Enter</kbd> or <kbd>Space</kbd>, or clicking on a highlighted slide, will set the slide as the current one
+and will reset the deck's mode to the one set before grid has been selected, or to presentation mode if no other mode
+have been set before.
 
 ### Notes
 
@@ -188,13 +213,18 @@ maps a command name with a list of key descriptions (partials of
 [`KeyboardEvent`](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent) objects). These are the default
 definitions:
 
-| Command       | Keybindings                                                |
-| ------------- | ---------------------------------------------------------- |
-| `next`        | `[{ key: 'ArrowRight' }, { key: 'ArrowDown' }]`            |
-| `previous`    | `[{ key: 'ArrowLeft' }, { key: 'ArrowUp' }]`               |
-| `toggleclock` | `[{ key: 'P' }, { key: 'p' }]`                             |
-| `resetclock`  | `[{ key: '0', altKey: true }]`                             |
-| `togglemode`  | `[{ key: 'M', altKey: true }, { key: 'm', altKey: true }]` |
+| Command         | Keybindings                                                                                  |
+| --------------- | -------------------------------------------------------------------------------------------- |
+| `next`          | `[{ key: 'ArrowRight' }, { key: 'ArrowDown' }]`                                              |
+| `previous`      | `[{ key: 'ArrowLeft' }, { key: 'ArrowUp' }]`                                                 |
+| `nextslide`     | `[{ key: 'PageDown' }]`                                                                      |
+| `previousslide` | `[{ key: 'PageUp' }]`                                                                        |
+| `gotostart`     | `[{ key: 'Home' }]`                                                                          |
+| `gotoend`       | `[{ key: 'End' }]`                                                                           |
+| `toggleclock`   | `[{ key: 'P' }, { key: 'p' }]`                                                               |
+| `resetclock`    | `[{ key: '0', altKey: true }]`                                                               |
+| `togglemode`    | `[{ key: 'M', altKey: true, shiftKey: false }, { key: 'm', altKey: true, shiftKey: false }]` |
+| `previousmode`  | `[{ key: 'M', altKey: true, shiftKey: true }, { key: 'm', altKey: true, shiftKey: true }]`   |
 
 ### A11y and I18n
 
@@ -439,3 +469,30 @@ Fired when a block of fragments has been shown or hidden. The event bubbles and 
 | --------------- | ----------- | --------------------------------------------- |
 | `fragments`     | `Element[]` | The fragments that have been toggled          |
 | `areVisible`    | `boolean`   | The visibility state of the toggled fragments |
+
+### Style customizations
+
+P-Slides needs two stylesheets, which are both provided by the library:
+
+- **deck.css**: encapsulated styles for the deck's Shadow DOM;
+- **p-slides.css**: global styles for the slides, resets and general layout.
+
+The latter should be loaded however you want (presumably a `<link>` element), while the former is loaded by the
+`<p-deck>` component class (see the documentation for `setStyleRoot()` and `PresentationDeckElement.styles`). Of course,
+you can replace them as you like and define your own styles from scratch.
+
+If you don't need to tweak the stylesheet as much, P-Slides can be fine-tuned by setting some CSS custom properties:
+
+| Property                 | Type        | Default           | Description                                                                                    |
+| ------------------------ | ----------- | ----------------- | ---------------------------------------------------------------------------------------------- |
+| `--fragment-duration`    | `<time>`    | 300ms             | Time for a fragment's transition                                                               |
+| `--grid-columns`         | `<integer>` | 4                 | Number of columns in grid mode                                                                 |
+| `--grid-gap`             | `<length>`  | 0.25em            | Gap and external padding in grid mode                                                          |
+| `--grid-highlight-color` | \*          | `LinkText` / 50%  | Color for the outline of the highlighted slide in grid mode                                    |
+| `--slide-aspect-ratio`   | `<number>`  | 1.777778 (16 / 9) | Aspect ratio of the slides                                                                     |
+| `--slide-bg`             | \*          | white             | Background for the slides. Can be anything `background` accepts. Can be set on a single slide. |
+| `--slide-debug`          | \*          | 0                 | Flag for animation debugging                                                                   |
+| `--sliding-duration`     | `<time>`    | 0s                | Time for the transition between two slides                                                     |
+| `--speaker-next-scale`   | `<number>`  | 0.666667 (2 / 3)  | Scale for the next slide compared to the whole area in speaker mode.                           |
+
+When the type is specified, the properties have been registered using `@property` in **p-slides.css**.

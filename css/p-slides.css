@@ -33,7 +33,7 @@ p-slide {
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
-	background: var(--slide-bg, skyblue);
+	background: var(--slide-bg, white);
 	width: calc(100vmin * var(--slide-aspect-ratio));
 	max-width: 100vw;
 	height: calc(100vw / var(--slide-aspect-ratio));
