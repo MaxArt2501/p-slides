@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.3
+
+- add grid mode;
+- add additional navigation keys;
+- add `nextSlide()`, `previousSlide()` deck methods.
+
 ## 1.1.0
 
 - add support to external stylesheet/raw CSS to style `<p-deck>`'s shadow DOM;
