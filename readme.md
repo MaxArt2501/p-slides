@@ -483,16 +483,106 @@ you can replace them as you like and define your own styles from scratch.
 
 If you don't need to tweak the stylesheet as much, P-Slides can be fine-tuned by setting some CSS custom properties:
 
-| Property                 | Type        | Default           | Description                                                                                    |
-| ------------------------ | ----------- | ----------------- | ---------------------------------------------------------------------------------------------- |
-| `--fragment-duration`    | `<time>`    | 300ms             | Time for a fragment's transition                                                               |
-| `--grid-columns`         | `<integer>` | 4                 | Number of columns in grid mode                                                                 |
-| `--grid-gap`             | `<length>`  | 0.25em            | Gap and external padding in grid mode                                                          |
-| `--grid-highlight-color` | \*          | `LinkText` / 50%  | Color for the outline of the highlighted slide in grid mode                                    |
-| `--slide-aspect-ratio`   | `<number>`  | 1.777778 (16 / 9) | Aspect ratio of the slides                                                                     |
-| `--slide-bg`             | \*          | white             | Background for the slides. Can be anything `background` accepts. Can be set on a single slide. |
-| `--slide-debug`          | \*          | 0                 | Flag for animation debugging                                                                   |
-| `--sliding-duration`     | `<time>`    | 0s                | Time for the transition between two slides                                                     |
-| `--speaker-next-scale`   | `<number>`  | 0.666667 (2 / 3)  | Scale for the next slide compared to the whole area in speaker mode.                           |
+| Property                 | Type        | Default           | Description                                                                                      |
+| ------------------------ | ----------- | ----------------- | ------------------------------------------------------------------------------------------------ |
+| `--fragment-duration`    | `<time>`    | 300ms             | Time for a fragment's transition                                                                 |
+| `--grid-columns`         | `<integer>` | 4                 | Number of columns in grid mode                                                                   |
+| `--grid-gap`             | `<length>`  | 0.25em            | Gap and external padding in grid mode                                                            |
+| `--grid-highlight-color` | \*          | `LinkText` / 50%  | Color for the outline of the highlighted slide in grid mode                                      |
+| `--slide-aspect-ratio`   | `<number>`  | 1.777778 (16 / 9) | Aspect ratio of the slides                                                                       |
+| `--slide-bg`             | \*          | white             | Background for the slides. Can be anything `background` accepts. Can be set on a single slide    |
+| `--slide-effect`         | \*          | shuffle           | Animation effect for the slide (see [Slide effects](#slide-effects))                             |
+| `--slide-font-size`      | \*          | 5                 | Size of the base presentation font in virtual units. Slides will be 100/(this value) `em`s large |
+| `--slide-previous`       | \*          | 0                 | Set to 1 for every _previous_ slide; otherwise it's 0. Useful for animation effects and such     |
+| `--sliding-duration`     | `<time>`    | 0s/0.5s           | Time for the transition between two slides: 0.5s if the user doesn't prefer reduced motion       |
+| `--speaker-next-scale`   | `<number>`  | 0.666667 (2 / 3)  | Scale for the next slide compared to the whole area in speaker mode.                             |
 
 When the type is specified, the properties have been registered using `@property` in **p-slides.css**.
+
+#### Slide numbering
+
+The counter `slide` will be incremented by each `<p-slide>` element inside a `<p-deck>`. You can use it to automatically
+generate the content of the slide using `counter(slide)`. There's no counter for the total amount of slides, but you can
+always use the following:
+
+- getting `slides.length` of the parent deck element;
+- using [`sibling-count()`](https://developer.mozilla.org/en-US/docs/Web/CSS/sibling-count) - only where supported and
+  only if all the slides are actually children of the same element.
+
+If you're providing your own styles for the presentation, remember it's important to not set `display: none` on hidden
+slides, because such elements don't affect counters.
+
+### Slide effects
+
+P-Slides comes with 4 pre-defined animations that are played when switching from a slide to another:
+
+- `shuffle`: (default) classic effect of sliding the old slide behind the new one;
+- `fade`: opacify fading;
+- `slide`: slides get in and out of the view horizontally;
+- `scroll`: slides get in and out of the view vertically.
+
+Every slide can have its own entering effect when the `effect` attribute is set to one of the above values (notice that
+there is no `effect` _property_ on `<p-slide>` elements). If you want to provide your own custom animation effect, you
+have to provide your own CSS. P-Slides just uses a `@keyframes` rule to animate a slide in, and another to animate out
+of the view, using the following CSS rules:
+
+```css
+p-slide[aria-hidden='true']:has(+ [effect='xyz']),
+p-slide[effect='xyz'][aria-hidden='true']:not([previous]) {
+	animation-name: xyz-out;
+}
+p-slide[previous][aria-hidden='false']:has(+ [effect='xyz']),
+p-slide[effect='xyz'][aria-hidden='false']:not([previous]) {
+	animation-name: xyz-in;
+}
+```
+
+> [!NOTE]
+> We need to use two different animations, and not using the same but playing it in reverse, because animations that
+> have already ended don't restart if `animation-name` doesn't change or a reflow event occurs. Read this
+> [CSS Tricks article](https://css-tricks.com/restart-css-animation/) for details.
+
+Make use of the `--slide-previous` flag to discriminate an animation when applied to a _previous_ slide. For example:
+
+```css
+/* p-slides.css */
+@keyframes slide-in {
+	0% {
+		translate: calc(100cqw - 200cqw * var(--slide-previous)) 0;
+	}
+	100% {
+		translate: 0 0;
+	}
+}
+```
+
+This means that if we're going _forwards_, then the new slide will translate _from the right_ (`100cqw` to `0`), and if
+we're returning to the previous slide it will translate _from the left_ (`-100cqw` to `0`).
+
+If you want to change the default animation effect, redefine the `animation-name` property with your own CSS:
+
+```css
+p-slide {
+	animation-name: xyz-out;
+
+	&[aria-hidden='false'] {
+		animation-name: xyz-in;
+	}
+}
+```
+
+#### Effect duration
+
+If you don't want animations when showing a new slide, simply set `--sliding-duration` to `0s`. This is also what
+happens normally, unless the `prefers-reduced-motion` media query resolves to `no-preference`: in that case, the value
+is set to half second on the deck.
+
+If you want to set another value, for accessibility's sake please check if the user allows full motion first:
+
+```css
+@media (prefers-reduced-motion: no-preference) {
+	p-deck {
+		--sliding-duration: 1s;
+	}
+}
+```
