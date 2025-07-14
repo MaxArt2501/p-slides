@@ -95,7 +95,8 @@ button:last-of-type::after {
 }
 /* :not([aria-current='page'] ~ *) doesn't work inside ::slotted(), but we have a workaround */
 :host([mode='speaker']) ::slotted(p-slide:not([aria-current='page']):not(:nth-child(1 of [aria-current='page'] ~ *))) {
-	display: none !important;
+	position: absolute !important;
+	visibility: hidden !important;
 }
 :host([mode='speaker']) ::slotted(p-slide) {
 	animation: none !important;
