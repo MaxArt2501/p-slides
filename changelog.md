@@ -1,6 +1,11 @@
 # Changelog
 
-## 1.2.3
+## 1.3.0
+
+- add additional slide animation effects via the `effect` attribute;
+- fix slide counter.
+
+## 1.2.0
 
 - add grid mode;
 - add additional navigation keys;
