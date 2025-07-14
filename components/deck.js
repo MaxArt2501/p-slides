@@ -133,10 +133,7 @@ export class PresentationDeckElement extends HTMLElement {
 				<ul></ul>
 			</aside>`;
 
-		getStylesheets().then(styles => {
-			this.shadowRoot.adoptedStyleSheets.push(...styles);
-			this.#computeFontSize();
-		});
+		getStylesheets().then(styles => this.shadowRoot.adoptedStyleSheets.push(...styles));
 
 		const [playButton, resetButton] = this.shadowRoot.querySelectorAll('button');
 		playButton.addEventListener('click', this.toggleClock);
@@ -171,7 +168,6 @@ export class PresentationDeckElement extends HTMLElement {
 	/** @internal */
 	connectedCallback() {
 		this.ownerDocument.addEventListener('keydown', this.#keyHandler);
-		this.ownerDocument.defaultView.addEventListener('resize', this.#computeFontSize, { passive: true });
 		this.#clockInterval = this.ownerDocument.defaultView.setInterval(() => {
 			if (this.isClockRunning) this.#updateClock();
 		}, 1000);
@@ -187,7 +183,6 @@ export class PresentationDeckElement extends HTMLElement {
 	/** @internal */
 	disconnectedCallback() {
 		this.ownerDocument.removeEventListener('keydown', this.#keyHandler);
-		this.ownerDocument.defaultView.removeEventListener('resize', this.#computeFontSize);
 		this.ownerDocument.defaultView.clearInterval(this.#clockInterval);
 		this.#clockInterval = null;
 		this.stopClock();
@@ -230,16 +225,10 @@ export class PresentationDeckElement extends HTMLElement {
 		}
 	}
 
-	#computeFontSize = function () {
-		const { width } = this.slideSizes;
-		const fontSize = +this.ownerDocument.defaultView.getComputedStyle(this).getPropertyValue('--slide-font-size') || 5;
-		this.style.fontSize = `${(width * fontSize) / 100}px`;
-	}.bind(this);
-
 	get slideSizes() {
 		const { width, height } = this.getBoundingClientRect();
 		const deckRatio = width / height;
-		const aspectRatio = +this.ownerDocument.defaultView.getComputedStyle(this).getPropertyValue('--slide-aspect-ratio') || 1.5;
+		const aspectRatio = +this.ownerDocument.defaultView.getComputedStyle(this).getPropertyValue('--slide-aspect-ratio') || 16 / 9;
 		if (deckRatio > aspectRatio) {
 			return { width: height * aspectRatio, height };
 		}

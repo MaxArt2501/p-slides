@@ -8,6 +8,7 @@
 	align-items: center;
 	color: #222;
 	counter-reset: slide;
+	font-size: calc(1cqw * var(--slide-font-size, 5));
 	--grid-gap: 0.25em;
 }
 aside {
