@@ -34,35 +34,55 @@ p-slide {
 	flex-direction: column;
 	justify-content: center;
 	background: var(--slide-bg, white);
-	width: calc(100vmin * var(--slide-aspect-ratio));
-	max-width: 100vw;
-	height: calc(100vw / var(--slide-aspect-ratio));
-	max-height: 100vh;
+	width: calc(100cqmin * var(--slide-aspect-ratio));
+	max-width: 100cqw;
+	height: calc(100cqw / var(--slide-aspect-ratio));
+	max-height: 100cqh;
 	grid-area: 1 / 1;
 	box-sizing: border-box;
 	padding: 1em;
 	position: relative;
 	contain: paint;
 	counter-increment: slide;
-
-	/* Transition-specific styles */
-	animation: slide-out-right var(--sliding-duration) 1 forwards;
-	transition: z-index var(--sliding-duration);
-	z-index: -100;
-}
-p-slide > :is(img, video, canvas, svg, iframe) {
-	align-self: center;
+	animation: shuffle-out var(--sliding-duration) 1 forwards;
+	--slide-previous: 0;
 }
 p-slide[aria-hidden='false'] {
-	z-index: 100;
-	animation-name: slide-in-right;
+	animation-name: shuffle-in;
 }
 p-slide[previous] {
-	animation-name: slide-out-left;
+	--slide-previous: 1;
 }
-p-slide[previous][aria-hidden='false'] {
-	z-index: 100;
-	animation-name: slide-in-left;
+
+p-slide[aria-hidden='true']:has(+ [effect='slide']),
+p-slide[effect='slide'][aria-hidden='true']:not([previous]) {
+	animation-name: slide-out;
+}
+p-slide[previous][aria-hidden='false']:has(+ [effect='slide']),
+p-slide[effect='slide'][aria-hidden='false']:not([previous]) {
+	animation-name: slide-in;
+}
+
+p-slide[aria-hidden='true']:has(+ [effect='scroll']),
+p-slide[effect='scroll'][aria-hidden='true']:not([previous]) {
+	animation-name: scroll-out;
+}
+p-slide[previous][aria-hidden='false']:has(+ [effect='scroll']),
+p-slide[effect='scroll'][aria-hidden='false']:not([previous]) {
+	animation-name: scroll-in;
+}
+
+p-slide[aria-hidden='true']:has(+ [effect='fade']),
+p-slide[effect='fade'][aria-hidden='true']:not([previous]) {
+	animation-name: fade-out;
+}
+p-slide[previous][aria-hidden='false']:has(+ [effect='fade']),
+p-slide[effect='fade'][aria-hidden='false']:not([previous]) {
+	animation-name: fade-in;
+}
+
+p-slide > :is(img, video, canvas, svg, iframe) {
+	align-self: center;
 }
 
 p-fragment,
@@ -80,47 +100,80 @@ p-notes {
 	display: none !important;
 }
 
-@keyframes slide-in-right {
+@keyframes shuffle-in {
 	0% {
-		transform: translate(0, calc(-40vw * var(--slide-debug, 0))) scale(calc(0.1 * var(--slide-debug, 0)));
+		transform: translate(0, 0) scale(0);
+		z-index: -100;
 	}
 	50% {
-		transform: translate(50%, 0) scale(0.9);
+		transform: translate(calc(50% - 100% * var(--slide-previous)), 0) scale(0.9);
 	}
 	100% {
 		transform: translate(0, 0) scale(1);
+		z-index: 100;
 	}
 }
-@keyframes slide-in-left {
+@keyframes shuffle-out {
 	0% {
-		transform: translate(0, calc(-40vw * var(--slide-debug, 0))) scale(calc(0.1 * var(--slide-debug, 0)));
+		transform: translate(0, 0) scale(1);
+		z-index: 100;
 	}
 	50% {
-		transform: translate(-50%, 0) scale(0.9);
+		transform: translate(calc(50% - 100% * var(--slide-previous)), 0) scale(0.9);
 	}
 	100% {
-		transform: translate(0, 0) scale(1);
+		transform: translate(0, 0) scale(0);
+		z-index: -100;
 	}
 }
-@keyframes slide-out-right {
+
+@keyframes slide-in {
 	0% {
-		transform: translate(0, 0) scale(1);
-	}
-	50% {
-		transform: translate(50%, 0) scale(0.9);
+		translate: calc(100cqw - 200cqw * var(--slide-previous)) 0;
 	}
 	100% {
-		transform: translate(0, calc(-40vw * var(--slide-debug, 0))) scale(calc(0.1 * var(--slide-debug, 0)));
+		translate: 0 0;
 	}
 }
-@keyframes slide-out-left {
+@keyframes slide-out {
 	0% {
-		transform: translate(0, 0) scale(1);
-	}
-	50% {
-		transform: translate(-50%, 0) scale(0.9);
+		translate: 0 0;
 	}
 	100% {
-		transform: translate(0, calc(-40vw * var(--slide-debug, 0))) scale(calc(0.1 * var(--slide-debug, 0)));
+		translate: calc(100cqw - 200cqw * var(--slide-previous)) 0;
+	}
+}
+
+@keyframes scroll-in {
+	0% {
+		translate: 0 calc(100cqh - 200cqh * var(--slide-previous));
+	}
+	100% {
+		translate: 0 0;
+	}
+}
+@keyframes scroll-out {
+	0% {
+		translate: 0 0;
+	}
+	100% {
+		translate: 0 calc(100cqh - 200cqh * var(--slide-previous));
+	}
+}
+
+@keyframes fade-in {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+@keyframes fade-out {
+	from {
+		opacity: 1;
+	}
+	to {
+		opacity: 0;
 	}
 }
