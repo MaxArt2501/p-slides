@@ -188,7 +188,7 @@ export const getSequencedFragments = fragments => {
 	let nextIndex = indexes.shift();
 	let count = 0;
 	while (count < fragments.length) {
-		if ((nextIndex === undefined || nextIndex > count) && nullIndexes.length) {
+		if ((nextIndex === undefined || nextIndex > sorted.length) && nullIndexes.length) {
 			sorted.push([nullIndexes.shift()]);
 			count++;
 		} else if (nextIndex <= sorted.length || !nullIndexes.length) {
