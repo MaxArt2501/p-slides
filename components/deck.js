@@ -136,7 +136,7 @@ export class PresentationDeckElement extends HTMLElement {
 		getStylesheets().then(styles => this.shadowRoot.adoptedStyleSheets.push(...styles));
 
 		const [playButton, resetButton] = this.shadowRoot.querySelectorAll('button');
-		playButton.addEventListener('click', this.toggleClock);
+		playButton.addEventListener('click', () => this.toggleClock());
 		resetButton.addEventListener('click', () => (this.clock = 0));
 
 		this.#gridLink = this.shadowRoot.querySelector('a');
@@ -215,7 +215,8 @@ export class PresentationDeckElement extends HTMLElement {
 		}
 	}
 
-	#resetCurrentSlide(nextSlide = this.querySelector('p-slide')) {
+	#resetCurrentSlide() {
+		const nextSlide = this.querySelector('p-slide[aria-current="page"]') ?? this.querySelector('p-slide');
 		let { currentSlide } = this;
 		if (!currentSlide && nextSlide) {
 			currentSlide = nextSlide;
@@ -525,13 +526,13 @@ export class PresentationDeckElement extends HTMLElement {
 	 * @fires {PresentationClockStartEvent} p-slides.clockstart - If the timer starts
 	 * @fires {PresentationClockStopEvent} p-slides.clockstop - If the timer stops
 	 */
-	toggleClock = /** @this {PresentationDeckElement} */ function () {
+	toggleClock() {
 		if (this.isClockRunning) {
 			this.stopClock();
 		} else {
 			this.startClock();
 		}
-	}.bind(this);
+	}
 
 	#updateClock() {
 		const time = this.shadowRoot.querySelector('time');
