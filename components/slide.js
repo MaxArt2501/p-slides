@@ -14,6 +14,13 @@ whenAllDefined().then(() => (allDefined = true));
 
 /** @typedef {import('../declarations.js').PresentationFragmentToggleEvent} PresentationFragmentToggleEvent */
 
+/** @type {MutationObserverInit} */
+const mutationOptions = {
+	subtree: true,
+	attributes: true,
+	attributeFilter: ['p-fragment', 'index']
+};
+
 /**
  * The class corresponding to the `<p-slide>` element.
  */
@@ -22,6 +29,8 @@ export class PresentationSlideElement extends HTMLElement {
 	static get observedAttributes() {
 		return ['aria-current'];
 	}
+
+	#mutations = new MutationObserver(() => (this.#fragmentSequence = null));
 
 	/** @internal */
 	attributeChangedCallback(attribute, _, value) {
@@ -42,6 +51,12 @@ export class PresentationSlideElement extends HTMLElement {
 			fragment.ariaHidden ??= 'true';
 			fragment.ariaCurrent ??= 'false';
 		});
+		this.#mutations.observe(this, mutationOptions);
+	}
+
+	/** @internal */
+	disconnectedCallback() {
+		this.#mutations.disconnect(this);
 	}
 
 	/**
@@ -86,11 +101,16 @@ export class PresentationSlideElement extends HTMLElement {
 		return this.querySelectorAll('p-fragment, [p-fragment]');
 	}
 
+	#fragmentSequence;
+
 	/**
 	 * The fragments grouped using their indexes.
 	 */
 	get fragmentSequence() {
-		return getSequencedFragments(this.fragments);
+		if (!this.#fragmentSequence) {
+			this.#fragmentSequence = getSequencedFragments(this.fragments);
+		}
+		return this.#fragmentSequence;
 	}
 
 	/**
