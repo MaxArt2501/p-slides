@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.1
+
+- fix incorrect fragment sequence building that caused a loop;
+- fix incorrect current slide retrieval on initialization;
+- set slides as inert if not in presentation mode.
+
 ## 1.3.0
 
 - add additional slide animation effects via the `effect` attribute;
