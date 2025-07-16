@@ -23,10 +23,9 @@ import {
 /** @typedef {import('../declarations.js').PresentationClockStartEvent} PresentationClockStartEvent */
 /** @typedef {import('../declarations.js').PresentationClockStopEvent} PresentationClockStopEvent */
 /** @typedef {import('../declarations.js').PresentationClockSetEvent} PresentationClockSetEvent */
-/** @typedef {'presentation' | 'speaker' | 'grid'} PresentationMode */
 
-/** @type {PresentationMode} */
-const MODES = ['presentation', 'speaker', 'grid'];
+const MODES = /** @type {const} */ (['presentation', 'speaker', 'grid']);
+/** @typedef {typeof MODES[number]} PresentationMode */
 
 /** @type {Record<string, Promise<CSSStyleSheet>>} */
 const stylesheets = {};
@@ -106,7 +105,7 @@ export class PresentationDeckElement extends HTMLElement {
 
 	/**
 	 * Labels used in speaker mode for accessibility.
-	 * @type {Record<import('../declarations.js').PresentationDeckLabelName, import('../declarations.js').PresentationLabel<PresentationDeckElement>>>}
+	 * @type {Record<import('../declarations.js').PresentationDeckLabelName, import('../declarations.js').PresentationLabel<PresentationDeckElement>>}
 	 */
 	labels = {
 		ELAPSED_TIME: 'Elapsed time',
@@ -208,7 +207,7 @@ export class PresentationDeckElement extends HTMLElement {
 		if (!MODES.includes(mode) || mode === this.mode) return;
 		this.#previousMode = this.mode;
 		this.setAttribute('mode', mode);
-		this.slides.forEach(slide => (slide.inert = mode === 'grid'));
+		this.slides.forEach(slide => (slide.inert = mode !== 'presentation'));
 		if (mode === 'grid') {
 			this.#hoveredSlideIndex = -1;
 			this.#gridLink.scrollIntoView({ block: 'center' });
