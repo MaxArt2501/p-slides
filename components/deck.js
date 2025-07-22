@@ -122,14 +122,14 @@ export class PresentationDeckElement extends HTMLElement {
 		this.attachShadow({ mode: 'open' });
 		this.shadowRoot.innerHTML = html`<slot></slot>
 			<a></a>
-			<aside>
-				<header>
+			<aside part="sidebar">
+				<header part="toolbar">
 					<span></span>
 					<time role="timer" aria-label="${getLabel(this, 'ELAPSED_TIME')}" aria-atomic="true" aria-busy="false"></time>
-					<button type="button" aria-label="${getLabel(this, 'TIMER_START')}"></button>
-					<button type="button" aria-label="${getLabel(this, 'TIMER_RESET')}"></button>
+					<button type="button" part="control-button" aria-label="${getLabel(this, 'TIMER_START')}"></button>
+					<button type="button" part="control-button" aria-label="${getLabel(this, 'TIMER_RESET')}"></button>
 				</header>
-				<ul></ul>
+				<ul part="notelist"></ul>
 			</aside>`;
 
 		getStylesheets().then(styles => this.shadowRoot.adoptedStyleSheets.push(...styles));
