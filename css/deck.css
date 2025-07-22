@@ -8,7 +8,7 @@
 	align-items: center;
 	color: #222;
 	counter-reset: slide;
-	font-size: calc(1cqw * var(--slide-font-size, 5));
+	font-size: calc(min(1cqw, 1cqh * var(--slide-aspect-ratio)) * var(--slide-font-size, 5));
 	--grid-gap: 0.25em;
 
 	@media (prefers-reduced-motion: no-preference) {
