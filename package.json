@@ -5,10 +5,15 @@
 	"main": "index.js",
 	"type": "module",
 	"scripts": {
-		"build": "tsc",
+		"build": "tsc && cem analyze --packagejson",
 		"prepublishOnly": "npm run build"
 	},
-	"keywords": [],
+	"keywords": [
+		"presentations",
+		"webcomponents",
+		"customelements",
+		"custom-elements"
+	],
 	"author": {
 		"name": "Massimo Artizzu",
 		"email": "maxart.x@gmail.com"
@@ -16,11 +21,14 @@
 	"license": "MIT",
 	"types": "lib.d.ts",
 	"devDependencies": {
+		"@custom-elements-manifest/analyzer": "^0.10.4",
 		"typescript": "^5.8.3"
 	},
+	"customElements": "custom-elements.json",
 	"files": [
 		"components",
 		"css",
+		"custom-elements.json",
 		"declarations.d.ts",
 		"index.d.ts",
 		"index.js",

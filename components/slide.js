@@ -23,6 +23,10 @@ const mutationOptions = {
 
 /**
  * The class corresponding to the `<p-slide>` element.
+ * @tag p-slide
+ * @attribute {string} aria-current - When set to `'page'`, the slide is the current one in the presentation. It's discouraged to set it manually
+ * @attribute {string} effect - Effect name for entering the slide from, or exiting to, the previous slide
+ * @fires {PresentationFragmentToggleEvent} p-slides.fragmenttoggle - When a fragment has been shown or hidden
  */
 export class PresentationSlideElement extends HTMLElement {
 	/** @internal */

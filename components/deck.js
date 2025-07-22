@@ -60,6 +60,26 @@ const html = String.raw;
 /**
  * The class corresponding to the `<p-deck>` element wrapper. You'll mostly have to interact with this to manage the
  * presentation.
+ * @tag p-deck
+ * @slot - Expected to contain `<p-slide>` elements only
+ * @attribute {PresentationMode} mode - Presentation mode
+ * @fires {PresentationFinishEvent} p-slides.finish - When reaching the end of the presentation
+ * @fires {PresentationSlideChangeEvent} p-slides.slidechange - When the current slide changes
+ * @fires {PresentationClockStartEvent} p-slides.clockstart - When the timer starts
+ * @fires {PresentationClockStopEvent} p-slides.clockstop - When the timer stops
+ * @fires {PresentationClockSetEvent} p-slides.clockset - When the timer has been explicitly set
+ * @cssprop {<time>} [--fragment-duration=300ms] - Time for a fragment's transition
+ * @cssprop {<integer>} [--grid-columns=4] - Number of columns in grid mode
+ * @cssprop {<length>} [--grid-gap=0.25em] - Gap and external padding in grid mode
+ * @cssprop [--grid-highlight-color=color-mix(in srgb, LinkText, transparent)] - Color for the outline of the highlighted slide in grid mode
+ * @cssprop {<number>} [--slide-aspect-ratio=calc(16 / 9)] - Aspect ratio of the slides
+ * @cssprop [--slide-font-size=5] - Size of the base presentation font in virtual units. Slides will be 100/(this value) `em`s large
+ * @cssprop {<time>} [--sliding-duration=0s/0.5s] - Time for the transition between two slides: 0.5s if the user doesn't prefer reduced motion
+ * @cssprop {<number>} [--speaker-next-scale=calc(2 / 3)] - Scale for the next slide compared to the whole area in speaker mode.
+ * @csspart {<aside>} sidebar - Spearker mode's sidebar
+ * @csspart {<header>} toolbar - Spearker mode's toolbar inside the sidenav
+ * @csspart {<ul>} notelist - Container for the speaker notes
+ * @csspart {<button>} control-button - Play, pause and clock reset button
  */
 export class PresentationDeckElement extends HTMLElement {
 	/**
@@ -241,8 +261,6 @@ export class PresentationDeckElement extends HTMLElement {
 	/**
 	 * Getter/setter for the slide element marked as 'current'. When setting, it _must_ be a `<p-slide>` elements descendant
 	 * of the deck.
-	 * @fires {PresentationSlideChangeEvent} p-slides.slidechange - When setting the value
-	 * @fires {PresentationFinishEvent} p-slides.finish - When reaching the end of the presentation
 	 */
 	get currentSlide() {
 		return this.#currentSlide;
@@ -280,8 +298,6 @@ export class PresentationDeckElement extends HTMLElement {
 
 	/**
 	 * Getter/setter of index of the current slide.
-	 * @fires {PresentationSlideChangeEvent} p-slides.slidechange - When setting the value
-	 * @fires {PresentationFinishEvent} p-slides.finish - When reaching the end of the presentation
 	 */
 	get currentIndex() {
 		return [...this.slides].findIndex(slide => slide.isActive);
@@ -425,8 +441,6 @@ export class PresentationDeckElement extends HTMLElement {
 
 	/**
 	 * Advances the presentation, either by showing a new fragment on the current slide, or switching to the next slide.
-	 * @fires {PresentationFinishEvent} p-slides.finish - When reaching the end of the presentation
-	 * @fires {PresentationSlideChangeEvent} p-slides.slidechange - If the presentation advances to the next slide.
 	 */
 	next() {
 		if (this.atEnd) return;
@@ -445,7 +459,6 @@ export class PresentationDeckElement extends HTMLElement {
 	/**
 	 * Brings the presentation back, either by hiding the last shown fragment on the current slide, or switching to the
 	 * previous slide.
-	 * @fires {PresentationSlideChangeEvent} p-slides.slidechange - If the presentation returns to the previous slide.
 	 */
 	previous() {
 		if (this.atStart) return;
@@ -460,8 +473,6 @@ export class PresentationDeckElement extends HTMLElement {
 
 	/**
 	 * Advances the presentation to the next slide, if possible.
-	 * @fires {PresentationSlideChangeEvent} p-slides.slidechange - If the current slide isn't the last one
-	 * @fires {PresentationFinishEvent} p-slides.finish - When reaching the end of the presentation
 	 */
 	nextSlide() {
 		const { currentIndex, slides } = this;
@@ -477,7 +488,6 @@ export class PresentationDeckElement extends HTMLElement {
 
 	/**
 	 * Brings the presentation back to the previous slide, if possible.
-	 * @fires {PresentationSlideChangeEvent} p-slides.slidechange - If the current slide isn't the first one
 	 */
 	previousSlide() {
 		const { currentIndex } = this;
@@ -495,7 +505,6 @@ export class PresentationDeckElement extends HTMLElement {
 
 	/**
 	 * Starts the timer.
-	 * @fires {PresentationClockStartEvent} p-slides.clockstart
 	 */
 	startClock() {
 		this.#clockStart = Date.now();
@@ -507,7 +516,6 @@ export class PresentationDeckElement extends HTMLElement {
 
 	/**
 	 * Stops the timer.
-	 * @fires {PresentationClockStopEvent} p-slides.clockstop
 	 */
 	stopClock() {
 		if (this.isClockRunning) {
@@ -522,8 +530,6 @@ export class PresentationDeckElement extends HTMLElement {
 
 	/**
 	 * Toggles the timer.
-	 * @fires {PresentationClockStartEvent} p-slides.clockstart - If the timer starts
-	 * @fires {PresentationClockStopEvent} p-slides.clockstop - If the timer stops
 	 */
 	toggleClock() {
 		if (this.isClockRunning) {
@@ -542,7 +548,6 @@ export class PresentationDeckElement extends HTMLElement {
 
 	/**
 	 * The amount of milliseconds on the timer.
-	 * @fires {PresentationClockSetEvent} p-slides.clockset
 	 */
 	get clock() {
 		return this.#clockElapsed + (this.isClockRunning ? Date.now() - this.#clockStart : 0);

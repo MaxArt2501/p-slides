@@ -1,7 +1,9 @@
+/** @internal */
 export const whenAllDefined = () => Promise.all(['p-deck', 'p-slide'].map(tag => customElements.whenDefined(tag)));
 
 /** @typedef {import('./components/slide.js').PresentationSlideElement} PresentationSlideElement */
 
+/** @internal */
 export let styleRoot = 'css/';
 
 /**
@@ -18,10 +20,11 @@ export function setStyleRoot(root) {
 /**
  * @param {unknown} element
  * @returns {element is PresentationSlideElement}
+ * @internal
  */
 export const isSlide = element => element instanceof Element && element.localName === 'p-slide';
 
-/** @param {string} source */
+/** @param {string} source @internal */
 export const parseStylesheet = source => {
 	const styleSheet = new CSSStyleSheet();
 	styleSheet.replaceSync(source);
@@ -31,6 +34,7 @@ export const parseStylesheet = source => {
 /**
  * @param {PresentationSlideElement[]} slides
  * @param {PresentationSlideElement} nextSlide
+ * @internal
  */
 export const selectSlide = (slides, nextSlide) => {
 	let isPrevious = true;
@@ -49,6 +53,7 @@ export const selectSlide = (slides, nextSlide) => {
 /**
  * @param {Node} root
  * @returns {Array<Element | Comment>}
+ * @internal
  */
 export function getNotes(root) {
 	if (root instanceof Element) {
@@ -63,6 +68,7 @@ export function getNotes(root) {
 /**
  * @param {Element} noteContainer
  * @param {Array<Element | Comment>} notes
+ * @internal
  */
 export const copyNotes = (noteContainer, notes) => {
 	while (noteContainer.lastChild) {
@@ -83,6 +89,7 @@ export const copyNotes = (noteContainer, notes) => {
 /**
  * @param {Element} noteContainer
  * @param {Array<Element | Comment>} notes
+ * @internal
  */
 export const checkNoteActivations = (noteContainer, notes) => {
 	notes.forEach((note, index) => {
@@ -95,6 +102,7 @@ export const checkNoteActivations = (noteContainer, notes) => {
  * @param {Record<T, Array<Partial<KeyboardEvent>>>} keyMap
  * @return {T | null}
  * @template {string} T
+ * @internal
  */
 export function matchKey(keyEvent, keyMap) {
 	for (const [command, keys] of Object.entries(keyMap)) {
@@ -117,6 +125,7 @@ export function matchKey(keyEvent, keyMap) {
  * @param {N} eventName
  * @param {HTMLElementEventMap[`p-slides.${N}`]['detail']} detail
  * @template {PresentationEventSimpleName} N
+ * @internal
  */
 export const fireEvent = (target, eventName, detail = {}) => {
 	const event = new CustomEvent(`p-slides.${eventName}`, { bubbles: true, detail });
@@ -126,13 +135,14 @@ export const fireEvent = (target, eventName, detail = {}) => {
 /**
  * @param {number} millis
  * @returns {[number, number, number]}
+ * @internal
  */
 export const formatClock = millis => {
 	const secs = Math.floor(millis / 1000);
 	return [Math.trunc(secs / 3600), Math.trunc((secs % 3600) / 60), Math.trunc(secs % 60)];
 };
 
-/** @param {Element} element */
+/** @param {Element} element @internal */
 const getFragmentIndex = element => {
 	const rawValue = element.getAttribute(element.localName === 'p-fragment' ? 'index' : 'p-fragment');
 	if (rawValue === null) return null;
@@ -140,19 +150,20 @@ const getFragmentIndex = element => {
 	return Number.isFinite(numValue) && numValue >= 0 ? numValue : null;
 };
 
-/** @param {Element} element */
+/** @param {Element} element @internal */
 export const isFragmentVisible = element => element.getAttribute('aria-hidden') === 'false';
 
 /**
  * @param {boolean} visible
  * @return {(...elements: Element[]) => void}
+ * @internal
  */
 export const setFragmentVisibility =
 	visible =>
 	(...elements) =>
 		elements.forEach(element => element.setAttribute('aria-hidden', String(!visible)));
 
-/** @param {PresentationSlideElement} slide */
+/** @param {PresentationSlideElement} slide @internal */
 export const setCurrentFragments = slide => {
 	slide.fragmentSequence.forEach((fragments, index, blocks) => {
 		const areVisible = fragments.every(isFragmentVisible);
@@ -165,7 +176,7 @@ export const setCurrentFragments = slide => {
 	});
 };
 
-/** @param {Element | Comment} note */
+/** @param {Element | Comment} note @internal */
 const isNoteVisible = note =>
 	((note instanceof Element ? note : note.parentElement).closest('p-fragment, [p-fragment]')?.getAttribute('aria-hidden') ?? 'false') ===
 	'false';
@@ -173,6 +184,7 @@ const isNoteVisible = note =>
 /**
  * @param {ArrayLike<Element>} fragments
  * @returns {Element[][]}
+ * @internal
  */
 export const getSequencedFragments = fragments => {
 	const nullIndexes = [];
@@ -206,6 +218,7 @@ export const getSequencedFragments = fragments => {
  * @param {keyof T} name
  * @template {{ labels: T}} C
  * @template {Record<string, string | (context: C) => string>} T
+ * @internal
  */
 export const getLabel = (context, name) =>
 	typeof context.labels[name] === 'string' ? context.labels[name] : context.labels[name](context);
@@ -226,6 +239,7 @@ const indexMoveMap = {
  * @param {number} current
  * @param {number} columns
  * @param {number} slides
+ * @internal
  */
 export const getHighlightIndex = (key, current, columns, slides) =>
 	key in indexMoveMap ? indexMoveMap[key](current, columns, slides) : NaN;
@@ -234,6 +248,7 @@ export const getHighlightIndex = (key, current, columns, slides) =>
  * @param {number} pageX
  * @param {number} pageY
  * @param {PresentationSlideElement[]} slides
+ * @internal
  */
 export const getHoverIndex = (pageX, pageY, slides) => {
 	let start = 0;
