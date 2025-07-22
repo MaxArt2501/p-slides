@@ -17,5 +17,14 @@
 	"types": "lib.d.ts",
 	"devDependencies": {
 		"typescript": "^5.8.3"
-	}
+	},
+	"files": [
+		"components",
+		"css",
+		"declarations.d.ts",
+		"index.d.ts",
+		"index.js",
+		"utils.d.ts",
+		"utils.js"
+	]
 }
