@@ -2,6 +2,11 @@
 	"name": "p-slides",
 	"version": "1.4.0",
 	"description": "Presentation framework using Web Components",
+	"repository": "https://github.com/MaxArt2501/p-slides",
+	"homepage": "https://github.com/MaxArt2501/p-slides",
+	"bugs": {
+		"url": "https://github.com/MaxArt2501/p-slides/issues"
+	},
 	"main": "index.js",
 	"type": "module",
 	"scripts": {
