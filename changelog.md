@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.4.0
+
+- add Custom Element Manifest and VS Code integration;
+- add CSS shadow parts for speaker mode;
+- fix font sizing in viewports wider than the slides;
+- perform fragment computation only on changes.
+
 ## 1.3.1
 
 - fix incorrect fragment sequence building that caused a loop;
