@@ -1,6 +1,6 @@
 node_modules/
 components/*.d.ts
-custom-elements.json
+*.json
 index.d.ts
 utils.d.ts
 package-lock.json
