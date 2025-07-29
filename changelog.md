@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.4.1
+
+- add missing lib.d.ts in package.json's files property
+- add missing references to repository URL
+
 ## 1.4.0
 
 - add Custom Element Manifest and VS Code integration;
