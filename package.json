@@ -33,6 +33,7 @@
 		"declarations.d.ts",
 		"index.d.ts",
 		"index.js",
+		"lib.d.ts",
 		"p-slides.vscode.css-custom-data.json",
 		"p-slides.vscode.html-custom-data.json",
 		"utils.d.ts",
