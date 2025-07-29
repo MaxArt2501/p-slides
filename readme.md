@@ -28,17 +28,23 @@ Also, the element `<p-slide>` does not define a Shadow DOM anymore.
 You _must_ use ES modules to use this library. It shouldn't be a problem, as every browser that supports Web Components
 also supports ES modules.
 
-Of course, you're free to `import` the classes on your own and transpile whatever you want. But I will _not_ provide a
-pre-bundled version of this the library.
+Of course, you're free to `import` the classes on your own and transpile whatever you want. But a pre-bundled version of
+this the library will _not_ be provided.
 
-Now, in order to install this library, just use `npm` (or `yarn` or whatever):
+Now, in order to install this library, just use `npm` (or `yarn` or `pnpm` or whatever):
 
 ```
 npm install p-slides
 ```
 
-If you want to use the modules as-is, you just have to copy them in a served directory. Everything `.js` file that's not
-in the `test` directory is necessary. Then, in your module:
+If you want to use the modules as-is, you just have to copy them in a served directory. The following files are
+necessary for P-Slides to function properly:
+
+- **index.js**
+- **components/deck.js**
+- **components/slide.js**
+
+Then, in your module:
 
 ```js
 import { registerElements } from './vendor/p-slides/index.js';
@@ -57,7 +63,7 @@ You may wish to load the stylesheet **p-slides.css** globally, as it provides ba
 <link rel="stylesheet" href="./vendor/p-slides/css/p-slides.css" />
 ```
 
-The custom element `<p-deck>`, having a Shadow DOM, loads the file `css/deck.css` to style its internal content. If the
+The custom element `<p-deck>`, having a Shadow DOM, loads the file **css/deck.css** to style its internal content. If the
 file is located in a different directory, please use the `setStyleRoot` method to define the correct path:
 
 ```js
@@ -251,7 +257,7 @@ first argument.
 
 ## API
 
-All of the following can be `import`ed from `index.js`.
+All of the following can be `import`ed from **index.js**.
 
 ### `registerElements(): Promise<void[]>`
 
@@ -293,14 +299,14 @@ the deck.
 
 Getter/setter of index of the current slide.
 
-##### `mode: 'presentation' | 'speaker'`
+##### `mode: 'presentation' | 'speaker' | 'grid'`
 
-Getter/setter of current deck mode. It reflects the same named attribute value _if_ it's either `'presentation'` or
-`'speaker'` (defaults to the former). Also sets it when assigning.
+Getter/setter of current deck mode. It reflects the same named attribute value _if_ it's one of the valid values
+(`'presentation'`, `'speaker'` or `'grid'`, defaults to `'presentation'`). Also sets it when assigning.
 
 Operatively speaking, changing the deck mode does _nothing_. Its only purpose is to apply a different style to the
-presentation, i.e. either the 'normal' or the 'speaker' mode. If you provide your own stylesheet without a specific
-style for the speaker mode then eh, you're on your own.
+presentation, i.e. either the 'normal', the 'speaker' or the 'grid' mode. If you provide your own stylesheet without a
+specific style for the speaker or grid mode then you're on your own.
 
 ##### `readonly slides: NodeList<PresentationSlideElement>`
 
@@ -325,8 +331,7 @@ It's `true` if and only if the timer is not paused.
 #### `state: PresentationState`
 
 An object that represents the presentation's state. Although exposed, handle it with caution, as changes may not be
-reflected on the view or a second window. Use the method `broadcastState()` to send an updated state to a second
-view.
+reflected on the view or a second window. Use the method `broadcastState()` to send an updated state to a second view.
 
 #### Methods
 
@@ -499,6 +504,24 @@ If you don't need to tweak the stylesheet as much, P-Slides can be fine-tuned by
 
 When the type is specified, the properties have been registered using `@property` in **p-slides.css**.
 
+`<p-deck>` elements also expose some [CSS shadow parts](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_shadow_parts)
+for the speaker mode to let external stylesheets to override the default styling:
+
+| Part name        | Element    | Description                                |
+| ---------------- | ---------- | ------------------------------------------ |
+| `sidebar`        | `<aside>`  | Spearker mode's sidebar                    |
+| `toolbar`        | `<header>` | Spearker mode's toolbar inside the sidenav |
+| `notelist`       | `<ul>`     | Container for the speaker notes            |
+| `control-button` | `<button>` | Play, pause and clock reset button         |
+
+For example:
+
+```css
+p-deck::part(sidebar) {
+	filter: invert(0.9);
+}
+```
+
 #### Slide numbering
 
 The counter `slide` will be incremented by each `<p-slide>` element inside a `<p-deck>`. You can use it to automatically
@@ -584,5 +607,33 @@ If you want to set another value, for accessibility's sake please check if the u
 	p-deck {
 		--sliding-duration: 1s;
 	}
+}
+```
+
+Fragment transition duration is defined by the custom property `--fragment-duration`, with a default value of `300ms`.
+Since fragments normally cover a portion of the screen, this value is _not_ determined by the `prefers-reduced-motion`
+media query: if it's not the case, consider setting it to `0s` for all the fragments or maybe just for the larger ones:
+
+```css
+@media (prefers-reduced-motion: reduce) {
+	.large-fragment {
+		--fragment-duration: 0s;
+	}
+}
+```
+
+## Custom Element Manifest and IDE integrations
+
+The package provides a [Custom Element Manifest](https://github.com/webcomponents/custom-elements-manifest) file with the
+name **custom-elements.json**. It's also set as the `"custom-elements"` property in **package.json**. You can use it to
+instruct your IDE and tasks about the components defined by P-Slides.
+
+If you're using Visual Studio Code, remember to add the following lines to your **.vscode/setting.json** file in order to
+receive autocompletion and intellisense from the IDE:
+
+```json
+{
+	"html.customData": ["./node_modules/p-slides/p-slides.vscode.html-custom-data.json"],
+	"css.customData": ["./node_modules/p-slides/p-slides.vscode.css-custom-data.json"]
 }
 ```
