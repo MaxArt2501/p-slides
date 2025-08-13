@@ -17,6 +17,7 @@ whenAllDefined().then(() => (allDefined = true));
 /** @type {MutationObserverInit} */
 const mutationOptions = {
 	subtree: true,
+	childList: true,
 	attributes: true,
 	attributeFilter: ['p-fragment', 'index']
 };
@@ -34,7 +35,10 @@ export class PresentationSlideElement extends HTMLElement {
 		return ['aria-current'];
 	}
 
-	#mutations = new MutationObserver(() => (this.#fragmentSequence = null));
+	#mutations = new MutationObserver(() => {
+		this.#fragmentSequence = null;
+		this.#notes = null;
+	});
 
 	/** @internal */
 	attributeChangedCallback(attribute, _, value) {
@@ -60,7 +64,7 @@ export class PresentationSlideElement extends HTMLElement {
 
 	/** @internal */
 	disconnectedCallback() {
-		this.#mutations.disconnect(this);
+		this.#mutations.disconnect();
 	}
 
 	/**
@@ -109,6 +113,7 @@ export class PresentationSlideElement extends HTMLElement {
 
 	/**
 	 * The fragments grouped using their indexes.
+	 * @type {Element[][]}
 	 */
 	get fragmentSequence() {
 		if (!this.#fragmentSequence) {
@@ -131,11 +136,23 @@ export class PresentationSlideElement extends HTMLElement {
 		return this.fragmentSequence.findLast(fragments => fragments.every(isFragmentVisible));
 	}
 
+	#notes;
+
 	/**
-	 * The list of the speaker notes as they appear in the slide's markup.
+	 * The list of the speaker notes as they appear in the slide's fragment sequence.
+	 * @type {Array<Element | Comment>}
 	 */
 	get notes() {
-		return getNotes(this);
+		if (!this.#notes) {
+			const notes = getNotes(this);
+			const { fragmentSequence } = this;
+			const noteFragments = new Map(
+				notes.map(note => [note, fragmentSequence.findIndex(frags => frags.some(fragment => fragment.contains(note)))])
+			);
+			notes.sort((a, b) => noteFragments.get(a) - noteFragments.get(b));
+			this.#notes = notes;
+		}
+		return this.#notes;
 	}
 
 	/**
