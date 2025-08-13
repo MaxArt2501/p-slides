@@ -47,6 +47,9 @@ p-slide {
 	animation: shuffle-out var(--sliding-duration) 1 forwards;
 	--slide-previous: 0;
 }
+p-slide[aria-hidden='true'] {
+	pointer-events: none;
+}
 p-slide[aria-hidden='false'] {
 	animation-name: shuffle-in;
 }
