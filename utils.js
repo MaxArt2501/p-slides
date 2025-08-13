@@ -3,8 +3,7 @@ export const whenAllDefined = () => Promise.all(['p-deck', 'p-slide'].map(tag =>
 
 /** @typedef {import('./components/slide.js').PresentationSlideElement} PresentationSlideElement */
 
-/** @internal */
-export let styleRoot = 'css/';
+let styleRoot = 'css/';
 
 /**
  * The `<p-deck>` element will start loading its stylesheet at the default location of `css/`, if nothing has been set
@@ -17,6 +16,34 @@ export function setStyleRoot(root) {
 	styleRoot = root;
 }
 
+/** @type {Record<string, Promise<CSSStyleSheet>>} */
+const stylesheets = {};
+
+/** @param {string | string[] | null} styles @internal */
+export const getStylesheets = styles => {
+	if (!styles) styles = [`${styleRoot}deck.css`];
+	else if (!Array.isArray(styles)) styles = [styles];
+
+	return Promise.all(
+		styles.map(source => {
+			const sourceString = String(source);
+			if (!stylesheets[sourceString]) {
+				const stylesheet = parseStylesheet(sourceString);
+				stylesheets[sourceString] = stylesheet
+					? Promise.resolve(stylesheet)
+					: fetch(sourceString, { headers: { accept: 'text/css' } })
+							.then(res => res.text())
+							.then(text => {
+								const styleSheet = new CSSStyleSheet();
+								styleSheet.replaceSync(text);
+								return styleSheet;
+							});
+			}
+			return stylesheets[sourceString];
+		})
+	);
+};
+
 /**
  * @param {unknown} element
  * @returns {element is PresentationSlideElement}
@@ -25,7 +52,7 @@ export function setStyleRoot(root) {
 export const isSlide = element => element instanceof Element && element.localName === 'p-slide';
 
 /** @param {string} source @internal */
-export const parseStylesheet = source => {
+const parseStylesheet = source => {
 	const styleSheet = new CSSStyleSheet();
 	styleSheet.replaceSync(source);
 	return styleSheet.cssRules.length || source.includes('\n') ? styleSheet : null;

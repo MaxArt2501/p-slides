@@ -6,14 +6,13 @@ import {
 	getHighlightIndex,
 	getHoverIndex,
 	getLabel,
+	getStylesheets,
 	isFragmentVisible,
 	isSlide,
 	matchKey,
-	parseStylesheet,
 	selectSlide,
 	setCurrentFragments,
 	setFragmentVisibility,
-	styleRoot,
 	whenAllDefined
 } from '../utils.js';
 
@@ -26,34 +25,6 @@ import {
 
 const MODES = /** @type {const} */ (['presentation', 'speaker', 'grid']);
 /** @typedef {typeof MODES[number]} PresentationMode */
-
-/** @type {Record<string, Promise<CSSStyleSheet>>} */
-const stylesheets = {};
-
-const getStylesheets = () => {
-	let { styles } = PresentationDeckElement;
-	if (!styles) styles = [`${styleRoot}deck.css`];
-	else if (!Array.isArray(styles)) styles = [styles];
-
-	return Promise.all(
-		styles.map(source => {
-			const sourceString = String(source);
-			if (!stylesheets[sourceString]) {
-				const stylesheet = parseStylesheet(sourceString);
-				stylesheets[sourceString] = stylesheet
-					? Promise.resolve(stylesheet)
-					: fetch(sourceString, { headers: { accept: 'text/css' } })
-							.then(res => res.text())
-							.then(text => {
-								const styleSheet = new CSSStyleSheet();
-								styleSheet.replaceSync(text);
-								return styleSheet;
-							});
-			}
-			return stylesheets[sourceString];
-		})
-	);
-};
 
 const html = String.raw;
 
@@ -140,6 +111,7 @@ export class PresentationDeckElement extends HTMLElement {
 		super();
 
 		this.attachShadow({ mode: 'open' });
+		/** @ignore */
 		this.shadowRoot.innerHTML = html`<slot></slot>
 			<a></a>
 			<aside part="sidebar">
@@ -152,7 +124,7 @@ export class PresentationDeckElement extends HTMLElement {
 				<ul part="notelist"></ul>
 			</aside>`;
 
-		getStylesheets().then(styles => this.shadowRoot.adoptedStyleSheets.push(...styles));
+		getStylesheets(PresentationDeckElement.styles).then(styles => this.shadowRoot.adoptedStyleSheets.push(...styles));
 
 		const [playButton, resetButton] = this.shadowRoot.querySelectorAll('button');
 		playButton.addEventListener('click', () => this.toggleClock());
@@ -190,7 +162,6 @@ export class PresentationDeckElement extends HTMLElement {
 		this.#clockInterval = this.ownerDocument.defaultView.setInterval(() => {
 			if (this.isClockRunning) this.#updateClock();
 		}, 1000);
-		this.shadowRoot.querySelector('span').setAttribute('data-total', this.slides.length);
 		this.#updateClock();
 
 		whenAllDefined().then(() => {
@@ -282,9 +253,7 @@ export class PresentationDeckElement extends HTMLElement {
 		}
 
 		selectSlide(this.slides, nextSlide);
-		const counter = this.shadowRoot.querySelector('span');
-		counter.textContent = this.currentIndex + 1;
-		counter.ariaLabel = getLabel(this, 'SLIDE_COUNTER');
+		this.#updateCounter();
 		copyNotes(this.shadowRoot.querySelector('ul'), nextSlide.notes);
 		this.#highlightedSlideIndex = this.currentIndex;
 
@@ -304,7 +273,7 @@ export class PresentationDeckElement extends HTMLElement {
 	}
 	set currentIndex(index) {
 		const { slides } = this;
-		if (slides.lenght === 0 && +index === 0) {
+		if (slides.length === 0 && +index === 0) {
 			return;
 		}
 		const slide = slides[index];
@@ -375,7 +344,7 @@ export class PresentationDeckElement extends HTMLElement {
 	#keyHandler = /**
 	 * @this {PresentationDeckElement}
 	 * @param {KeyboardEvent} keyEvent
-	 */ function (keyEvent) {
+	 */ keyEvent => {
 		const [realTarget] = /** @type {Element[]} */ (keyEvent.composedPath());
 		if (realTarget.isContentEditable || ['input', 'select', 'textarea'].includes(realTarget.localName)) return;
 		if (this.mode === 'grid' && ['altKey', 'shiftKey', 'metaKey', 'ctrlKey'].every(modifier => !keyEvent[modifier])) {
@@ -428,16 +397,23 @@ export class PresentationDeckElement extends HTMLElement {
 				this.mode = MODES[(MODES.indexOf(this.mode) + MODES.length - 1) % MODES.length];
 				break;
 		}
-	}.bind(this);
+	};
 
 	#handleGridPointer = /**
 	 * @this {PresentationDeckElement}
 	 * @param {PointerEvent} event
-	 */ function ({ pageX, pageY }) {
+	 */ ({ pageX, pageY }) => {
 		if (this.mode === 'grid') {
 			this.#hoveredSlideIndex = getHoverIndex(pageX, pageY, this.slides);
 		}
-	}.bind(this);
+	};
+
+	#updateCounter() {
+		const counter = this.shadowRoot.querySelector('span');
+		counter.textContent = this.currentIndex + 1;
+		counter.dataset.total = this.slides.length;
+		counter.ariaLabel = getLabel(this, 'SLIDE_COUNTER');
+	}
 
 	/**
 	 * Advances the presentation, either by showing a new fragment on the current slide, or switching to the next slide.
