@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.4.2
+
+- order speaker notes according to the order of the container fragments;
+- set slides inert to pointer actions except for the current one.
+
 ## 1.4.1
 
 - add missing lib.d.ts in package.json's files property
