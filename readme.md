@@ -324,11 +324,11 @@ It's `true` if and only if the presentation is at the end.
 
 The amount of milliseconds on the timer.
 
-#### `readonly isClockRunning: boolean`
+##### `readonly isClockRunning: boolean`
 
 It's `true` if and only if the timer is not paused.
 
-#### `state: PresentationState`
+##### `state: PresentationState`
 
 An object that represents the presentation's state. Although exposed, handle it with caution, as changes may not be
 reflected on the view or a second window. Use the method `broadcastState()` to send an updated state to a second view.
