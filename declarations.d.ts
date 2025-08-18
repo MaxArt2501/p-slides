@@ -11,7 +11,8 @@ export type KeyCommand =
 	| 'gotoend'
 	| 'toggleclock'
 	| 'resetclock'
-	| 'togglemode';
+	| 'togglemode'
+	| 'previousmode';
 
 export interface PresentationState {
 	currentIndex: number;
