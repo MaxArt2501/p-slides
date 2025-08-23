@@ -19,12 +19,14 @@ export function setStyleRoot(root) {
 /** @type {Record<string, Promise<CSSStyleSheet>>} */
 const stylesheets = {};
 
-/** @param {string | string[] | null} styles @internal */
-export const getStylesheets = styles => {
+/** @param {import('./components/deck.js').PresentationDeckElement} deck @internal */
+export const applyStylesheets = async deck => {
+	let styles =
+		deck.getAttribute('styles') || /** @type {typeof import('./components/deck.js').PresentationDeckElement} */ (deck.constructor).styles;
 	if (!styles) styles = [`${styleRoot}deck.css`];
 	else if (!Array.isArray(styles)) styles = [styles];
 
-	return Promise.all(
+	const cssStyles = await Promise.all(
 		styles.map(source => {
 			const sourceString = String(source);
 			if (!stylesheets[sourceString]) {
@@ -42,6 +44,7 @@ export const getStylesheets = styles => {
 			return stylesheets[sourceString];
 		})
 	);
+	deck.shadowRoot.adoptedStyleSheets.push(...cssStyles);
 };
 
 /**
@@ -156,7 +159,7 @@ export function matchKey(keyEvent, keyMap) {
  */
 export const fireEvent = (target, eventName, detail = {}) => {
 	const event = new CustomEvent(`p-slides.${eventName}`, { bubbles: true, detail });
-	target.dispatchEvent(event);
+	return target.dispatchEvent(event);
 };
 
 /**

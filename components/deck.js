@@ -1,4 +1,5 @@
 import {
+	applyStylesheets,
 	checkNoteActivations,
 	copyNotes,
 	fireEvent,
@@ -6,7 +7,6 @@ import {
 	getHighlightIndex,
 	getHoverIndex,
 	getLabel,
-	getStylesheets,
 	isFragmentVisible,
 	isSlide,
 	matchKey,
@@ -50,7 +50,11 @@ const html = String.raw;
  * @csspart {<aside>} sidebar - Spearker mode's sidebar
  * @csspart {<header>} toolbar - Spearker mode's toolbar inside the sidenav
  * @csspart {<ul>} notelist - Container for the speaker notes
- * @csspart {<button>} control-button - Play, pause and clock reset button
+ * @csspart {<button>} control-button - Timer play/pause and timer reset button
+ * @csspart {<button>} timer-button - Timer play/pause button
+ * @csspart {<button>} reset-button - Timer reset button
+ * @csspart {<time>} timer - Container for the elapsed time
+ * @csspart {<span>} counter - Container for the current slide index (1-based)
  */
 export class PresentationDeckElement extends HTMLElement {
 	/**
@@ -110,27 +114,28 @@ export class PresentationDeckElement extends HTMLElement {
 	constructor() {
 		super();
 
-		this.attachShadow({ mode: 'open' });
-		/** @ignore */
-		this.shadowRoot.innerHTML = html`<slot></slot>
-			<a></a>
-			<aside part="sidebar">
-				<header part="toolbar">
-					<span></span>
-					<time role="timer" aria-label="${getLabel(this, 'ELAPSED_TIME')}" aria-atomic="true" aria-busy="false"></time>
-					<button type="button" part="control-button" aria-label="${getLabel(this, 'TIMER_START')}"></button>
-					<button type="button" part="control-button" aria-label="${getLabel(this, 'TIMER_RESET')}"></button>
-				</header>
-				<ul part="notelist"></ul>
-			</aside>`;
+		if (!this.shadowRoot) {
+			this.attachShadow({ mode: 'open' });
+			/** @ignore */
+			this.shadowRoot.innerHTML = html`<slot></slot>
+				<a part="slide-highlighter"></a>
+				<aside part="sidebar">
+					<header part="toolbar">
+						<span part="counter"></span>
+						<time part="timer" role="timer" aria-label="${getLabel(this, 'ELAPSED_TIME')}" aria-atomic="true" aria-busy="false"></time>
+						<button type="button" part="control-button timer-button" aria-label="${getLabel(this, 'TIMER_START')}"></button>
+						<button type="button" part="control-button reset-button" aria-label="${getLabel(this, 'TIMER_RESET')}"></button>
+					</header>
+					<ul part="notelist"></ul>
+				</aside>`;
+		}
 
-		getStylesheets(PresentationDeckElement.styles).then(styles => this.shadowRoot.adoptedStyleSheets.push(...styles));
+		applyStylesheets(this);
 
-		const [playButton, resetButton] = this.shadowRoot.querySelectorAll('button');
-		playButton.addEventListener('click', () => this.toggleClock());
-		resetButton.addEventListener('click', () => (this.clock = 0));
+		this.shadowRoot.querySelector('[part~="timer-button"]').addEventListener('click', () => this.toggleClock());
+		this.shadowRoot.querySelector('[part~="reset-button"]').addEventListener('click', () => (this.clock = 0));
 
-		this.#gridLink = this.shadowRoot.querySelector('a');
+		this.#gridLink = this.shadowRoot.querySelector('[part~="slide-highlighter"]');
 		this.#gridLink.addEventListener('click', () => {
 			this.currentIndex = this.#hoveredSlideIndex >= 0 ? this.#hoveredSlideIndex : this.#highlightedSlideIndex;
 			this.mode = this.#previousMode;
@@ -254,7 +259,7 @@ export class PresentationDeckElement extends HTMLElement {
 
 		selectSlide(this.slides, nextSlide);
 		this.#updateCounter();
-		copyNotes(this.shadowRoot.querySelector('ul'), nextSlide.notes);
+		copyNotes(this.shadowRoot.querySelector('[part~="notelist"]'), nextSlide.notes);
 		this.#highlightedSlideIndex = this.currentIndex;
 
 		this.#currentSlide = nextSlide;
@@ -266,7 +271,7 @@ export class PresentationDeckElement extends HTMLElement {
 	}
 
 	/**
-	 * Getter/setter of index of the current slide.
+	 * Getter/setter of index of the current slide (0-based).
 	 */
 	get currentIndex() {
 		return [...this.slides].findIndex(slide => slide.isActive);
@@ -409,7 +414,7 @@ export class PresentationDeckElement extends HTMLElement {
 	};
 
 	#updateCounter() {
-		const counter = this.shadowRoot.querySelector('span');
+		const counter = this.shadowRoot.querySelector('[part~="counter"]');
 		counter.textContent = this.currentIndex + 1;
 		counter.dataset.total = this.slides.length;
 		counter.ariaLabel = getLabel(this, 'SLIDE_COUNTER');
@@ -476,7 +481,7 @@ export class PresentationDeckElement extends HTMLElement {
 	}
 
 	#checkNotes() {
-		checkNoteActivations(this.shadowRoot.querySelector('ul'), this.currentSlide.notes);
+		checkNoteActivations(this.shadowRoot.querySelector('[part~="notelist"]'), this.currentSlide.notes);
 	}
 
 	/**
@@ -484,8 +489,8 @@ export class PresentationDeckElement extends HTMLElement {
 	 */
 	startClock() {
 		this.#clockStart = Date.now();
-		this.shadowRoot.querySelector('time').ariaBusy = 'true';
-		this.shadowRoot.querySelector('button').ariaLabel = getLabel(this, 'TIMER_PAUSE');
+		this.shadowRoot.querySelector('[part~="timer"]').ariaBusy = 'true';
+		this.shadowRoot.querySelector('[part~="timer-button"]').ariaLabel = getLabel(this, 'TIMER_PAUSE');
 		fireEvent(this, 'clockstart', { timestamp: this.#clockStart, elapsed: this.#clockElapsed });
 		this.broadcastState();
 	}
@@ -498,8 +503,8 @@ export class PresentationDeckElement extends HTMLElement {
 			this.#clockElapsed += Date.now() - this.#clockStart;
 		}
 		this.#clockStart = null;
-		this.shadowRoot.querySelector('time').ariaBusy = 'false';
-		this.shadowRoot.querySelector('button').ariaLabel = getLabel(this, 'TIMER_START');
+		this.shadowRoot.querySelector('[part~="timer"]').ariaBusy = 'false';
+		this.shadowRoot.querySelector('[part~="timer-button"]').ariaLabel = getLabel(this, 'TIMER_START');
 		fireEvent(this, 'clockstop', { elapsed: this.#clockElapsed });
 		this.broadcastState();
 	}
@@ -516,7 +521,7 @@ export class PresentationDeckElement extends HTMLElement {
 	}
 
 	#updateClock() {
-		const time = this.shadowRoot.querySelector('time');
+		const time = this.shadowRoot.querySelector('[part~="timer"]');
 		const parts = formatClock(this.clock);
 		time.textContent = parts.map(part => part.toString().padStart(2, '0')).join(':');
 		time.dateTime = `PT${parts[0]}H${parts[1]}M${parts[2]}S`;
