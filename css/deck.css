@@ -1,4 +1,6 @@
 :host {
+	--computed-font-size: calc(min(1cqw, 1cqh * var(--slide-aspect-ratio)) * var(--slide-font-size, 5));
+	--grid-gap: 0.25em;
 	position: fixed;
 	inset: 0;
 	overflow: hidden;
@@ -8,8 +10,7 @@
 	align-items: center;
 	color: #222;
 	counter-reset: slide;
-	font-size: calc(min(1cqw, 1cqh * var(--slide-aspect-ratio)) * var(--slide-font-size, 5));
-	--grid-gap: 0.25em;
+	font-size: var(--computed-font-size);
 
 	@media (prefers-reduced-motion: no-preference) {
 		--sliding-duration: 0.5s;

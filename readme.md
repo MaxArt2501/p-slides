@@ -497,6 +497,7 @@ If you don't need to tweak the stylesheet as much, P-Slides can be fine-tuned by
 
 | Property                 | Type        | Default           | Description                                                                                      |
 | ------------------------ | ----------- | ----------------- | ------------------------------------------------------------------------------------------------ |
+| `--computed-font-size`   | `<length>`  | _computed value_  | Font size for the deck. Useful as a reference for sizing. Computed using `--slide-font-size`     |
 | `--fragment-duration`    | `<time>`    | 300ms             | Time for a fragment's transition                                                                 |
 | `--grid-columns`         | `<integer>` | 4                 | Number of columns in grid mode                                                                   |
 | `--grid-gap`             | `<length>`  | 0.25em            | Gap and external padding in grid mode                                                            |

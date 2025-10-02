@@ -23,6 +23,11 @@
 	inherits: true;
 	initial-value: 4;
 }
+@property --computed-font-size {
+	syntax: '<length>';
+	inherits: true;
+	initial-value: 1rem;
+}
 @property --grid-gap {
 	syntax: '<length>';
 	inherits: true;
