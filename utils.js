@@ -1,6 +1,7 @@
 /** @internal */
 export const whenAllDefined = () => Promise.all(['p-deck', 'p-slide'].map(tag => customElements.whenDefined(tag)));
 
+/** @typedef {import('./components/deck.js').PresentationDeckElement} PresentationDeckElement */
 /** @typedef {import('./components/slide.js').PresentationSlideElement} PresentationSlideElement */
 
 let styleRoot = 'css/';
@@ -19,7 +20,7 @@ export function setStyleRoot(root) {
 /** @type {Record<string, Promise<CSSStyleSheet>>} */
 const stylesheets = {};
 
-/** @param {import('./components/deck.js').PresentationDeckElement} deck @internal */
+/** @param {PresentationDeckElement} deck @internal */
 export const applyStylesheets = async deck => {
 	let styles =
 		deck.getAttribute('styles') || /** @type {typeof import('./components/deck.js').PresentationDeckElement} */ (deck.constructor).styles;
@@ -296,4 +297,12 @@ export const getHoverIndex = (pageX, pageY, slides) => {
 		}
 	}
 	return -1;
+};
+
+const encoder = new TextEncoder();
+/** @param {Element} element @internal */
+export const generateTextId = async element => {
+	const hash = await crypto.subtle.digest('sha-1', encoder.encode(element.textContent).buffer);
+	const bytes = new Uint8Array(hash);
+	return bytes.toHex?.() ?? Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('');
 };

@@ -4,6 +4,7 @@ import {
 	copyNotes,
 	fireEvent,
 	formatClock,
+	generateTextId,
 	getHighlightIndex,
 	getHoverIndex,
 	getLabel,
@@ -22,6 +23,7 @@ import {
 /** @typedef {import('../declarations.js').PresentationClockStartEvent} PresentationClockStartEvent */
 /** @typedef {import('../declarations.js').PresentationClockStopEvent} PresentationClockStopEvent */
 /** @typedef {import('../declarations.js').PresentationClockSetEvent} PresentationClockSetEvent */
+/** @typedef {import('../declarations.js').PresentationState} PresentationState */
 
 const MODES = /** @type {const} */ (['presentation', 'speaker', 'grid']);
 /** @typedef {typeof MODES[number]} PresentationMode */
@@ -144,7 +146,7 @@ export class PresentationDeckElement extends HTMLElement {
 		this.addEventListener('pointermove', this.#handleGridPointer);
 
 		// Channel for state sync
-		this.#channel.addEventListener('message', ({ data }) => {
+		this.#channel.addEventListener('message', (/** @type {MessageEvent<PresentationState>} */ { data }) => {
 			// Sending a null state => requesting the state
 			if (data === null) {
 				this.broadcastState();
@@ -163,6 +165,7 @@ export class PresentationDeckElement extends HTMLElement {
 
 	/** @internal */
 	connectedCallback() {
+		if (!this.id) generateTextId(this).then(id => (this.id = `deck_${id}`));
 		this.ownerDocument.addEventListener('keydown', this.#keyHandler);
 		this.#clockInterval = this.ownerDocument.defaultView.setInterval(() => {
 			if (this.isClockRunning) this.#updateClock();
@@ -558,18 +561,19 @@ export class PresentationDeckElement extends HTMLElement {
 	 * An object that represents the presentation's state. Although exposed, handle it with caution, as changes may not be
 	 * reflected on the view or a second window. Use the method `broadcastState()` to send an updated state to a second
 	 * view.
-	 * @type {import('../declarations.js').PresentationState}
+	 * @type {PresentationState}
 	 */
 	get state() {
-		const state = {
+		return {
+			deckId: this.id,
 			currentIndex: this.currentIndex,
 			currentSlideFragmentVisibility: Array.from(this.currentSlide.fragments, isFragmentVisible),
 			clockElapsed: this.#clockElapsed,
 			clockStart: this.#clockStart
 		};
-		return state;
 	}
 	set state(state) {
+		if (state.deckId !== this.id) return;
 		this.currentIndex = state.currentIndex;
 		this.#clockElapsed = state.clockElapsed;
 		this.#clockStart = state.clockStart;

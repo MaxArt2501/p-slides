@@ -19,6 +19,7 @@ export interface PresentationState {
 	currentSlideFragmentVisibility: boolean[];
 	clockElapsed: number;
 	clockStart: number | null;
+	deckId: string;
 }
 
 export type PresentationLabel<Context> = string | ((context: Context) => string);
@@ -58,6 +59,9 @@ export type PresentationFragmentToggleEvent = CustomEvent<{
 }>;
 
 declare global {
+	interface Uint8Array {
+		toHex(): string;
+	}
 	interface HTMLElementTagNameMap {
 		'p-deck': PresentationDeckElement;
 		'p-slide': PresentationSlideElement;

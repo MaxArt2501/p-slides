@@ -78,7 +78,7 @@ Now you're ready to design your presentation. In order to do so, wrap your `<p-s
 
 ```html
 <body>
-	<p-deck>
+	<p-deck id="myFirstPresentation">
 		<p-slide>First slide</p-slide>
 		<p-slide>Second slide</p-slide>
 		...
@@ -101,6 +101,13 @@ In order to navigate among the slides, you can use the following keys:
 - <kbd>End</kbd>: end of the presentation.
 
 These keys are compatible with most presentation pointers that are registered as external keyboards.
+
+The `id` attribute on the `<p-deck>` element is necessary to tell decks apart. If not provided, it will be generated
+using the [text content](https://developer.mozilla.org/en-US/docs/Web/API/Node/textContent) of the deck, hashed using
+SHA-1 and converted to a hex string. This is necessary because you can open the presentation in more than one window
+and their states are synchronized using a
+[`BroadcastChannel`](https://developer.mozilla.org/en-US/docs/Web/API/Broadcast_Channel_API). If different decks are
+server on the same origin, then their states would get mixed.
 
 ### Fragments
 
