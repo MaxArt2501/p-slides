@@ -493,6 +493,8 @@ The latter should be loaded however you want (presumably a `<link>` element), wh
 `<p-deck>` component class (see the documentation for `setStyleRoot()` and `PresentationDeckElement.styles`). Of course,
 you can replace them as you like and define your own styles from scratch.
 
+#### CSS custom properties
+
 If you don't need to tweak the stylesheet as much, P-Slides can be fine-tuned by setting some CSS custom properties:
 
 | Property                 | Type        | Default           | Description                                                                                      |
@@ -504,9 +506,10 @@ If you don't need to tweak the stylesheet as much, P-Slides can be fine-tuned by
 | `--grid-highlight-color` | \*          | `LinkText` / 50%  | Color for the outline of the highlighted slide in grid mode                                      |
 | `--slide-aspect-ratio`   | `<number>`  | 1.777778 (16 / 9) | Aspect ratio of the slides                                                                       |
 | `--slide-bg`             | \*          | white             | Background for the slides. Can be anything `background` accepts. Can be set on a single slide    |
-| `--slide-effect`         | \*          | shuffle           | Animation effect for the slide (see [Slide effects](#slide-effects))                             |
 | `--slide-font-size`      | \*          | 5                 | Size of the base presentation font in virtual units. Slides will be 100/(this value) `em`s large |
+| `--slide-height`         | `<length>`  | 0                 | Height of a slide                                                                                |
 | `--slide-previous`       | \*          | 0                 | Set to 1 for every _previous_ slide; otherwise it's 0. Useful for animation effects and such     |
+| `--slide-width`          | `<length>`  | 0                 | Width of a slide                                                                                 |
 | `--sliding-duration`     | `<time>`    | 0s/0.5s           | Time for the transition between two slides: 0.5s if the user doesn't prefer reduced motion       |
 | `--speaker-next-scale`   | `<number>`  | 0.666667 (2 / 3)  | Scale for the next slide compared to the whole area in speaker mode.                             |
 
@@ -538,7 +541,7 @@ always use the following:
 
 - getting `slides.length` of the parent deck element;
 - using [`sibling-count()`](https://developer.mozilla.org/en-US/docs/Web/CSS/sibling-count) - only where supported and
-  only if all the slides are actually children of the same element.
+  only if all the slides are the only children of the same element.
 
 If you're providing your own styles for the presentation, remember it's important to not set `display: none` on hidden
 slides, because such elements don't affect counters.

@@ -1,6 +1,8 @@
 :host {
-	--computed-font-size: calc(min(1cqw, 1cqh * var(--slide-aspect-ratio)) * var(--slide-font-size, 5));
-	--grid-gap: 0.25em;
+	--slide-width: min(100cqw, 100cqh * var(--slide-aspect-ratio));
+	--slide-height: min(100cqw / var(--slide-aspect-ratio), 100cqh);
+	--computed-font-size: calc(var(--slide-width) * var(--slide-font-size, 5) / 100);
+	--grid-gap: 0.6cqw;
 	position: fixed;
 	inset: 0;
 	overflow: hidden;
@@ -159,6 +161,5 @@ button:last-of-type::after {
 	aspect-ratio: var(--slide-aspect-ratio) !important;
 	grid-area: auto !important;
 	min-height: 0;
-	font-size: calc(100% / var(--grid-columns));
 	pointer-events: none;
 }

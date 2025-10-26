@@ -3,6 +3,21 @@
 	inherits: true;
 	initial-value: calc(16 / 9);
 }
+@property --computed-font-size {
+	syntax: '<length>';
+	inherits: true;
+	initial-value: 1rem;
+}
+@property --slide-width {
+	syntax: '<length>';
+	inherits: true;
+	initial-value: 1px;
+}
+@property --slide-height {
+	syntax: '<length>';
+	inherits: true;
+	initial-value: 1px;
+}
 @property --sliding-duration {
 	syntax: '<time>';
 	inherits: true;
@@ -23,11 +38,6 @@
 	inherits: true;
 	initial-value: 4;
 }
-@property --computed-font-size {
-	syntax: '<length>';
-	inherits: true;
-	initial-value: 1rem;
-}
 @property --grid-gap {
 	syntax: '<length>';
 	inherits: true;
@@ -39,10 +49,8 @@ p-slide {
 	flex-direction: column;
 	justify-content: center;
 	background: var(--slide-bg, white);
-	width: calc(100cqmin * var(--slide-aspect-ratio));
-	max-width: 100cqw;
-	height: calc(100cqw / var(--slide-aspect-ratio));
-	max-height: 100cqh;
+	width: var(--slide-width);
+	aspect-ratio: var(--slide-aspect-ratio);
 	grid-area: 1 / 1;
 	box-sizing: border-box;
 	padding: 1em;
