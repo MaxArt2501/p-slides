@@ -135,7 +135,7 @@ export const checkNoteActivations = (noteContainer, notes) => {
  * @template {string} T
  * @internal
  */
-export function matchKey(keyEvent, keyMap) {
+function matchKey(keyEvent, keyMap) {
 	for (const [command, keys] of Object.entries(keyMap)) {
 		for (const keyDef of keys) {
 			if (Object.entries(keyDef).every(([prop, value]) => keyEvent[prop] === value)) {
@@ -305,4 +305,64 @@ export const generateTextId = async element => {
 	const hash = await crypto.subtle.digest('sha-1', encoder.encode(element.textContent).buffer);
 	const bytes = new Uint8Array(hash);
 	return bytes.toHex?.() ?? Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('');
+};
+
+/** @type {PresentationKeyHandler} */
+export const defaultKeyHandler = (keyEvent, deck) => {
+	const command = matchKey(keyEvent, deck.keyCommands);
+	switch (command) {
+		case 'previous':
+			deck.previous();
+			break;
+		case 'next':
+			deck.next();
+			break;
+		case 'previousslide':
+			deck.previousSlide();
+			break;
+		case 'nextslide':
+			deck.nextSlide();
+			break;
+		case 'gotostart':
+			deck.currentIndex = 0;
+			deck.previousSlide();
+			break;
+		case 'gotoend':
+			deck.currentIndex = deck.slides.length - 1;
+			deck.nextSlide();
+			break;
+		case 'toggleclock':
+			deck.toggleClock();
+			break;
+		case 'resetclock':
+			deck.clock = 0;
+			break;
+		case 'togglemode':
+			deck.mode = deck.modes[(deck.modes.indexOf(deck.mode) + 1) % deck.modes.length];
+			break;
+		case 'previousmode':
+			deck.mode = deck.modes[(deck.modes.indexOf(deck.mode) + deck.modes.length - 1) % deck.modes.length];
+			break;
+		default:
+			return false;
+	}
+	return true;
+};
+
+/** @type {PresentationKeyHandler} */
+export const gridKeyHandler = (keyEvent, deck) => {
+	if (['altKey', 'shiftKey', 'metaKey', 'ctrlKey'].some(modifier => keyEvent[modifier])) return false;
+	if (['Escape', 'Enter', 'Space'].includes(keyEvent.key)) {
+		if (keyEvent.key !== 'Escape') {
+			deck.currentIndex = deck.highlightedSlideIndex;
+		}
+		deck.restoreMode();
+		return true;
+	}
+	const gridColumns = parseInt(deck.ownerDocument.defaultView.getComputedStyle(deck).getPropertyValue('--grid-columns'), 10);
+	const newIndex = updateHighlightIndex(keyEvent.key, deck.highlightedSlideIndex, gridColumns, deck.slides.length);
+	if (isNaN(newIndex)) return false;
+	deck.highlightedSlideIndex = newIndex;
+	keyEvent.preventDefault();
+	return true;
 };

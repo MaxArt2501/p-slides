@@ -331,6 +331,10 @@ It's `true` if and only if the presentation is at the end.
 
 The amount of milliseconds on the timer.
 
+##### `highlightedSlideIndex: number`
+
+Index of the currently highlighted slide (only meaningful in grid mode).
+
 ##### `readonly isClockRunning: boolean`
 
 It's `true` if and only if the timer is not paused.
@@ -370,6 +374,10 @@ Sends the current presentation's state to other windows/tabs open on the present
 ##### `requestState(): void`
 
 Retrieves the presentation's state from other windows/tabs open on the presentation.
+
+##### `restoreMode(): string`
+
+Returns to the previous deck mode, which is returned my the method.
 
 #### Events
 

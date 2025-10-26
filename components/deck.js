@@ -2,15 +2,16 @@ import {
 	applyStylesheets,
 	checkNoteActivations,
 	copyNotes,
+	defaultKeyHandler,
 	fireEvent,
 	formatClock,
 	generateTextId,
 	getHighlightIndex,
 	getHoverIndex,
 	getLabel,
+	gridKeyHandler,
 	isFragmentVisible,
 	isSlide,
-	matchKey,
 	selectSlide,
 	setCurrentFragments,
 	setFragmentVisibility,
@@ -43,7 +44,7 @@ const html = String.raw;
  * @fires {PresentationClockSetEvent} p-slides.clockset - When the timer has been explicitly set
  * @cssprop {<time>} [--fragment-duration=300ms] - Time for a fragment's transition
  * @cssprop {<integer>} [--grid-columns=4] - Number of columns in grid mode
- * @cssprop {<length>} [--grid-gap=0.25em] - Gap and external padding in grid mode
+ * @cssprop {<length>} [--grid-gap=0.6cqw] - Gap and external padding in grid mode
  * @cssprop [--grid-highlight-color=color-mix(in srgb, LinkText, transparent)] - Color for the outline of the highlighted slide in grid mode
  * @cssprop {<number>} [--slide-aspect-ratio=calc(16 / 9)] - Aspect ratio of the slides
  * @cssprop [--slide-font-size=5] - Size of the base presentation font in virtual units. Slides will be 100/(this value) `em`s large
@@ -99,6 +100,15 @@ export class PresentationDeckElement extends HTMLElement {
 			{ key: 'm', altKey: true, shiftKey: true }
 		]
 	};
+
+	/**
+	 * @type {Partial<Record<PresentationMode, import('../declarations.js').PresentationKeyHandler>>}
+	 */
+	keyHandlers = {
+		grid: gridKeyHandler
+	};
+
+	modes = MODES;
 
 	/**
 	 * Labels used in speaker mode for accessibility.
@@ -190,20 +200,19 @@ export class PresentationDeckElement extends HTMLElement {
 	#previousMode = 'presentation';
 
 	/**
-	 * Getter/setter of current deck mode. It reflects the same named attribute value _if_ it's either `'presentation'` or
-	 * `'speaker'` (defaults to the former). Also sets it when assigning.
+	 * Getter/setter of current deck mode. It reflects the same named attribute value _if_ it's either `'presentation'`,
+	 * `'speaker'` or `'grid'` (defaults to the first). Also sets it when assigning.
 	 *
 	 * Operatively speaking, changing the deck mode does _nothing_. Its only purpose is to apply a different style to the
-	 * presentation, i.e. either the 'normal' or the 'speaker' mode. If you provide your own stylesheet without a specific
-	 * style for the speaker mode then eh, you're on your own.
+	 * presentation.
 	 * @type {PresentationMode}
 	 */
 	get mode() {
 		const attrValue = this.getAttribute('mode');
-		return MODES.includes(attrValue) ? attrValue : 'presentation';
+		return this.modes.includes(attrValue) ? attrValue : 'presentation';
 	}
 	set mode(mode) {
-		if (!MODES.includes(mode) || mode === this.mode) return;
+		if (!this.modes.includes(mode) || mode === this.mode) return;
 		this.#previousMode = this.mode;
 		this.setAttribute('mode', mode);
 		this.slides.forEach(slide => (slide.inert = mode !== 'presentation'));
@@ -211,6 +220,9 @@ export class PresentationDeckElement extends HTMLElement {
 			this.#hoveredSlideIndex = -1;
 			this.#gridLink.scrollIntoView({ block: 'center' });
 		}
+
+	restoreMode() {
+		return (this.mode = this.#previousMode);
 	}
 
 	#resetCurrentSlide() {
@@ -253,7 +265,7 @@ export class PresentationDeckElement extends HTMLElement {
 		selectSlide(this.slides, nextSlide);
 		this.#updateCounter();
 		copyNotes(this.shadowRoot.querySelector('[part~="notelist"]'), nextSlide.notes);
-		this.#highlightedSlideIndex = this.currentIndex;
+		this.highlightedSlideIndex = this.currentIndex;
 
 		this.#currentSlide = nextSlide;
 		fireEvent(this, 'slidechange', { slide: nextSlide, previous: this.#currentSlide });
@@ -310,10 +322,13 @@ export class PresentationDeckElement extends HTMLElement {
 	/** @type {HTMLAnchorElement} */
 	#gridLink;
 
-	get #highlightedSlideIndex() {
+	/**
+	 * Index of the currently highlighted slide (only meaningful in grid mode).
+	 */
+	get highlightedSlideIndex() {
 		return parseInt(this.#gridLink.style.getPropertyValue('--highlighted-slide-index'), 10);
 	}
-	set #highlightedSlideIndex(value) {
+	set highlightedSlideIndex(value) {
 		this.#gridLink.style.setProperty('--highlighted-slide-index', value);
 		this.#gridLink.href = `#${value}`;
 		this.#hoveredSlideIndex = -1;
@@ -345,65 +360,8 @@ export class PresentationDeckElement extends HTMLElement {
 	 */ keyEvent => {
 		const [realTarget] = /** @type {Element[]} */ (keyEvent.composedPath());
 		if (realTarget.isContentEditable || ['input', 'select', 'textarea'].includes(realTarget.localName)) return;
-		if (this.mode === 'grid' && ['altKey', 'shiftKey', 'metaKey', 'ctrlKey'].every(modifier => !keyEvent[modifier])) {
-			if (['altKey', 'shiftKey', 'metaKey', 'ctrlKey'].some(modifier => keyEvent[modifier])) return;
-			if (keyEvent.key === 'Escape') {
-				this.mode = this.#previousMode;
-				return;
-			}
-			const gridColumns = parseInt(this.ownerDocument.defaultView.getComputedStyle(this).getPropertyValue('--grid-columns'), 10);
-			const newIndex = getHighlightIndex(keyEvent.key, this.#highlightedSlideIndex, gridColumns, this.slides.length);
-			if (!isNaN(newIndex)) {
-				this.#hoveredSlideIndex = -1;
-				this.#highlightedSlideIndex = newIndex;
-				keyEvent.preventDefault();
-			}
-			return;
-		}
-		const command = matchKey(keyEvent, this.keyCommands);
-		switch (command) {
-			case 'previous':
-				this.previous();
-				break;
-			case 'next':
-				this.next();
-				break;
-			case 'previousslide':
-				this.previousSlide();
-				break;
-			case 'nextslide':
-				this.nextSlide();
-				break;
-			case 'gotostart':
-				this.currentIndex = 0;
-				this.previousSlide();
-				break;
-			case 'gotoend':
-				this.currentIndex = this.slides.length - 1;
-				this.nextSlide();
-				break;
-			case 'toggleclock':
-				this.toggleClock();
-				break;
-			case 'resetclock':
-				this.clock = 0;
-				break;
-			case 'togglemode':
-				this.mode = MODES[(MODES.indexOf(this.mode) + 1) % MODES.length];
-				break;
-			case 'previousmode':
-				this.mode = MODES[(MODES.indexOf(this.mode) + MODES.length - 1) % MODES.length];
-				break;
-		}
-	};
-
-	#handleGridPointer = /**
-	 * @this {PresentationDeckElement}
-	 * @param {PointerEvent} event
-	 */ ({ pageX, pageY }) => {
-		if (this.mode === 'grid') {
-			this.#hoveredSlideIndex = getHoverIndex(pageX, pageY, this.slides);
-		}
+		const handled = this.keyHandlers[this.mode]?.(keyEvent, this);
+		if (!handled) defaultKeyHandler(keyEvent, this);
 	};
 
 	#updateCounter() {

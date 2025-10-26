@@ -75,3 +75,5 @@ declare global {
 		'p-slides.fragmenttoggle': PresentationFragmentToggleEvent;
 	}
 }
+
+export type PresentationKeyHandler = (event: KeyboardEvent, deck: PresentationDeckElement) => boolean;
