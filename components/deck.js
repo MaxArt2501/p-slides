@@ -224,16 +224,6 @@ export class PresentationDeckElement extends HTMLElement {
 		}
 	}
 
-	get slideSizes() {
-		const { width, height } = this.getBoundingClientRect();
-		const deckRatio = width / height;
-		const aspectRatio = +this.ownerDocument.defaultView.getComputedStyle(this).getPropertyValue('--slide-aspect-ratio') || 16 / 9;
-		if (deckRatio > aspectRatio) {
-			return { width: height * aspectRatio, height };
-		}
-		return { width, height: width / aspectRatio };
-	}
-
 	/** @type {PresentationSlideElement | null} */
 	#currentSlide = null;
 
