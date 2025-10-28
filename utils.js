@@ -3,6 +3,7 @@ export const whenAllDefined = () => Promise.all(['p-deck', 'p-slide'].map(tag =>
 
 /** @typedef {import('./components/deck.js').PresentationDeckElement} PresentationDeckElement */
 /** @typedef {import('./components/slide.js').PresentationSlideElement} PresentationSlideElement */
+/** @typedef {import('./declarations.js').PresentationKeyHandler} PresentationKeyHandler */
 
 let styleRoot = 'css/';
 
@@ -46,6 +47,7 @@ export const applyStylesheets = async deck => {
 		})
 	);
 	deck.shadowRoot.adoptedStyleSheets.push(...cssStyles);
+	return cssStyles;
 };
 
 /**
@@ -272,32 +274,14 @@ const indexMoveMap = {
  * @param {number} slides
  * @internal
  */
-export const getHighlightIndex = (key, current, columns, slides) =>
+export const updateHighlightIndex = (key, current, columns, slides) =>
 	key in indexMoveMap ? indexMoveMap[key](current, columns, slides) : NaN;
 
-/**
- * @param {number} pageX
- * @param {number} pageY
- * @param {PresentationSlideElement[]} slides
- * @internal
- */
-export const getHoverIndex = (pageX, pageY, slides) => {
-	let start = 0;
-	let end = slides.length;
-	while (end > start) {
-		const midIndex = (start + end) >> 1;
-		const midRect = slides[midIndex].getBoundingClientRect();
-		if (pageX >= midRect.left && pageY >= midRect.top && pageX < midRect.right && pageY < midRect.bottom) {
-			return midIndex;
-		}
-		if (pageY >= midRect.bottom || (pageY >= midRect.top && pageX >= midRect.right)) {
-			start = midIndex + 1;
-		} else {
-			end = midIndex;
-		}
-	}
-	return -1;
-};
+/** @param {number} index */
+export const getHighlightSelector = index => `:host([mode="grid"]) ::slotted(p-slide:nth-of-type(${index}))`;
+
+/** @param {string} selector */
+export const getHighlightIndex = selector => selector.replace(/\D/g, '') - 1;
 
 const encoder = new TextEncoder();
 /** @param {Element} element @internal */
@@ -306,6 +290,10 @@ export const generateTextId = async element => {
 	const bytes = new Uint8Array(hash);
 	return bytes.toHex?.() ?? Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('');
 };
+
+const motionMatcher = matchMedia('(prefers-reduced-motion: no-preference)');
+export let whateverMotion = motionMatcher.matches;
+motionMatcher.addEventListener('change', event => (whateverMotion = event.matches));
 
 /** @type {PresentationKeyHandler} */
 export const defaultKeyHandler = (keyEvent, deck) => {

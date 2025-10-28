@@ -7,7 +7,7 @@ import {
 	formatClock,
 	generateTextId,
 	getHighlightIndex,
-	getHoverIndex,
+	getHighlightSelector,
 	getLabel,
 	gridKeyHandler,
 	isFragmentVisible,
@@ -15,6 +15,7 @@ import {
 	selectSlide,
 	setCurrentFragments,
 	setFragmentVisibility,
+	whateverMotion,
 	whenAllDefined
 } from '../utils.js';
 
@@ -78,6 +79,9 @@ export class PresentationDeckElement extends HTMLElement {
 
 	#channel = new BroadcastChannel('p-slides');
 
+	/** @type {CSSStyleRule} */
+	#highlightRule;
+
 	/**
 	 * Deck commands mapped to their key bindings.
 	 * @type {Record<import('../declarations.js').KeyCommand, Array<Partial<KeyboardEvent>>>}
@@ -130,7 +134,6 @@ export class PresentationDeckElement extends HTMLElement {
 			this.attachShadow({ mode: 'open' });
 			/** @ignore */
 			this.shadowRoot.innerHTML = html`<slot></slot>
-				<a part="slide-highlighter"></a>
 				<aside part="sidebar">
 					<header part="toolbar">
 						<span part="counter"></span>
@@ -142,18 +145,25 @@ export class PresentationDeckElement extends HTMLElement {
 				</aside>`;
 		}
 
-		applyStylesheets(this);
+		applyStylesheets(this).then(([styleSheet]) => {
+			styleSheet.insertRule(`${getHighlightSelector(this.currentIndex + 1)}{--is-highlighted:1}`);
+			this.#highlightRule = styleSheet.cssRules[0];
+		});
 
 		this.shadowRoot.querySelector('[part~="timer-button"]').addEventListener('click', () => this.toggleClock());
 		this.shadowRoot.querySelector('[part~="reset-button"]').addEventListener('click', () => (this.clock = 0));
-
-		this.#gridLink = this.shadowRoot.querySelector('[part~="slide-highlighter"]');
-		this.#gridLink.addEventListener('click', () => {
-			this.currentIndex = this.#hoveredSlideIndex >= 0 ? this.#hoveredSlideIndex : this.#highlightedSlideIndex;
-			this.mode = this.#previousMode;
-		});
-
-		this.addEventListener('pointermove', this.#handleGridPointer);
+		this.shadowRoot.querySelector('slot').addEventListener(
+			'click',
+			event => {
+				const slide = /** @type {PresentationSlideElement | null} */ (event.target.closest('p-slide'));
+				if (slide && slide !== this.currentSlide) {
+					this.currentSlide = slide;
+					this.restoreMode();
+					event.stopPropagation();
+				}
+			},
+			{ capture: true }
+		);
 
 		// Channel for state sync
 		this.#channel.addEventListener('message', (/** @type {MessageEvent<PresentationState>} */ { data }) => {
@@ -215,11 +225,8 @@ export class PresentationDeckElement extends HTMLElement {
 		if (!this.modes.includes(mode) || mode === this.mode) return;
 		this.#previousMode = this.mode;
 		this.setAttribute('mode', mode);
-		this.slides.forEach(slide => (slide.inert = mode !== 'presentation'));
-		if (mode === 'grid') {
-			this.#hoveredSlideIndex = -1;
-			this.#gridLink.scrollIntoView({ block: 'center' });
-		}
+		this.#currentSlide?.scrollIntoView({ block: 'center' });
+	}
 
 	restoreMode() {
 		return (this.mode = this.#previousMode);
@@ -319,39 +326,20 @@ export class PresentationDeckElement extends HTMLElement {
 		return !lastSlide?.nextHiddenFragments;
 	}
 
-	/** @type {HTMLAnchorElement} */
-	#gridLink;
-
 	/**
 	 * Index of the currently highlighted slide (only meaningful in grid mode).
 	 */
 	get highlightedSlideIndex() {
-		return parseInt(this.#gridLink.style.getPropertyValue('--highlighted-slide-index'), 10);
+		return getHighlightIndex(this.#highlightRule.selectorText);
 	}
-	set highlightedSlideIndex(value) {
-		this.#gridLink.style.setProperty('--highlighted-slide-index', value);
-		this.#gridLink.href = `#${value}`;
-		this.#hoveredSlideIndex = -1;
-		if (this.mode === 'grid') {
-			if (this.shadowRoot.activeElement !== this.#gridLink) this.#gridLink.focus();
-			this.#gridLink.scrollIntoView({
-				block: 'center',
-				behavior: matchMedia('(prefers-reduced-motion: no-preference)').matches ? 'smooth' : 'auto'
-			});
+	set highlightedSlideIndex(index) {
+		if (this.#highlightRule) {
+			this.#highlightRule.selectorText = getHighlightSelector(index + 1);
 		}
-	}
-
-	get #hoveredSlideIndex() {
-		const value = parseInt(this.#gridLink.style.getPropertyValue('--hovered-slide-index'), 10);
-		return isNaN(value) ? -1 : value;
-	}
-	set #hoveredSlideIndex(value) {
-		if (value >= 0) {
-			this.#gridLink.style.setProperty('--hovered-slide-index', value);
-			this.#gridLink.href = `#${value}`;
-		} else {
-			this.#gridLink.style.removeProperty('--hovered-slide-index');
-		}
+		this.slides[index].scrollIntoView({
+			block: 'center',
+			behavior: whateverMotion ? 'smooth' : 'auto'
+		});
 	}
 
 	#keyHandler = /**

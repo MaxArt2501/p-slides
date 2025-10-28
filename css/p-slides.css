@@ -50,7 +50,7 @@ p-slide {
 	justify-content: center;
 	background: var(--slide-bg, white);
 	width: var(--slide-width);
-	aspect-ratio: var(--slide-aspect-ratio);
+	height: var(--slide-height);
 	grid-area: 1 / 1;
 	box-sizing: border-box;
 	padding: 1em;
@@ -60,7 +60,8 @@ p-slide {
 	animation: shuffle-out var(--sliding-duration) 1 forwards;
 	--slide-previous: 0;
 }
-p-slide[aria-hidden='true'] {
+p-deck[mode='presentation'] p-slide[aria-hidden='true'],
+p-deck[mode='speaker'] p-slide {
 	pointer-events: none;
 }
 p-slide[aria-hidden='false'] {
@@ -68,6 +69,22 @@ p-slide[aria-hidden='false'] {
 }
 p-slide[previous] {
 	--slide-previous: 1;
+}
+:is(p-deck[mode='grid']:not(:has(p-slide:hover)) p-slide, p-deck[mode='grid'] p-slide:hover) {
+	border-radius: calc(var(--grid-gap) * var(--is-highlighted, 0) / 2);
+	box-shadow: 0 0 0 calc(var(--grid-gap) * var(--is-highlighted, 0) / 2)
+		var(--grid-highlight-color, color-mix(in srgb, LinkText, transparent));
+	&::before {
+		content: counter(slide);
+		font-size: calc(var(--slide-width) / 20);
+		position: absolute;
+		inset: 0 auto auto 0;
+		background: hsl(from currentColor h s calc(90 - l * 0.8));
+		border-radius: 0.25em;
+		padding: 0.25em 0.5em;
+		pointer-events: none;
+		opacity: var(--is-highlighted, 0);
+	}
 }
 
 p-slide[aria-hidden='true']:has(+ [effect='slide']),

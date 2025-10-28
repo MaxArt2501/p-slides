@@ -5,7 +5,7 @@
 	--grid-gap: 0.6cqw;
 	position: fixed;
 	inset: 0;
-	overflow: hidden;
+	overflow: clip;
 	display: grid;
 	grid-template: 100% / 100%;
 	justify-items: center;
@@ -53,9 +53,6 @@ li:only-child {
 li[hidden] {
 	display: revert;
 	opacity: 0.5;
-}
-a {
-	display: none;
 }
 span::after {
 	font-size: 70%;
@@ -108,6 +105,7 @@ button:last-of-type::after {
 }
 :host([mode='speaker']) ::slotted(p-slide) {
 	animation: none !important;
+	overflow: hidden;
 }
 :host([mode='speaker']) ::slotted(p-slide[aria-current='page']) {
 	transform: scale(calc(1 - var(--speaker-next-scale)));
@@ -134,25 +132,8 @@ button:last-of-type::after {
 	overflow: auto;
 	max-height: 100cqh;
 	scrollbar-width: none;
-}
-:host([mode='grid']) a {
-	position: absolute;
-	display: block;
-	box-sizing: content-box;
-	--link-width: calc((100cqw - var(--grid-gap) * (var(--grid-columns) + 1)) / var(--grid-columns) + var(--grid-gap));
-	--link-height: calc(
-		(100cqw - var(--grid-gap) * (var(--grid-columns) + 1)) / var(--grid-columns) / var(--slide-aspect-ratio) + var(--grid-gap)
-	);
-	width: var(--link-width);
-	height: var(--link-height);
-	top: calc(
-		round(down, var(--hovered-slide-index, var(--highlighted-slide-index)) / var(--grid-columns)) * var(--link-height) + var(--grid-gap) / 2
-	);
-	left: calc(
-		mod(var(--hovered-slide-index, var(--highlighted-slide-index)), var(--grid-columns)) * var(--link-width) + var(--grid-gap) / 2
-	);
-	border-radius: calc(var(--grid-gap) / 2);
-	box-shadow: inset 0 0 0 calc(var(--grid-gap) / 2) var(--grid-highlight-color, color-mix(in srgb, LinkText, transparent));
+	--slide-width: calc((100cqw - (var(--grid-columns) + 1) * var(--grid-gap)) / var(--grid-columns));
+	--slide-height: calc(var(--slide-width) / var(--slide-aspect-ratio));
 }
 :host([mode='grid']) ::slotted(p-slide) {
 	animation: none !important;
@@ -161,5 +142,8 @@ button:last-of-type::after {
 	aspect-ratio: var(--slide-aspect-ratio) !important;
 	grid-area: auto !important;
 	min-height: 0;
-	pointer-events: none;
+	pointer-events: auto;
+}
+:host([mode='grid']) ::slotted(p-slide:hover) {
+	--is-highlighted: 1;
 }
