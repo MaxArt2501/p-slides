@@ -1,0 +1,228 @@
+@property --fragment-progress {
+	syntax: '<number>';
+	inherits: true;
+	initial-value: 0;
+}
+
+:root {
+	--overshoot: linear(0, 1.32 16%, 0.87 28%, 1.05 44%, 0.98 59%, 1.01 73%, 1 88%, 1);
+	--bounce: linear(
+		0,
+		0.004,
+		0.016,
+		0.035,
+		0.063,
+		0.098,
+		0.141 13.6%,
+		0.25,
+		0.391,
+		0.563,
+		0.765,
+		1,
+		0.891 40.9%,
+		0.848,
+		0.813,
+		0.785,
+		0.766,
+		0.754,
+		0.75,
+		0.754,
+		0.766,
+		0.785,
+		0.813,
+		0.848,
+		0.891 68.2%,
+		1 72.7%,
+		0.973,
+		0.953,
+		0.941,
+		0.938,
+		0.941,
+		0.953,
+		0.973,
+		1,
+		0.988,
+		0.984,
+		0.988,
+		1
+	);
+}
+
+[effect]:is(p-fragment, [p-fragment]) {
+	transition-property: --fragment-progress;
+	opacity: initial;
+}
+
+[effect][aria-hidden='true']:is(p-fragment, [p-fragment]),
+[effect]:not(p-fragment, [p-fragment], p-fragment *, [p-fragment] *):is([aria-hidden='true'] *) {
+	--fragment-progress: 0;
+}
+[effect][aria-hidden='false']:is(p-fragment, [p-fragment]),
+[effect]:not(p-fragment, [p-fragment], p-fragment *, [p-fragment] *):not([aria-hidden='true'] *) {
+	--fragment-progress: 1;
+}
+
+[effect]:not(p-fragment, [p-fragment]):not(p-fragment *, [p-fragment] *) {
+	transition-delay: var(--sliding-duration, 0s);
+}
+
+[effect~='fade'] {
+	opacity: calc(var(--fade-from, 0) + var(--fragment-progress) * (var(--fade-to, 1) - var(--fade-from, 0)));
+}
+[effect~='zoom'] {
+	scale: calc(var(--scale-from, 0) + var(--fragment-progress) * (var(--scale-to, 1) - var(--scale-from, 0)));
+}
+[effect~='spin'] {
+	rotate: calc(var(--angle-from, 0deg) + var(--fragment-progress) * (var(--angle-to, 3turn) - var(--angle-from, 0deg)));
+}
+
+/**** reveal/shrink ****/
+:is([effect~='reveal'], [effect~='shrink']) {
+	transition-property: --fragment-progress, padding-inline, margin-inline, border-inline-width, overflow;
+	display: inline-block;
+	transition-behavior: allow-discrete;
+}
+@supports (width: calc-size(auto, size)) {
+	[effect~='reveal'] {
+		width: calc-size(auto, size * var(--fragment-progress));
+	}
+	[effect~='shrink'] {
+		width: calc-size(auto, size * (1 - var(--fragment-progress)));
+	}
+}
+@supports not (width: calc-size(auto, size)) {
+	[effect~='reveal'] {
+		max-width: calc(100vw * var(--fragment-progress));
+	}
+	[effect~='shrink'] {
+		max-width: calc(100vw * (1 - var(--fragment-progress)));
+	}
+}
+
+[effect~='reveal']:is(p-fragment, [p-fragment])[aria-hidden='true'],
+[effect~='shrink']:is(p-fragment, [p-fragment])[aria-hidden='false'],
+[effect~='reveal']:not(p-fragment, [p-fragment]):is([aria-hidden='true'] *),
+[effect~='shrink']:not(p-fragment, [p-fragment]):is([aria-hidden='false'] *) {
+	padding-inline: 0;
+	margin-inline: 0;
+	border-inline-width: 0;
+	overflow: clip;
+}
+
+/**** insert/collapse ****/
+:is([effect~='insert'], [effect~='collapse']) {
+	transition-property: --fragment-progress, padding-block, margin-block, border-block-width, overflow;
+	display: block;
+	transition-behavior: allow-discrete;
+}
+@supports (height: calc-size(auto, size)) {
+	[effect~='insert'] {
+		height: calc-size(auto, size * var(--fragment-progress));
+	}
+	[effect~='collapse'] {
+		height: calc-size(auto, size * (1 - var(--fragment-progress)));
+	}
+}
+@supports not (height: calc-size(auto, size)) {
+	[effect~='insert'] {
+		max-height: calc(100vh * var(--fragment-progress));
+	}
+	[effect~='collapse'] {
+		max-height: calc(100vh * (1 - var(--fragment-progress)));
+	}
+}
+
+[effect~='insert']:is(p-fragment, [p-fragment])[aria-hidden='true'],
+[effect~='collapse']:is(p-fragment, [p-fragment])[aria-hidden='false'],
+[effect~='insert']:not(p-fragment, [p-fragment]):is([aria-hidden='true'] *),
+[effect~='collapse']:not(p-fragment, [p-fragment]):is([aria-hidden='false'] *) {
+	padding-block: 0;
+	margin-block: 0;
+	border-block-width: 0;
+	overflow: clip;
+}
+
+[effect~='strike'] {
+	position: relative;
+}
+[effect~='strike']::before {
+	content: '';
+	position: absolute;
+	inset: 0;
+	inset-inline-end: 100%;
+	inset-inline-end: calc(100% * (1 - var(--fragment-progress)));
+	background: linear-gradient(
+			to bottom,
+			transparent calc(0.5lh - var(--strike-width, 0.2em) / 2),
+			var(--effect-color, red) 0 calc(0.5lh + var(--strike-width, 0.2em) / 2),
+			transparent 0
+		)
+		0 / auto 1lh;
+	z-index: 1;
+}
+
+[effect~='highlight'] {
+	padding: var(--highlight-expand, 0.1em);
+	margin: calc(0em - var(--highlight-expand, 0.1em));
+	background: linear-gradient(color-mix(in srgb, var(--effect-color, yellow), transparent var(--highlight-transparency, 50%))) 0 /
+		calc(100% * var(--fragment-progress)) auto no-repeat;
+}
+
+[effect~='red'] {
+	--effect-color: red;
+}
+[effect~='blue'] {
+	--effect-color: blue;
+}
+[effect~='green'] {
+	--effect-color: green;
+}
+[effect~='yellow'] {
+	--effect-color: yellow;
+}
+
+[effect~='drawing'] {
+	stroke-dasharray: calc(var(--length, 0px) * var(--fragment-progress)) var(--length, 0px);
+}
+
+/**** from ****/
+[effect~='from'] {
+	translate: calc(var(--from-x, 0px) + var(--fragment-progress) * (var(--to-x, 0px) - var(--from-x, 0px)))
+		calc(var(--from-y, 0px) + var(--fragment-progress) * (var(--to-y, 0px) - var(--from-y, 0px)));
+}
+
+[effect~='above'] {
+	--from-y: -100cqh;
+}
+
+[effect~='right'],
+[effect~='start']:dir(rtl),
+[effect~='end']:dir(ltr) {
+	--from-x: 100cqw;
+}
+
+[effect~='below'] {
+	--from-y: 100cqh;
+}
+
+[effect~='left'],
+[effect~='start']:dir(ltr),
+[effect~='end']:dir(rtl) {
+	--from-x: -100cqw;
+}
+
+[effect~='dropping'] {
+	transition-timing-function: var(--bounce);
+}
+[effect~='boing'] {
+	transition-timing-function: var(--overshoot);
+}
+
+@supports (x: attr(x type(<time>))) {
+	[effect][delay] {
+		transition-delay: calc(var(--fragment-duration) * attr(delay type(<number>)));
+	}
+	[effect][duration] {
+		transition-duration: calc(var(--fragment-duration) * attr(duration type(<number>)));
+	}
+}

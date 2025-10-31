@@ -118,18 +118,16 @@ p-slide > :is(img, video, canvas, svg, iframe) {
 	align-self: center;
 }
 
-p-fragment,
-[p-fragment] {
-	opacity: 1;
+:is(p-fragment, [p-fragment]) {
 	transition: opacity var(--fragment-duration);
 }
-:is(p-deck:not([mode='speaker']), p-deck[mode='speaker'] p-slide:not([aria-current='page'] ~ *))
+:where(p-deck:not([mode='speaker']), p-deck[mode='speaker'] p-slide:not([aria-current='page'] ~ *))
 	[aria-hidden='true']:is(p-fragment, [p-fragment]) {
 	opacity: 0;
 	pointer-events: none;
 }
 
-p-notes {
+:is(p-notes, [p-notes]) {
 	display: none !important;
 }
 

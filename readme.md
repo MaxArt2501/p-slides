@@ -57,13 +57,13 @@ registerElements().then(() => {
 
 Don't forget to also copy their stylesheets (located in the `css` directory), unless you want to provide your own.
 
-You may wish to load the stylesheet **p-slides.css** globally, as it provides basic styling for the presentation.
+You may wish to load the stylesheet [**css/p-slides.css**](./blob/main/css/p-slides.css) globally, as it provides basic styling for the presentation.
 
 ```html
 <link rel="stylesheet" href="./vendor/p-slides/css/p-slides.css" />
 ```
 
-The custom element `<p-deck>`, having a Shadow DOM, loads the file **css/deck.css** to style its internal content. If the
+The custom element `<p-deck>`, having a Shadow DOM, loads the file [**css/deck.css**](./blob/main/css/deck.css) to style its internal content. If the
 file is located in a different directory, please use the `setStyleRoot` method to define the correct path:
 
 ```js
@@ -494,8 +494,8 @@ Fired when a block of fragments has been shown or hidden. The event bubbles and 
 
 P-Slides needs two stylesheets, which are both provided by the library:
 
-- **deck.css**: encapsulated styles for the deck's Shadow DOM;
-- **p-slides.css**: global styles for the slides, resets and general layout.
+- [**deck.css**](./blob/main/css/deck.css): encapsulated styles for the deck's Shadow DOM;
+- [**p-slides.css**](./blob/main/css/p-slides.css): global styles for the slides, resets and general layout.
 
 The latter should be loaded however you want (presumably a `<link>` element), while the former is loaded by the
 `<p-deck>` component class (see the documentation for `setStyleRoot()` and `PresentationDeckElement.styles`). Of course,
@@ -521,7 +521,7 @@ If you don't need to tweak the stylesheet as much, P-Slides can be fine-tuned by
 | `--sliding-duration`     | `<time>`    | 0s/0.5s           | Time for the transition between two slides: 0.5s if the user doesn't prefer reduced motion       |
 | `--speaker-next-scale`   | `<number>`  | 0.666667 (2 / 3)  | Scale for the next slide compared to the whole area in speaker mode.                             |
 
-When the type is specified, the properties have been registered using `@property` in **p-slides.css**.
+When the type is specified, the properties have been registered using `@property` in [**p-slides.css**](./blob/main/css/p-slides.css).
 
 `<p-deck>` elements also expose some [CSS shadow parts](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_shadow_parts)
 for the speaker mode to let external stylesheets to override the default styling:
@@ -640,6 +640,123 @@ media query: if it's not the case, consider setting it to `0s` for all the fragm
 	}
 }
 ```
+
+### Fragment effects
+
+The usual effect for fragment appearance is a variation of the opacity, from 0 to 1. It's good for most needs, but
+sometimes we want something fancier than that.
+
+The additional stylesheet [**css/effects.css**](./blob/main/css/effects.css) contains additional effects for fragment
+transitions. These effects can be enabled by adding the `effect` attribute on the fragment elements with the name of the
+effect you want to use. You may even combine some of these effects (e.g. `effect="spin zoom"`). This is possible as the
+only property that get transitioned is (usually) `--fragment-progress`, declared as a property of type `<number>` from
+`0` to `1`: effects rely on this property to compute their own transitioned value.
+
+> [!WARNING]
+> Some of the effects are meant to make a fragment _disappear_ from the view rather than appear (e.g. `"shrink"` and
+> `"collapse"`). This could be an accesibility issue, as the elements are initially marked with `aria-hidden="true"` when
+> hidden and `aria-hidden="false"` when shown. Use with caution.
+
+Some effects have "parameters" in terms of custom CSS properties that can be used to adjust transition values. Among
+them some have effect "variants" that basically preset the parameters with meaningful values. For example, instead of
+just `effect="highlight"`, you can write `effect="highlight red"` to have red highlighting instead of the default yellow.
+
+| Effect name | Transition properties                                  | Parameters: default value                                            | Description                                                                                                                                                                                                                                                     |
+| ----------- | ------------------------------------------------------ | -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `collapse`  | `height`/`max-height` (if `calc-size` isn't supported) | -                                                                    | Hides elements. Also sets `display: block` on the element (change it to your needs), and block `padding`/`margin`/`border-width` to 0 when shown                                                                                                                |
+| `dropping`  | `stroke-dasharray`                                     | `--length: 0px`                                                      | For SVG elements like `<path>` or other geometry elements. This is the only case where the parameter is _mandatory_, and can be knwon beforehand using [`getTotalLength()`](https://developer.mozilla.org/en-US/docs/Web/API/SVGGeometryElement/getTotalLength) |
+| `fade`      | `opacity`                                              | `--fade-from: 0`<br>`--fade-to: 1`                                   | Essentially the default fragment transition, but with parameters                                                                                                                                                                                                |
+| `from`      | `translate`                                            | `--from-x: 0px`<br>`--from-y: 0px`<br>`--to-x: 0px`<br>`--to-y: 0px` | Moves from a given position shift to a final position shift                                                                                                                                                                                                     |
+| `highlight` | `background`                                           | `--effect-color: yellow`<br>`--highlight-expand: 0.1em`              | Highlights words by setting the background                                                                                                                                                                                                                      |
+| `insert`    | `height`/`max-height` (if `calc-size` isn't supported) | -                                                                    | Reveals elements. Also sets `display: block` on the element (change it to your needs), and block `padding`/`margin`/`border-width` to 0 when hidden                                                                                                             |
+| `reveal`    | `width`/`max-width` (if `calc-size` isn't supported)   | -                                                                    | Reveals words/elements. Also sets `display: inline-block` on the element (change it to your needs), and inline `padding`/`margin`/`border-width` to 0 when hidden                                                                                               |
+| `spin`      | `rotated`                                              | `--angle-from: 0deg`<br>`--angle-to: 3turn`                          | Rotates the element from a given angle to a given angle                                                                                                                                                                                                         |
+| `shrink`    | `width`/`max-width` (if `calc-size` isn't supported)   | -                                                                    | Hides words/elements. Also sets `display: inline-block` on the element (change it to your needs), and inline `padding`/`margin`/`border-width` to 0 when shown                                                                                                  |
+| `strike`    | `background-size`                                      | `--effect-color: red`<br>`--strike-width: 0.2em`                     | Draws a line over the element (sets `position: relative` on the element and uses `::before`)                                                                                                                                                                    |
+| `zoom`      | `scale`                                                | `--scale-from: 0`<br>`--scale-to: 1`                                 | Scales the element from a given level to a given level                                                                                                                                                                                                          |
+
+If you want to be somewhat semantic, when combining effects you can add conjunctions like in `effect="reveal and fade"`
+or `effect="spin + zoom"`.
+
+#### Effect variants
+
+Here are the variants that can be used with the above effects:
+
+| Variant    | Parameters set                           | To be used with               |
+| ---------- | ---------------------------------------- | ----------------------------- |
+| `above`    | `--from-y: -100cqh`                      | `from`                        |
+| `below`    | `--from-y: 100cqh`                       | `from`                        |
+| `left`     | `--from-x: -100cqw`                      | `from`                        |
+| `start`    | `--from-x: -100cqw` (ltr) `100cqw` (rtl) | `from`                        |
+| `right`    | `--from-x: 100cqw`                       | `from`                        |
+| `end`      | `--from-x: 100cqw` (ltr) `-100cqw` (rtl) | `from`                        |
+| `red`      | `--effect-color: red`                    | `highlight`, `strike`         |
+| `blue`     | `--effect-color: blue`                   | `highlight`, `strike`         |
+| `green`    | `--effect-color: green`                  | `highlight`, `strike`         |
+| `yellow`   | `--effect-color: yellow`                 | `highlight`, `strike`         |
+| `dropping` | `transition-duration: var(--bounce)`     | `from`, `insert`, `reveal`... |
+| `boing`    | `transition-duration: var(--overshoot)`  | `from`, `insert`, `reveal`... |
+
+The last two don't set a parameter, but rather the timing function of the transition, using a couple of custom
+properties defined on `:root` (`--bounce` and `--overshoot`) that allows you to combine keywords like in
+`effect="dropping from above"`. They can be used for any effect, but give their best with `from`.
+
+> [!TIP]
+> The order of the words in the `effect` attribute doesn't matter, and unknown words are ignored:
+> `effect="above the hill, dropping a stone from the cabin"` has the same effect of `effect="dropping from above"`.
+
+#### Grouped fragments
+
+Using effects, there's another way to group fragment transitions: you can declare a parent element as a fragment (with
+a bogus effect) and apply the `effect` attribute to the descendant elements that you want to animate. For example:
+
+```html
+<section p-fragment effect="none">
+	<h3>The amazing composable woman!</h3>
+	<div effect="from above">Head</div>
+	<div effect="from right">Left arm</div>
+	<div effect="zoom">Chest</div>
+	<div effect="from left">Right arm</div>
+	<div effect="from below and left">Right leg</div>
+	<div effect="from below and right">Left leg</div>
+</section>
+```
+
+This way, the whole "fragment" (the `<section>` element) will always be visible, including the heading (be careful with
+accessibility semantics, though!), while the sub-parts will animate together once the fragment will become "visible".
+Before that, you had to declare all the single parts as fragments, assigning the same index to each one of them.
+
+#### Delay and duration
+
+You can always set `--fragment-duration`, `transition-duration` and `transition-delay` with the granularity you want,
+but loading **effects.css** allows to set the duration and the delay of the fragment transition using the `duration` and
+`delay` attributes respectively, as multiples of `--fragment-duration`. This lets you create staggered and complex
+fragment effects like in the following:
+
+```html
+<h1>
+	<span p-fragment="0" effect="highlight">Thelma</span> and
+	<span p-fragment="0" effect="highlight" delay="1">Louise</span>
+</h1>
+<p p-fragment="0" effect="highlight" duration="2">A film by Ridley Scott</p>
+```
+
+This is possible _only_ if the browser supports [typed attributes](https://developer.mozilla.org/en-US/docs/Web/CSS/attr)
+in CSS.
+
+#### Custom effects
+
+You can create your own effects too. In order to make them usable with other effects, you can rely on the custom
+property `--fragment-progress` being transitioned from `0` to `1`, and use it as a factor in your effects. For example,
+to create an effect that starts from a picture deprived of its colors to its original colors, you can do this:
+
+```css
+[effect~='revive'] {
+	filter: saturate(var(--fragment-progress));
+}
+```
+
+Notice the operator `~=` has been used instead of the usual `=`: this allows to match a word in a space-separated list.
 
 ## Custom Element Manifest and IDE integrations
 
