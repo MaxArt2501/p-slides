@@ -155,8 +155,9 @@ export class PresentationDeckElement extends HTMLElement {
 		this.shadowRoot.querySelector('slot').addEventListener(
 			'click',
 			event => {
+				if (this.mode === 'presentation') return;
 				const slide = /** @type {PresentationSlideElement | null} */ (event.target.closest('p-slide'));
-				if (slide && slide !== this.currentSlide) {
+				if (slide) {
 					this.currentSlide = slide;
 					this.restoreMode();
 					event.stopPropagation();
