@@ -67,6 +67,15 @@ p-deck[mode='speaker'] p-slide {
 p-slide[aria-hidden='false'] {
 	animation-name: shuffle-in;
 }
+p-deck:is([mode='presentation'], :not([mode]), [mode='speaker']) p-slide[aria-hidden='false'] + p-slide ~ p-slide,
+p-deck:is([mode='presentation'], :not([mode])) p-slide:has(~ p-slide + p-slide[aria-hidden='false']),
+p-deck[mode='speaker'] p-slide:has(~ p-slide[aria-hidden='false']) {
+	content-visibility: hidden;
+}
+p-deck[mode='grid'] p-slide {
+	content-visibility: auto;
+}
+
 p-slide[previous] {
 	--slide-previous: 1;
 }
