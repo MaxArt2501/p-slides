@@ -48,25 +48,25 @@
 	);
 }
 
-[effect]:is(p-fragment, [p-fragment]) {
+[effect]:where(p-fragment, [p-fragment]):not(p-slide) {
 	transition-property: --fragment-progress;
 	opacity: initial;
 }
 
-[effect][aria-hidden='true']:is(p-fragment, [p-fragment]),
-[effect]:not(p-fragment, [p-fragment], p-fragment *, [p-fragment] *):is([aria-hidden='true'] *) {
+[effect][aria-hidden='true']:where(p-fragment, [p-fragment]):not(p-slide),
+[effect]:not(p-slide, p-fragment, [p-fragment], p-fragment *, [p-fragment] *):is([aria-hidden='true'] *) {
 	--fragment-progress: 0;
 }
-[effect][aria-hidden='false']:is(p-fragment, [p-fragment]),
-[effect]:not(p-fragment, [p-fragment], p-fragment *, [p-fragment] *):not([aria-hidden='true'] *) {
+[effect][aria-hidden='false']:where(p-fragment, [p-fragment]):not(p-slide),
+[effect]:not(p-slide, p-fragment, [p-fragment], p-fragment *, [p-fragment] *):not([aria-hidden='true'] *) {
 	--fragment-progress: 1;
 }
 
-[effect]:not(p-fragment, [p-fragment]):not(p-fragment *, [p-fragment] *) {
+[effect]:not(p-slide, p-fragment, [p-fragment]):not(p-fragment *, [p-fragment] *) {
 	transition-delay: var(--sliding-duration, 0s);
 }
 
-[effect~='fade'] {
+[effect~='fade']:not(p-slide) {
 	opacity: calc(var(--fade-from, 0) + var(--fragment-progress) * (var(--fade-to, 1) - var(--fade-from, 0)));
 }
 [effect~='zoom'] {
