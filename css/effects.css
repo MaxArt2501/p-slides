@@ -226,13 +226,13 @@
 }
 
 @supports (x: attr(x type(<time>))) {
-	[p-effect][delay] {
-		transition-delay: calc(var(--fragment-duration) * attr(delay type(<number>)));
+	[p-effect][p-delay] {
+		transition-delay: calc(var(--fragment-duration) * attr(p-delay type(<number>)));
 	}
-	[p-effect][delay]:not(p-fragment, [p-fragment], p-fragment *, [p-fragment] *) {
-		transition-delay: calc(var(--fragment-duration) * attr(delay type(<number>)) + var(--sliding-duration, 0s));
+	[p-effect][p-delay]:not(p-fragment, [p-fragment], p-fragment *, [p-fragment] *) {
+		transition-delay: calc(var(--fragment-duration) * attr(p-delay type(<number>)) + var(--sliding-duration, 0s));
 	}
-	[p-effect][duration] {
-		transition-duration: calc(var(--fragment-duration) * attr(duration type(<number>)));
+	[p-effect][p-duration] {
+		transition-duration: calc(var(--fragment-duration) * attr(p-duration type(<number>)));
 	}
 }

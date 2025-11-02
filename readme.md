@@ -769,16 +769,16 @@ effects will be run once the containing slide becomes visible, with a delay equa
 #### Delay and duration
 
 You can always set `--fragment-duration`, `transition-duration` and `transition-delay` with the granularity you want,
-but loading **effects.css** allows to set the duration and the delay of the fragment transition using the `duration` and
-`delay` attributes respectively, as multiples of `--fragment-duration`. This lets you create staggered and complex
+but loading **effects.css** allows to set the duration and the delay of the fragment transition using the `p-duration` and
+`p-delay` attributes respectively, as multiples of `--fragment-duration`. This lets you create staggered and complex
 fragment effects like in the following:
 
 ```html
 <h1>
 	<span p-fragment="0" p-effect="highlight">Thelma</span> and
-	<span p-fragment="0" p-effect="highlight" delay="1">Louise</span>
+	<span p-fragment="0" p-effect="highlight" p-delay="1">Louise</span>
 </h1>
-<p p-fragment="0" p-effect="highlight" duration="2">A film by Ridley Scott</p>
+<p p-fragment="0" p-effect="highlight" p-duration="2">A film by Ridley Scott</p>
 ```
 
 This is possible _only_ if the browser supports [typed attributes](https://developer.mozilla.org/en-US/docs/Web/CSS/attr)
