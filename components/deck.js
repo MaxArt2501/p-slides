@@ -186,14 +186,13 @@ export class PresentationDeckElement extends HTMLElement {
 
 	/** @internal */
 	connectedCallback() {
-		if (!this.id) generateTextId(this).then(id => (this.id = `deck_${id}`));
 		this.ownerDocument.addEventListener('keydown', this.#keyHandler);
 		this.#clockInterval = this.ownerDocument.defaultView.setInterval(() => {
 			if (this.isClockRunning) this.#updateClock();
 		}, 1000);
 		this.#updateClock();
 
-		whenAllDefined().then(() => {
+		Promise.all([whenAllDefined(), this.id || generateTextId(this).then(id => (this.id = `deck_${id}`))]).then(() => {
 			this.#muteAction(() => this.#resetCurrentSlide());
 			this.requestState();
 		});
