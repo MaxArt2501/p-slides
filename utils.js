@@ -176,11 +176,22 @@ export const formatClock = millis => {
 };
 
 /** @param {Element} element @internal */
+const getIndexAttr = element => element.getAttribute(element.localName === 'p-fragment' ? 'index' : 'p-fragment');
+
+/** @param {Element} element @internal */
 const getFragmentIndex = element => {
-	const rawValue = element.getAttribute(element.localName === 'p-fragment' ? 'index' : 'p-fragment');
+	const rawValue = getIndexAttr(element);
 	if (rawValue === null) return null;
 	const numValue = Number.parseFloat(rawValue);
 	return Number.isFinite(numValue) && numValue >= 0 ? numValue : null;
+};
+
+/** @param {Element} element @internal */
+const getFragmentGroup = element => {
+	const group = element.getAttribute('p-group');
+	if (group !== null) return group;
+	const rawValue = getIndexAttr(element);
+	return rawValue?.includes(':') ? rawValue.slice(rawValue.indexOf(':') + 1) : null;
 };
 
 /** @param {Element} element @internal */
@@ -215,6 +226,19 @@ const isNoteVisible = note =>
 	'false';
 
 /**
+ * @param {Map<K, V[]>} map
+ * @param {K} key
+ * @param  {...V} values
+ * @template {string | number} K
+ * @template V
+ * @internal
+ */
+const upsert = (map, key, ...values) => {
+	if (map.has(key)) map.get(key).push(...values);
+	else map.set(key, values);
+};
+
+/**
  * @param {ArrayLike<Element>} fragments
  * @returns {Element[][]}
  * @internal
@@ -222,11 +246,26 @@ const isNoteVisible = note =>
 export const getSequencedFragments = fragments => {
 	const nullIndexes = [];
 	const indexMap = new Map();
+	const groups = new Map();
 	for (const fragment of fragments) {
 		const index = getFragmentIndex(fragment);
-		if (index === null) nullIndexes.push(fragment);
-		else if (indexMap.has(index)) indexMap.get(index).push(fragment);
-		else indexMap.set(index, [fragment]);
+		const group = getFragmentGroup(fragment);
+		if (group !== null) upsert(groups, group, { fragment, index });
+		else if (index === null) nullIndexes.push(fragment);
+		else upsert(indexMap, index, fragment);
+	}
+	for (const [, group] of groups) {
+		const indexed = group.find(({ index }) => index !== null);
+		const fragments = group.map(({ fragment }) => fragment);
+		if (indexed) {
+			upsert(indexMap, indexed.index, ...fragments);
+		} else {
+			const insertIndex = nullIndexes.findIndex(
+				frags => (frags[0] ?? frags).compareDocumentPosition(fragments[0]) & Node.DOCUMENT_POSITION_PRECEDING
+			);
+			if (insertIndex >= 0) nullIndexes.splice(insertIndex, 0, fragments);
+			else nullIndexes.push(fragments);
+		}
 	}
 	const sorted = [];
 	let indexes = Array.from(indexMap.keys()).sort((a, b) => a - b);
@@ -234,8 +273,10 @@ export const getSequencedFragments = fragments => {
 	let count = 0;
 	while (count < fragments.length) {
 		if ((nextIndex === undefined || nextIndex > sorted.length) && nullIndexes.length) {
-			sorted.push([nullIndexes.shift()]);
-			count++;
+			const nulls = nullIndexes.shift();
+			const frags = Array.isArray(nulls) ? nulls : [nulls];
+			sorted.push(frags);
+			count += frags.length;
 		} else if (nextIndex <= sorted.length || !nullIndexes.length) {
 			const block = indexMap.get(nextIndex);
 			sorted.push(block);
@@ -277,10 +318,10 @@ const indexMoveMap = {
 export const updateHighlightIndex = (key, current, columns, slides) =>
 	key in indexMoveMap ? indexMoveMap[key](current, columns, slides) : NaN;
 
-/** @param {number} index */
+/** @param {number} index @internal */
 export const getHighlightSelector = index => `:host([mode="grid"]) ::slotted(p-slide:nth-of-type(${index}))`;
 
-/** @param {string} selector */
+/** @param {string} selector @internal */
 export const getHighlightIndex = selector => selector.replace(/\D/g, '') - 1;
 
 const encoder = new TextEncoder();
@@ -295,7 +336,7 @@ const motionMatcher = matchMedia('(prefers-reduced-motion: no-preference)');
 export let whateverMotion = motionMatcher.matches;
 motionMatcher.addEventListener('change', event => (whateverMotion = event.matches));
 
-/** @type {PresentationKeyHandler} */
+/** @type {PresentationKeyHandler} @internal */
 export const defaultKeyHandler = (keyEvent, deck) => {
 	const command = matchKey(keyEvent, deck.keyCommands);
 	switch (command) {
@@ -337,7 +378,7 @@ export const defaultKeyHandler = (keyEvent, deck) => {
 	return true;
 };
 
-/** @type {PresentationKeyHandler} */
+/** @type {PresentationKeyHandler} @internal */
 export const gridKeyHandler = (keyEvent, deck) => {
 	if (['altKey', 'shiftKey', 'metaKey', 'ctrlKey'].some(modifier => keyEvent[modifier])) return false;
 	if (['Escape', 'Enter', 'Space'].includes(keyEvent.key)) {

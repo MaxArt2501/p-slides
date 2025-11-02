@@ -158,6 +158,32 @@ This table will explain how the order is created:
 |     -      |     2      | This will be the 5th                                                               |
 |     5      |     5      | This will appear last                                                              |
 
+#### Fragment groups
+
+Fragment can be grouped together (i.e. will be toggled at the same time) when assigned the same numeric index, but if
+you don't want to tie the fragments to a specific index (e.g. because you may want to move them around when writing
+your presentation), you can use the `p-group` attribute:
+
+```html
+<p p-fragment p-group="start">This will appear first</p>
+<p-fragment>Then this</p-fragment>
+<div p-fragment p-group="start">This will appear first too!</div>
+```
+
+You can still specify a numeric index inside your group: the _first_ numeric index set in the group's fragments will be
+used as the index of _all_ the fragments (watch out for index mismatches).
+
+Alternatively, you can use the index attribute to specify the fragment's group name, separating the numeric index value
+from the group's name with a `:`:
+
+```html
+<p p-fragment="1:start">Group "start"</p>
+<p-fragment index=":end">Group "end"</p-fragment>
+```
+
+> [!NOTE]
+> Keep in mind that the `p-group` attribute takes precedence over the name specified in the index attribute.
+
 ### Deck modes
 
 P-Slides has three visualization modes, which can be cycled using <kbd>Alt-M</kbd> and <kbd>Alt-Shift-M</kbd> (by
@@ -705,26 +731,29 @@ properties defined on `:root` (`--bounce` and `--overshoot`) that allows you to 
 > The order of the words in the `p-effect` attribute doesn't matter, and unknown words are ignored:
 > `p-effect="above the hill, dropping a stone from the cabin"` has the same effect of `p-effect="dropping from above"`.
 
-#### Grouped fragments
+#### Fragment sub-effects
 
-Using effects, there's another way to group fragment transitions: you can declare a parent element as a fragment (with
-a bogus effect) and apply the `p-effect` attribute to the descendant elements that you want to animate. For example:
+You can set different effects to different descendant elements of the fragment. You can set a bogus effect on the parent
+fragment element (so it applies the transition to `--fragment-progress` instead of `opacity`) and set the `p-effect`
+attribute to the descendant elements that you want to animate. For example:
 
 ```html
-<section p-fragment p-effect="none">
-	<h3>The amazing composable woman!</h3>
-	<div p-effect="from above">Head</div>
-	<div p-effect="from right">Left arm</div>
-	<div p-effect="zoom">Chest</div>
-	<div p-effect="from left">Right arm</div>
-	<div p-effect="from below and left">Right leg</div>
-	<div p-effect="from below and right">Left leg</div>
+<section>
+	<h3>The amazing composable robot!</h3>
+	<p-fragment p-effect="none">
+		<div p-effect="from above">Head</div>
+		<div p-effect="from right">Left arm</div>
+		<div p-effect="zoom">Chest</div>
+		<div p-effect="from left">Right arm</div>
+		<div p-effect="from below and left">Right leg</div>
+		<div p-effect="from below and right">Left leg</div>
+	</p-fragment>
 </section>
 ```
 
-This way, the whole "fragment" (the `<section>` element) will always be visible, including the heading (be careful with
-accessibility semantics, though!), while the sub-parts will animate together once the fragment will become "visible".
-Before that, you had to declare all the single parts as fragments, assigning the same index to each one of them.
+This way, the whole fragment will always be visible, including the heading (be careful with accessibility semantics,
+though!), while the sub-parts will animate together once the fragment will become "visible". Before that, to achieve a
+similar effect you had to declare all the single parts as fragments, assigning the same index to each one of them.
 
 #### Delay and duration
 
