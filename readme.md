@@ -57,13 +57,13 @@ registerElements().then(() => {
 
 Don't forget to also copy their stylesheets (located in the `css` directory), unless you want to provide your own.
 
-You may wish to load the stylesheet [**css/p-slides.css**](./blob/main/css/p-slides.css) globally, as it provides basic styling for the presentation.
+You may wish to load the stylesheet [**css/p-slides.css**](./css/p-slides.css) globally, as it provides basic styling for the presentation.
 
 ```html
 <link rel="stylesheet" href="./vendor/p-slides/css/p-slides.css" />
 ```
 
-The custom element `<p-deck>`, having a Shadow DOM, loads the file [**css/deck.css**](./blob/main/css/deck.css) to style its internal content. If the
+The custom element `<p-deck>`, having a Shadow DOM, loads the file [**css/deck.css**](./css/deck.css) to style its internal content. If the
 file is located in a different directory, please use the `setStyleRoot` method to define the correct path:
 
 ```js
@@ -520,8 +520,8 @@ Fired when a block of fragments has been shown or hidden. The event bubbles and 
 
 P-Slides needs two stylesheets, which are both provided by the library:
 
-- [**deck.css**](./blob/main/css/deck.css): encapsulated styles for the deck's Shadow DOM;
-- [**p-slides.css**](./blob/main/css/p-slides.css): global styles for the slides, resets and general layout.
+- [**deck.css**](./css/deck.css): encapsulated styles for the deck's Shadow DOM;
+- [**p-slides.css**](./css/p-slides.css): global styles for the slides, resets and general layout.
 
 The latter should be loaded however you want (presumably a `<link>` element), while the former is loaded by the
 `<p-deck>` component class (see the documentation for `setStyleRoot()` and `PresentationDeckElement.styles`). Of course,
@@ -547,7 +547,7 @@ If you don't need to tweak the stylesheet as much, P-Slides can be fine-tuned by
 | `--sliding-duration`     | `<time>`    | 0s/0.5s           | Time for the transition between two slides: 0.5s if the user doesn't prefer reduced motion       |
 | `--speaker-next-scale`   | `<number>`  | 0.666667 (2 / 3)  | Scale for the next slide compared to the whole area in speaker mode.                             |
 
-When the type is specified, the properties have been registered using `@property` in [**p-slides.css**](./blob/main/css/p-slides.css).
+When the type is specified, the properties have been registered using `@property` in [**p-slides.css**](./css/p-slides.css).
 
 `<p-deck>` elements also expose some [CSS shadow parts](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_shadow_parts)
 for the speaker mode to let external stylesheets to override the default styling:
@@ -672,7 +672,7 @@ media query: if it's not the case, consider setting it to `0s` for all the fragm
 The usual effect for fragment appearance is a variation of the opacity, from 0 to 1. It's good for most needs, but
 sometimes we want something fancier than that.
 
-The additional stylesheet [**css/effects.css**](./blob/main/css/effects.css) contains additional effects for fragment
+The additional stylesheet [**css/effects.css**](./css/effects.css) contains additional effects for fragment
 transitions. These effects can be enabled by adding the `p-effect` attribute on the fragment elements with the name of the
 effect you want to use. You may even combine some of these effects (e.g. `p-effect="spin zoom"`). This is possible as the
 only property that get transitioned is (usually) `--fragment-progress`, declared as a property of type `<number>` from
@@ -755,6 +755,17 @@ This way, the whole fragment will always be visible, including the heading (be c
 though!), while the sub-parts will animate together once the fragment will become "visible". Before that, to achieve a
 similar effect you had to declare all the single parts as fragments, assigning the same index to each one of them.
 
+#### Fragment-less effects
+
+It's possible to have animation effects on elements even if they're not fragments or contained in fragments. These
+effects will be run once the containing slide becomes visible, with a delay equal to `--sliding-duration`:
+
+```html
+<p-slide>
+	<h2 p-effect="from above">I will fall once my slides complete its entry animation</h2>
+</p-slide>
+```
+
 #### Delay and duration
 
 You can always set `--fragment-duration`, `transition-duration` and `transition-delay` with the granularity you want,
@@ -772,6 +783,9 @@ fragment effects like in the following:
 
 This is possible _only_ if the browser supports [typed attributes](https://developer.mozilla.org/en-US/docs/Web/CSS/attr)
 in CSS.
+
+The delay of a fragment-less effect will add the value of `--sliding-duration` to the total delay in order to let the
+slide be fully rendered.
 
 #### Custom effects
 

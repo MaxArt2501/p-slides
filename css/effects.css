@@ -51,8 +51,8 @@
 [p-effect]:is(p-fragment, [p-fragment]) {
 	opacity: initial;
 }
-[p-effect]:where(p-fragment, [p-fragment]) {
-	transition-property: --fragment-progress;
+[p-effect]:where(p-fragment, [p-fragment], :not(p-fragment *, [p-fragment] *)) {
+	transition: --fragment-progress var(--fragment-duration);
 }
 
 [p-effect][aria-hidden='true']:where(p-fragment, [p-fragment]),
@@ -60,12 +60,17 @@
 	--fragment-progress: 0;
 }
 [p-effect][aria-hidden='false']:where(p-fragment, [p-fragment]),
-[p-effect]:not(p-fragment, [p-fragment], p-fragment *, [p-fragment] *):not([aria-hidden='true'] *) {
+[p-effect]:not(p-fragment, [p-fragment], p-fragment *, [p-fragment] *):not([aria-hidden='true'] *),
+:is([mode='speaker'] p-slide[aria-hidden='true'], [mode='grid']) [p-effect] {
 	--fragment-progress: 1;
 }
 
-[p-effect]:not(p-fragment, [p-fragment]):not(p-fragment *, [p-fragment] *) {
+[p-effect]:not(p-fragment, [p-fragment], p-fragment *, [p-fragment] *) {
 	transition-delay: var(--sliding-duration, 0s);
+}
+:is([mode='speaker'] p-slide[aria-hidden='true'], [mode='grid']) [p-effect] {
+	transition-duration: 0s;
+	transition-delay: 0s;
 }
 
 [p-effect][p-effect~='fade'] {
@@ -223,6 +228,9 @@
 @supports (x: attr(x type(<time>))) {
 	[p-effect][delay] {
 		transition-delay: calc(var(--fragment-duration) * attr(delay type(<number>)));
+	}
+	[p-effect][delay]:not(p-fragment, [p-fragment], p-fragment *, [p-fragment] *) {
+		transition-delay: calc(var(--fragment-duration) * attr(delay type(<number>)) + var(--sliding-duration, 0s));
 	}
 	[p-effect][duration] {
 		transition-duration: calc(var(--fragment-duration) * attr(duration type(<number>)));
