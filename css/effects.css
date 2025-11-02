@@ -48,61 +48,63 @@
 	);
 }
 
-[effect]:where(p-fragment, [p-fragment]):not(p-slide) {
-	transition-property: --fragment-progress;
+[p-effect]:is(p-fragment, [p-fragment]) {
 	opacity: initial;
 }
+[p-effect]:where(p-fragment, [p-fragment]) {
+	transition-property: --fragment-progress;
+}
 
-[effect][aria-hidden='true']:where(p-fragment, [p-fragment]):not(p-slide),
-[effect]:not(p-slide, p-fragment, [p-fragment], p-fragment *, [p-fragment] *):is([aria-hidden='true'] *) {
+[p-effect][aria-hidden='true']:where(p-fragment, [p-fragment]),
+[p-effect]:not(p-fragment, [p-fragment], p-fragment *, [p-fragment] *):is([aria-hidden='true'] *) {
 	--fragment-progress: 0;
 }
-[effect][aria-hidden='false']:where(p-fragment, [p-fragment]):not(p-slide),
-[effect]:not(p-slide, p-fragment, [p-fragment], p-fragment *, [p-fragment] *):not([aria-hidden='true'] *) {
+[p-effect][aria-hidden='false']:where(p-fragment, [p-fragment]),
+[p-effect]:not(p-fragment, [p-fragment], p-fragment *, [p-fragment] *):not([aria-hidden='true'] *) {
 	--fragment-progress: 1;
 }
 
-[effect]:not(p-slide, p-fragment, [p-fragment]):not(p-fragment *, [p-fragment] *) {
+[p-effect]:not(p-fragment, [p-fragment]):not(p-fragment *, [p-fragment] *) {
 	transition-delay: var(--sliding-duration, 0s);
 }
 
-[effect~='fade']:not(p-slide) {
+[p-effect][p-effect~='fade'] {
 	opacity: calc(var(--fade-from, 0) + var(--fragment-progress) * (var(--fade-to, 1) - var(--fade-from, 0)));
 }
-[effect~='zoom'] {
+[p-effect~='zoom'] {
 	scale: calc(var(--scale-from, 0) + var(--fragment-progress) * (var(--scale-to, 1) - var(--scale-from, 0)));
 }
-[effect~='spin'] {
+[p-effect~='spin'] {
 	rotate: calc(var(--angle-from, 0deg) + var(--fragment-progress) * (var(--angle-to, 3turn) - var(--angle-from, 0deg)));
 }
 
 /**** reveal/shrink ****/
-:is([effect~='reveal'], [effect~='shrink']) {
+:is([p-effect~='reveal'], [p-effect~='shrink']) {
 	transition-property: --fragment-progress, padding-inline, margin-inline, border-inline-width, overflow;
 	display: inline-block;
 	transition-behavior: allow-discrete;
 }
 @supports (width: calc-size(auto, size)) {
-	[effect~='reveal'] {
+	[p-effect~='reveal'] {
 		width: calc-size(auto, size * var(--fragment-progress));
 	}
-	[effect~='shrink'] {
+	[p-effect~='shrink'] {
 		width: calc-size(auto, size * (1 - var(--fragment-progress)));
 	}
 }
 @supports not (width: calc-size(auto, size)) {
-	[effect~='reveal'] {
+	[p-effect~='reveal'] {
 		max-width: calc(100vw * var(--fragment-progress));
 	}
-	[effect~='shrink'] {
+	[p-effect~='shrink'] {
 		max-width: calc(100vw * (1 - var(--fragment-progress)));
 	}
 }
 
-[effect~='reveal']:is(p-fragment, [p-fragment])[aria-hidden='true'],
-[effect~='shrink']:is(p-fragment, [p-fragment])[aria-hidden='false'],
-[effect~='reveal']:not(p-fragment, [p-fragment]):is([aria-hidden='true'] *),
-[effect~='shrink']:not(p-fragment, [p-fragment]):is([aria-hidden='false'] *) {
+[p-effect~='reveal']:is(p-fragment, [p-fragment])[aria-hidden='true'],
+[p-effect~='shrink']:is(p-fragment, [p-fragment])[aria-hidden='false'],
+[p-effect~='reveal']:not(p-fragment, [p-fragment]):is([aria-hidden='true'] *),
+[p-effect~='shrink']:not(p-fragment, [p-fragment]):is([aria-hidden='false'] *) {
 	padding-inline: 0;
 	margin-inline: 0;
 	border-inline-width: 0;
@@ -110,42 +112,42 @@
 }
 
 /**** insert/collapse ****/
-:is([effect~='insert'], [effect~='collapse']) {
+:is([p-effect~='insert'], [p-effect~='collapse']) {
 	transition-property: --fragment-progress, padding-block, margin-block, border-block-width, overflow;
 	display: block;
 	transition-behavior: allow-discrete;
 }
 @supports (height: calc-size(auto, size)) {
-	[effect~='insert'] {
+	[p-effect~='insert'] {
 		height: calc-size(auto, size * var(--fragment-progress));
 	}
-	[effect~='collapse'] {
+	[p-effect~='collapse'] {
 		height: calc-size(auto, size * (1 - var(--fragment-progress)));
 	}
 }
 @supports not (height: calc-size(auto, size)) {
-	[effect~='insert'] {
+	[p-effect~='insert'] {
 		max-height: calc(100vh * var(--fragment-progress));
 	}
-	[effect~='collapse'] {
+	[p-effect~='collapse'] {
 		max-height: calc(100vh * (1 - var(--fragment-progress)));
 	}
 }
 
-[effect~='insert']:is(p-fragment, [p-fragment])[aria-hidden='true'],
-[effect~='collapse']:is(p-fragment, [p-fragment])[aria-hidden='false'],
-[effect~='insert']:not(p-fragment, [p-fragment]):is([aria-hidden='true'] *),
-[effect~='collapse']:not(p-fragment, [p-fragment]):is([aria-hidden='false'] *) {
+[p-effect~='insert']:is(p-fragment, [p-fragment])[aria-hidden='true'],
+[p-effect~='collapse']:is(p-fragment, [p-fragment])[aria-hidden='false'],
+[p-effect~='insert']:not(p-fragment, [p-fragment]):is([aria-hidden='true'] *),
+[p-effect~='collapse']:not(p-fragment, [p-fragment]):is([aria-hidden='false'] *) {
 	padding-block: 0;
 	margin-block: 0;
 	border-block-width: 0;
 	overflow: clip;
 }
 
-[effect~='strike'] {
+[p-effect~='strike'] {
 	position: relative;
 }
-[effect~='strike']::before {
+[p-effect~='strike']::before {
 	content: '';
 	position: absolute;
 	inset: 0;
@@ -161,68 +163,68 @@
 	z-index: 1;
 }
 
-[effect~='highlight'] {
+[p-effect~='highlight'] {
 	padding: var(--highlight-expand, 0.1em);
 	margin: calc(0em - var(--highlight-expand, 0.1em));
 	background: linear-gradient(color-mix(in srgb, var(--effect-color, yellow), transparent var(--highlight-transparency, 50%))) 0 /
 		calc(100% * var(--fragment-progress)) auto no-repeat;
 }
 
-[effect~='red'] {
+[p-effect~='red'] {
 	--effect-color: red;
 }
-[effect~='blue'] {
+[p-effect~='blue'] {
 	--effect-color: blue;
 }
-[effect~='green'] {
+[p-effect~='green'] {
 	--effect-color: green;
 }
-[effect~='yellow'] {
+[p-effect~='yellow'] {
 	--effect-color: yellow;
 }
 
-[effect~='drawing'] {
+[p-effect~='drawing'] {
 	stroke-dasharray: calc(var(--length, 0px) * var(--fragment-progress)) var(--length, 0px);
 }
 
 /**** from ****/
-[effect~='from'] {
+[p-effect~='from'] {
 	translate: calc(var(--from-x, 0px) + var(--fragment-progress) * (var(--to-x, 0px) - var(--from-x, 0px)))
 		calc(var(--from-y, 0px) + var(--fragment-progress) * (var(--to-y, 0px) - var(--from-y, 0px)));
 }
 
-[effect~='above'] {
+[p-effect~='above'] {
 	--from-y: -100cqh;
 }
 
-[effect~='right'],
-[effect~='start']:dir(rtl),
-[effect~='end']:dir(ltr) {
+[p-effect~='right'],
+[p-effect~='start']:dir(rtl),
+[p-effect~='end']:dir(ltr) {
 	--from-x: 100cqw;
 }
 
-[effect~='below'] {
+[p-effect~='below'] {
 	--from-y: 100cqh;
 }
 
-[effect~='left'],
-[effect~='start']:dir(ltr),
-[effect~='end']:dir(rtl) {
+[p-effect~='left'],
+[p-effect~='start']:dir(ltr),
+[p-effect~='end']:dir(rtl) {
 	--from-x: -100cqw;
 }
 
-[effect~='dropping'] {
+[p-effect~='dropping'] {
 	transition-timing-function: var(--bounce);
 }
-[effect~='boing'] {
+[p-effect~='boing'] {
 	transition-timing-function: var(--overshoot);
 }
 
 @supports (x: attr(x type(<time>))) {
-	[effect][delay] {
+	[p-effect][delay] {
 		transition-delay: calc(var(--fragment-duration) * attr(delay type(<number>)));
 	}
-	[effect][duration] {
+	[p-effect][duration] {
 		transition-duration: calc(var(--fragment-duration) * attr(duration type(<number>)));
 	}
 }

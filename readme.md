@@ -647,8 +647,8 @@ The usual effect for fragment appearance is a variation of the opacity, from 0 t
 sometimes we want something fancier than that.
 
 The additional stylesheet [**css/effects.css**](./blob/main/css/effects.css) contains additional effects for fragment
-transitions. These effects can be enabled by adding the `effect` attribute on the fragment elements with the name of the
-effect you want to use. You may even combine some of these effects (e.g. `effect="spin zoom"`). This is possible as the
+transitions. These effects can be enabled by adding the `p-effect` attribute on the fragment elements with the name of the
+effect you want to use. You may even combine some of these effects (e.g. `p-effect="spin zoom"`). This is possible as the
 only property that get transitioned is (usually) `--fragment-progress`, declared as a property of type `<number>` from
 `0` to `1`: effects rely on this property to compute their own transitioned value.
 
@@ -659,7 +659,7 @@ only property that get transitioned is (usually) `--fragment-progress`, declared
 
 Some effects have "parameters" in terms of custom CSS properties that can be used to adjust transition values. Among
 them some have effect "variants" that basically preset the parameters with meaningful values. For example, instead of
-just `effect="highlight"`, you can write `effect="highlight red"` to have red highlighting instead of the default yellow.
+just `p-effect="highlight"`, you can write `p-effect="highlight red"` to have red highlighting instead of the default yellow.
 
 | Effect name | Transition properties                                  | Parameters: default value                                            | Description                                                                                                                                                                                                                                                     |
 | ----------- | ------------------------------------------------------ | -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -675,8 +675,8 @@ just `effect="highlight"`, you can write `effect="highlight red"` to have red hi
 | `strike`    | `background-size`                                      | `--effect-color: red`<br>`--strike-width: 0.2em`                     | Draws a line over the element (sets `position: relative` on the element and uses `::before`)                                                                                                                                                                    |
 | `zoom`      | `scale`                                                | `--scale-from: 0`<br>`--scale-to: 1`                                 | Scales the element from a given level to a given level                                                                                                                                                                                                          |
 
-If you want to be somewhat semantic, when combining effects you can add conjunctions like in `effect="reveal and fade"`
-or `effect="spin + zoom"`.
+If you want to be somewhat semantic, when combining effects you can add conjunctions like in `p-effect="reveal and fade"`
+or `p-effect="spin + zoom"`.
 
 #### Effect variants
 
@@ -699,26 +699,26 @@ Here are the variants that can be used with the above effects:
 
 The last two don't set a parameter, but rather the timing function of the transition, using a couple of custom
 properties defined on `:root` (`--bounce` and `--overshoot`) that allows you to combine keywords like in
-`effect="dropping from above"`. They can be used for any effect, but give their best with `from`.
+`p-effect="dropping from above"`. They can be used for any effect, but give their best with `from`.
 
 > [!TIP]
-> The order of the words in the `effect` attribute doesn't matter, and unknown words are ignored:
-> `effect="above the hill, dropping a stone from the cabin"` has the same effect of `effect="dropping from above"`.
+> The order of the words in the `p-effect` attribute doesn't matter, and unknown words are ignored:
+> `p-effect="above the hill, dropping a stone from the cabin"` has the same effect of `p-effect="dropping from above"`.
 
 #### Grouped fragments
 
 Using effects, there's another way to group fragment transitions: you can declare a parent element as a fragment (with
-a bogus effect) and apply the `effect` attribute to the descendant elements that you want to animate. For example:
+a bogus effect) and apply the `p-effect` attribute to the descendant elements that you want to animate. For example:
 
 ```html
-<section p-fragment effect="none">
+<section p-fragment p-effect="none">
 	<h3>The amazing composable woman!</h3>
-	<div effect="from above">Head</div>
-	<div effect="from right">Left arm</div>
-	<div effect="zoom">Chest</div>
-	<div effect="from left">Right arm</div>
-	<div effect="from below and left">Right leg</div>
-	<div effect="from below and right">Left leg</div>
+	<div p-effect="from above">Head</div>
+	<div p-effect="from right">Left arm</div>
+	<div p-effect="zoom">Chest</div>
+	<div p-effect="from left">Right arm</div>
+	<div p-effect="from below and left">Right leg</div>
+	<div p-effect="from below and right">Left leg</div>
 </section>
 ```
 
@@ -735,10 +735,10 @@ fragment effects like in the following:
 
 ```html
 <h1>
-	<span p-fragment="0" effect="highlight">Thelma</span> and
-	<span p-fragment="0" effect="highlight" delay="1">Louise</span>
+	<span p-fragment="0" p-effect="highlight">Thelma</span> and
+	<span p-fragment="0" p-effect="highlight" delay="1">Louise</span>
 </h1>
-<p p-fragment="0" effect="highlight" duration="2">A film by Ridley Scott</p>
+<p p-fragment="0" p-effect="highlight" duration="2">A film by Ridley Scott</p>
 ```
 
 This is possible _only_ if the browser supports [typed attributes](https://developer.mozilla.org/en-US/docs/Web/CSS/attr)
@@ -751,7 +751,7 @@ property `--fragment-progress` being transitioned from `0` to `1`, and use it as
 to create an effect that starts from a picture deprived of its colors to its original colors, you can do this:
 
 ```css
-[effect~='revive'] {
+[p-effect~='revive'] {
 	filter: saturate(var(--fragment-progress));
 }
 ```
