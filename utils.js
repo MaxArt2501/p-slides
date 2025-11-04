@@ -88,7 +88,7 @@ export const selectSlide = (slides, nextSlide) => {
  * @returns {Array<Element | Comment>}
  * @internal
  */
-export function getNotes(root) {
+function getNotes(root) {
 	if (root instanceof Element) {
 		return root.matches('p-notes, [p-notes]') ? [root] : Array.from(root.childNodes).flatMap(getNotes);
 	}
@@ -96,6 +96,37 @@ export function getNotes(root) {
 		return root.nodeValue.startsWith('-') ? [root] : [];
 	}
 	return [];
+}
+
+/**
+ * @param {Node} node
+ * @returns {node is Element}
+ * @internal */
+const isElement = node => node.nodeType === Node.ELEMENT_NODE;
+
+/** @param {Element | Comment} note @internal */
+const getNoteFragment = note => {
+	const fragment = (isElement(note) ? note : note.parentElement).closest('p-fragment, [p-fragment]');
+	if (fragment) return fragment;
+	if (!isElement(note)) return null;
+	const group = note.getAttribute('p-group');
+	if (group === null) return null;
+	return note.closest('p-slide')?.querySelector(`[p-group="${group}"]:is(p-fragment, [p-fragment])`) ?? null;
+};
+
+/** @param {PresentationSlideElement} slide @internal */
+export function collectNotes(slide) {
+	const notes = getNotes(slide);
+	const { fragmentSequence } = slide;
+	const noteFragments = new Map(
+		notes.map(note => {
+			const noteFragment = getNoteFragment(note);
+			const noteIndex = noteFragment ? fragmentSequence.findIndex(frags => frags.some(fragment => fragment === noteFragment)) : -1;
+			return [note, noteIndex];
+		})
+	);
+	notes.sort((a, b) => noteFragments.get(a) - noteFragments.get(b));
+	return notes;
 }
 
 /**
@@ -221,9 +252,7 @@ export const setCurrentFragments = slide => {
 };
 
 /** @param {Element | Comment} note @internal */
-const isNoteVisible = note =>
-	((note instanceof Element ? note : note.parentElement).closest('p-fragment, [p-fragment]')?.getAttribute('aria-hidden') ?? 'false') ===
-	'false';
+const isNoteVisible = note => (getNoteFragment(note)?.getAttribute('aria-hidden') ?? 'false') === 'false';
 
 /**
  * @param {Map<K, V[]>} map

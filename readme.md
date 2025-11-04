@@ -184,6 +184,9 @@ from the group's name with a `:`:
 > [!NOTE]
 > Keep in mind that the `p-group` attribute takes precedence over the name specified in the index attribute.
 
+Fragment groups can also be used to bind speaker notes to a fragment without the need to set a `p-fragment` attribute
+with the same index on the note. See the section about speaker notes ahead.
+
 ### Deck modes
 
 P-Slides has three visualization modes, which can be cycled using <kbd>Alt-M</kbd> and <kbd>Alt-Shift-M</kbd> (by
@@ -233,7 +236,7 @@ with `<!---` (meaning `<!` followed by _three_ dashes). Notes inside a fragment 
 	<p-notes>Notes are a help for the speaker</p-notes>
 	<div p-notes>Don't write too much in them (but you <em>can</em> use HTML inside)</div>
 	<div p-fragment>
-		Switch to the spearker mode to see them
+		Switch to the speaker mode to see them
 		<p p-notes>The key combination is Alt-M by default</p>
 	</div>
 	<!--- Comment notes can only hold simple text -->
@@ -241,9 +244,20 @@ with `<!---` (meaning `<!` followed by _three_ dashes). Notes inside a fragment 
 </p-slide>
 ```
 
-You can put whatever you like in notes. Remember they should be a _hint_ for the speaker, so I suggest to not put
-anything too fancy there. Also, keep in mind that the content of the notes is _copied_ inside the speaker mode's area
-for the notes.
+You can put whatever you like in notes. Remember they should be a _hint_ for the speaker, so the general suggestion is
+to not put anything too fancy there. Also, keep in mind that the content of the notes is _copied_ inside the speaker
+mode's area for the notes.
+
+> [!TIP]
+> Notes inside a fragment will initially appear dimmed on the note sidebar in speaker mode, and will regain full opacity
+> when the fragment is activated. Notes will also be ordered with the same order of fragment activation.
+>
+> Notes can also have a `p-group` attribute that allow you to bind notes to a separate fragment group:
+>
+> ```html
+> <p-fragment p-group="together">A note will be lit when this phrase will appear</p-fragment><br />
+> <p-notes p-group="together">A phrase has appeared</p-notes>
+> ```
 
 ### Keybindings
 

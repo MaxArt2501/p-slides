@@ -1,7 +1,7 @@
 /// <reference lib="es2023.array" />
 import {
+	collectNotes,
 	fireEvent,
-	getNotes,
 	getSequencedFragments,
 	isFragmentVisible,
 	setCurrentFragments,
@@ -143,16 +143,7 @@ export class PresentationSlideElement extends HTMLElement {
 	 * @type {Array<Element | Comment>}
 	 */
 	get notes() {
-		if (!this.#notes) {
-			const notes = getNotes(this);
-			const { fragmentSequence } = this;
-			const noteFragments = new Map(
-				notes.map(note => [note, fragmentSequence.findIndex(frags => frags.some(fragment => fragment.contains(note)))])
-			);
-			notes.sort((a, b) => noteFragments.get(a) - noteFragments.get(b));
-			this.#notes = notes;
-		}
-		return this.#notes;
+		return this.#notes ?? (this.#notes = collectNotes(this));
 	}
 
 	/**
