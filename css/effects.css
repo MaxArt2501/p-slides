@@ -171,25 +171,25 @@
 [p-effect~='highlight'] {
 	padding: var(--highlight-expand, 0.1em);
 	margin: calc(0em - var(--highlight-expand, 0.1em));
-	background: linear-gradient(color-mix(in srgb, var(--effect-color, yellow), transparent var(--highlight-transparency, 50%))) 0 /
-		calc(100% * var(--fragment-progress)) auto no-repeat;
+	background: linear-gradient(color-mix(in srgb, var(--effect-color, oklch(0.6 0.1 80deg)), transparent var(--highlight-transparency, 50%)))
+		0 / calc(100% * var(--fragment-progress)) auto no-repeat;
 }
 
 [p-effect~='red'] {
 	--effect-color: red;
 }
 [p-effect~='blue'] {
-	--effect-color: blue;
+	--effect-color: oklch(0.6 0.1 240deg);
 }
 [p-effect~='green'] {
-	--effect-color: green;
+	--effect-color: oklch(0.6 0.1 160deg);
 }
 [p-effect~='yellow'] {
-	--effect-color: yellow;
+	--effect-color: oklch(0.6 0.1 80deg);
 }
 
 [p-effect~='drawing'] {
-	stroke-dasharray: calc(var(--length, 0px) * var(--fragment-progress)) var(--length, 0px);
+	stroke-dasharray: calc(var(--length, 100px) * var(--fragment-progress)) var(--length, 100px);
 }
 
 /**** from ****/
