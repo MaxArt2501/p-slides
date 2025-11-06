@@ -229,7 +229,7 @@ export class PresentationDeckElement extends HTMLElement {
 	}
 
 	restoreMode() {
-		return (this.mode = this.#previousMode);
+		return (this.mode = this.#previousMode === this.mode ? 'presentation' : this.#previousMode);
 	}
 
 	#resetCurrentSlide() {

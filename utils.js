@@ -362,6 +362,7 @@ export const generateTextId = async element => {
 };
 
 const motionMatcher = matchMedia('(prefers-reduced-motion: no-preference)');
+/** @internal */
 export let whateverMotion = motionMatcher.matches;
 motionMatcher.addEventListener('change', event => (whateverMotion = event.matches));
 
