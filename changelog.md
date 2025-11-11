@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.5.0
+
+- add several fragment effect presets in a separate **effects.css** file;
+- hide slide content when one slide away in presentation mode, not visible in speaker mode and automatically in grid mode;
+- add support to fragment groups;
+- add support to fragment-less effects;
+- add support for initially visibile fragments;
+- add ability to group notes to separate fragments
+- add support to Declarative Shadow DOM;
+- add state data identification;
+- add custom property for slide-level font size;
+- code cleanup and minor fixes.
+
 ## 1.4.2
 
 - order speaker notes according to the order of the container fragments;
