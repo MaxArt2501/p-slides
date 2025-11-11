@@ -83,89 +83,74 @@
 	rotate: calc(var(--angle-from, 0deg) + var(--fragment-progress) * (var(--angle-to, 3turn) - var(--angle-from, 0deg)));
 }
 
-/**** reveal/shrink ****/
-:is([p-effect~='reveal'], [p-effect~='shrink']) {
+/**** reveal ****/
+[p-effect~='reveal'] {
 	transition-property: --fragment-progress, padding-inline, margin-inline, border-inline-width, overflow;
 	display: inline-block;
+	min-width: 0;
 	transition-behavior: allow-discrete;
 }
 @supports (width: calc-size(auto, size)) {
 	[p-effect~='reveal'] {
 		width: calc-size(auto, size * var(--fragment-progress));
 	}
-	[p-effect~='shrink'] {
-		width: calc-size(auto, size * (1 - var(--fragment-progress)));
-	}
 }
 @supports not (width: calc-size(auto, size)) {
 	[p-effect~='reveal'] {
-		max-width: calc(100vw * var(--fragment-progress));
-	}
-	[p-effect~='shrink'] {
-		max-width: calc(100vw * (1 - var(--fragment-progress)));
+		max-width: calc(var(--width, 100vw) * var(--fragment-progress));
 	}
 }
 
 [p-effect~='reveal']:is(p-fragment, [p-fragment])[aria-hidden='true'],
-[p-effect~='shrink']:is(p-fragment, [p-fragment])[aria-hidden='false'],
-[p-effect~='reveal']:not(p-fragment, [p-fragment]):is([aria-hidden='true'] *),
-[p-effect~='shrink']:not(p-fragment, [p-fragment]):is([aria-hidden='false'] *) {
+[p-effect~='reveal']:not(p-fragment, [p-fragment]):is([aria-hidden='true'] *) {
 	padding-inline: 0;
 	margin-inline: 0;
 	border-inline-width: 0;
 	overflow: clip;
 }
 
-/**** insert/collapse ****/
-:is([p-effect~='insert'], [p-effect~='collapse']) {
+/**** insert ****/
+[p-effect~='insert'] {
 	transition-property: --fragment-progress, padding-block, margin-block, border-block-width, overflow;
 	display: block;
+	min-height: 0;
 	transition-behavior: allow-discrete;
 }
 @supports (height: calc-size(auto, size)) {
 	[p-effect~='insert'] {
 		height: calc-size(auto, size * var(--fragment-progress));
 	}
-	[p-effect~='collapse'] {
-		height: calc-size(auto, size * (1 - var(--fragment-progress)));
-	}
 }
 @supports not (height: calc-size(auto, size)) {
 	[p-effect~='insert'] {
-		max-height: calc(100vh * var(--fragment-progress));
-	}
-	[p-effect~='collapse'] {
-		max-height: calc(100vh * (1 - var(--fragment-progress)));
+		max-height: calc(var(--height, 100vh) * var(--fragment-progress));
 	}
 }
 
 [p-effect~='insert']:is(p-fragment, [p-fragment])[aria-hidden='true'],
-[p-effect~='collapse']:is(p-fragment, [p-fragment])[aria-hidden='false'],
-[p-effect~='insert']:not(p-fragment, [p-fragment]):is([aria-hidden='true'] *),
-[p-effect~='collapse']:not(p-fragment, [p-fragment]):is([aria-hidden='false'] *) {
+[p-effect~='insert']:not(p-fragment, [p-fragment]):is([aria-hidden='true'] *) {
 	padding-block: 0;
 	margin-block: 0;
 	border-block-width: 0;
 	overflow: clip;
 }
 
+/**** strike ****/
 [p-effect~='strike'] {
-	position: relative;
+	display: inline-block;
 }
 [p-effect~='strike']::before {
 	content: '';
-	position: absolute;
-	inset: 0;
-	inset-inline-end: 100%;
-	inset-inline-end: calc(100% * (1 - var(--fragment-progress)));
-	background: linear-gradient(
-			to bottom,
-			transparent calc(0.5lh - var(--strike-width, 0.2em) / 2),
-			var(--effect-color, red) 0 calc(0.5lh + var(--strike-width, 0.2em) / 2),
-			transparent 0
-		)
-		0 / auto 1lh;
-	z-index: 1;
+	display: inline-block;
+	padding-inline: 0 calc(100% * var(--fragment-progress));
+	margin-inline: 0 calc(-100% * var(--fragment-progress));
+	background: linear-gradient(0deg, var(--effect-color, red) 0 100%);
+	height: var(--strike-width, 0.2em);
+	vertical-align: calc(0.5ex - var(--strike-width, 0.2em) / 2);
+	isolation: isolate;
+}
+[p-effect~='strike'][p-initially-visible]::before {
+	margin-inline: calc(100% * (1 - var(--fragment-progress))) -100%;
 }
 
 [p-effect~='highlight'] {
@@ -192,8 +177,9 @@
 	stroke-dasharray: calc(var(--length, 100px) * var(--fragment-progress)) var(--length, 100px);
 }
 
-/**** from ****/
-[p-effect~='from'] {
+/**** move/from ****/
+[p-effect~='from'],
+[p-effect~='move'] {
 	translate: calc(var(--from-x, 0px) + var(--fragment-progress) * (var(--to-x, 0px) - var(--from-x, 0px)))
 		calc(var(--from-y, 0px) + var(--fragment-progress) * (var(--to-y, 0px) - var(--from-y, 0px)));
 }

@@ -10,11 +10,11 @@ import {
 	getHighlightSelector,
 	getLabel,
 	gridKeyHandler,
-	isFragmentVisible,
+	isFragmentActivated,
 	isSlide,
 	selectSlide,
 	setCurrentFragments,
-	setFragmentVisibility,
+	setFragmentActivation,
 	whateverMotion,
 	whenAllDefined
 } from '../utils.js';
@@ -314,7 +314,7 @@ export class PresentationDeckElement extends HTMLElement {
 		if (this.currentIndex > 0) {
 			return false;
 		}
-		return !this.slides[0]?.lastVisibleFragments;
+		return !this.slides[0]?.lastActivatedFragments;
 	}
 	/**
 	 * It's `true` if and only if the presentation is at the end.
@@ -400,7 +400,7 @@ export class PresentationDeckElement extends HTMLElement {
 			this.currentSlide = slides[currentIndex + 1];
 			if (this.atEnd) fireEvent(this, 'finish');
 		} else if (!this.atEnd) {
-			setFragmentVisibility(true)(...this.currentSlide.fragments);
+			setFragmentActivation(true)(...this.currentSlide.fragments);
 			this.#checkNotes();
 			fireEvent(this, 'finish');
 		}
@@ -414,7 +414,7 @@ export class PresentationDeckElement extends HTMLElement {
 		if (currentIndex > 0) {
 			this.currentSlide = this.slides[currentIndex - 1];
 		} else if (!this.atStart) {
-			setFragmentVisibility(false)(...this.currentSlide.fragments);
+			setFragmentActivation(false)(...this.currentSlide.fragments);
 			this.#checkNotes();
 		}
 	}
@@ -503,7 +503,7 @@ export class PresentationDeckElement extends HTMLElement {
 		return {
 			deckId: this.id,
 			currentIndex: this.currentIndex,
-			currentSlideFragmentVisibility: Array.from(this.currentSlide.fragments, isFragmentVisible),
+			currentSlideFragmentActivation: Array.from(this.currentSlide.fragments, isFragmentActivated),
 			clockElapsed: this.#clockElapsed,
 			clockStart: this.#clockStart
 		};
@@ -515,7 +515,7 @@ export class PresentationDeckElement extends HTMLElement {
 		this.#clockStart = state.clockStart;
 		const { currentSlide } = this;
 		currentSlide.fragments.forEach((fragment, index) => {
-			setFragmentVisibility(state.currentSlideFragmentVisibility[index])(fragment);
+			setFragmentActivation(state.currentSlideFragmentActivation[index])(fragment);
 		});
 		setCurrentFragments(currentSlide);
 		this.#updateClock();

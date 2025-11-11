@@ -160,9 +160,9 @@ This table will explain how the order is created:
 
 #### Fragment groups
 
-Fragment can be grouped together (i.e. will be toggled at the same time) when assigned the same numeric index, but if
-you don't want to tie the fragments to a specific index (e.g. because you may want to move them around when writing
-your presentation), you can use the `p-group` attribute:
+Fragments can be grouped together (i.e. will be toggled at the same time) when assigned the same numeric index, but if
+you don't want to bind them to a specific index (e.g. because you may want to move them around while writing your
+presentation), you can use the `p-group` attribute:
 
 ```html
 <p p-fragment p-group="start">This will appear first</p>
@@ -170,8 +170,8 @@ your presentation), you can use the `p-group` attribute:
 <div p-fragment p-group="start">This will appear first too!</div>
 ```
 
-You can still specify a numeric index inside your group: the _first_ numeric index set in the group's fragments will be
-used as the index of _all_ the fragments (watch out for index mismatches).
+You can still specify a numeric index inside your group: the _first_ (as found in the markup) numeric index set in the
+group's fragments will be used as the index of _all_ the fragments (watch out for index mismatches).
 
 Alternatively, you can use the index attribute to specify the fragment's group name, separating the numeric index value
 from the group's name with a `:`:
@@ -186,6 +186,37 @@ from the group's name with a `:`:
 
 Fragment groups can also be used to bind speaker notes to a fragment without the need to set a `p-fragment` attribute
 with the same index on the note. See the section about speaker notes ahead.
+
+#### Initially visible fragments
+
+Sometimes, instead of making some content appear, you may want to make it _disappear_ from view while progressing your
+presentation. In these cases, fragments should be **initially visible** and then hidden. In order to do so, you have two
+choices:
+
+1. add a `p-initially-visible` attribute to your fragment element: when collected, it will be assigned a `aria-hidden`
+   attribute set to `"false"` instead of `"true"`, and switched to `"true"` when the fragment is activated;
+   ```html
+   <p-fragment p-initially-visible>I will soon disappear</p-fragment>
+   ```
+2. set `aria-hidden="false"` on the fragment element: the attribute `p-initially-visible` will be added as a
+   consequece.
+   ```html
+   <span p-fragment aria-hidden="false">I am temporary</span>
+   ```
+
+If you want a fragment to start hidden, then appear, and then disappear again after some progress, nest it with an
+initially visible fragment:
+
+```html
+<div p-fragment>
+	<p-fragment p-initially-visible> Like this. </p-fragment>
+</div>
+
+Alternatively:
+<p-fragment index="1" aria-hidden="false">
+	<span p-fragment="0"> Make sure to set the outer fragment to activate after the inner one </span>
+</p-fragment>
+```
 
 ### Deck modes
 
@@ -495,13 +526,13 @@ The list of the fragment elements as they appear in the slide's markup.
 
 The fragments grouped using their indexes.
 
-##### `readonly nextHiddenFragments: Element[] | undefined`
+##### `readonly nextInactiveFragments: Element[] | undefined`
 
-The next group of fragments that will be shown when advancing the presentation, if any.
+The next group of fragments that will be activated when advancing the presentation, if any.
 
-##### `readonly lastVisibleFragments: Element[] | undefined`
+##### `readonly lastActivatedFragments: Element[] | undefined`
 
-The last group of fragments that has been shown when advancing the presentation, if any.
+The last group of fragments that has been activated when advancing the presentation, if any.
 
 ##### `readonly notes: Array<Element | Comment>`
 
@@ -528,7 +559,7 @@ Fired when a block of fragments has been shown or hidden. The event bubbles and 
 | Detail property | Type        | Description                                   |
 | --------------- | ----------- | --------------------------------------------- |
 | `fragments`     | `Element[]` | The fragments that have been toggled          |
-| `areVisible`    | `boolean`   | The visibility state of the toggled fragments |
+| `areActivated`  | `boolean`   | The activation state of the toggled fragments |
 
 ### Style customizations
 
@@ -701,19 +732,17 @@ Some effects have "parameters" in terms of custom CSS properties that can be use
 them some have effect "variants" that basically preset the parameters with meaningful values. For example, instead of
 just `p-effect="highlight"`, you can write `p-effect="highlight red"` to have red highlighting instead of the default yellow.
 
-| Effect name | Transition properties                                  | Parameters: default value                                            | Description                                                                                                                                                                                                                                                                                                                                                                                                    |
-| ----------- | ------------------------------------------------------ | -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `collapse`  | `height`/`max-height` (if `calc-size` isn't supported) | -                                                                    | Hides elements. Also sets `display: block` on the element (change it to your needs), and block `padding`/`margin`/`border-width` to 0 when shown                                                                                                                                                                                                                                                               |
-| `drawing`   | `stroke-dasharray`                                     | `--length: 100px`                                                    | For SVG elements like `<path>` or other geometry elements. You can either set the parameter to the correct value (maybe using [`getTotalLength()`](https://developer.mozilla.org/en-US/docs/Web/API/SVGGeometryElement/getTotalLength)), or set the [`pathLength`](https://developer.mozilla.org/en-US/docs/Web/SVG/Reference/Attribute/pathLength) attribute on the element to `"100"` (to match the default) |
-| `fade`      | `opacity`                                              | `--fade-from: 0`<br>`--fade-to: 1`                                   | Essentially the default fragment transition, but with parameters                                                                                                                                                                                                                                                                                                                                               |
-| `from`      | `translate`                                            | `--from-x: 0px`<br>`--from-y: 0px`<br>`--to-x: 0px`<br>`--to-y: 0px` | Moves from a given position shift to a final position shift                                                                                                                                                                                                                                                                                                                                                    |
-| `highlight` | `background`                                           | `--effect-color: yellow`<br>`--highlight-expand: 0.1em`              | Highlights words by setting the background                                                                                                                                                                                                                                                                                                                                                                     |
-| `insert`    | `height`/`max-height` (if `calc-size` isn't supported) | -                                                                    | Reveals elements. Also sets `display: block` on the element (change it to your needs), and block `padding`/`margin`/`border-width` to 0 when hidden                                                                                                                                                                                                                                                            |
-| `reveal`    | `width`/`max-width` (if `calc-size` isn't supported)   | -                                                                    | Reveals words/elements. Also sets `display: inline-block` on the element (change it to your needs), and inline `padding`/`margin`/`border-width` to 0 when hidden                                                                                                                                                                                                                                              |
-| `spin`      | `rotated`                                              | `--angle-from: 0deg`<br>`--angle-to: 3turn`                          | Rotates the element from a given angle to a given angle                                                                                                                                                                                                                                                                                                                                                        |
-| `shrink`    | `width`/`max-width` (if `calc-size` isn't supported)   | -                                                                    | Hides words/elements. Also sets `display: inline-block` on the element (change it to your needs), and inline `padding`/`margin`/`border-width` to 0 when shown                                                                                                                                                                                                                                                 |
-| `strike`    | `background-size`                                      | `--effect-color: red`<br>`--strike-width: 0.2em`                     | Draws a line over the element (sets `position: relative` on the element and uses `::before`)                                                                                                                                                                                                                                                                                                                   |
-| `zoom`      | `scale`                                                | `--scale-from: 0`<br>`--scale-to: 1`                                 | Scales the element from a given level to a given level                                                                                                                                                                                                                                                                                                                                                         |
+| Effect name   | Transition properties                                  | Parameters: default value                                             | Description                                                                                                                                                                                                                                                                                                                                                                                                    |
+| ------------- | ------------------------------------------------------ | --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `drawing`     | `stroke-dasharray`                                     | `--length: 100px`                                                     | For SVG elements like `<path>` or other geometry elements. You can either set the parameter to the correct value (maybe using [`getTotalLength()`](https://developer.mozilla.org/en-US/docs/Web/API/SVGGeometryElement/getTotalLength)), or set the [`pathLength`](https://developer.mozilla.org/en-US/docs/Web/SVG/Reference/Attribute/pathLength) attribute on the element to `"100"` (to match the default) |
+| `fade`        | `opacity`                                              | `--fade-from: 0`<br>`--fade-to: 1`                                    | Essentially the default fragment transition, but with parameters                                                                                                                                                                                                                                                                                                                                               |
+| `move`/`from` | `translate`                                            | `--from-x: 0px`<br>`--from-y: 0px`<br>`--to-x: 0px`<br>`--to-y: 0px`  | Moves from a given position shift to a final position shift. The effect names are effectively synonyms, but `from` sounds better when used with positional variants (as in `from above`) while `move` does when initially visible (as in `move right`) or without positional variants                                                                                                                          |
+| `highlight`   | `background-size`                                      | `--effect-color: oklch(0.6 0.1 80deg)`<br>`--highlight-expand: 0.1em` | Highlights words by setting the background                                                                                                                                                                                                                                                                                                                                                                     |
+| `insert`      | `height` (`max-height` if `calc-size` isn't supported) | -                                                                     | Reveals elements. Also sets `display: block` on the element (change it to your needs), and block `padding`/`margin`/`border-width` to 0 when hidden                                                                                                                                                                                                                                                            |
+| `reveal`      | `width` (`max-width` if `calc-size` isn't supported)   | -                                                                     | Reveals words/elements. Also sets `display: inline-block` on the element (change it to your needs), and inline `padding`/`margin`/`border-width` to 0 when hidden                                                                                                                                                                                                                                              |
+| `spin`        | `rotated`                                              | `--angle-from: 0deg`<br>`--angle-to: 3turn`                           | Rotates the element from a given angle to a given angle. This is insufficient to make a fragment visually hidden, so use it with other effects like `fade` or `zoom`                                                                                                                                                                                                                                           |
+| `strike`      | `margin-`/`padding-inline-end` (on `::before`)         | `--effect-color: red`<br>`--strike-width: 0.2em`                      | Draws a line over the element (sets `display: inline-block` on the element and uses `::before`). Works on only _one line_ of text (re-apply and group the effect to multiple lines if necessary). You probably want to use this effect in initially visible fragments                                                                                                                                          |
+| `zoom`        | `scale`                                                | `--scale-from: 0`<br>`--scale-to: 1`                                  | Scales the element from a given level to a given level                                                                                                                                                                                                                                                                                                                                                         |
 
 If you want to be somewhat semantic, when combining effects you can add conjunctions like in `p-effect="reveal and fade"`
 or `p-effect="spin + zoom"`.
@@ -722,28 +751,35 @@ or `p-effect="spin + zoom"`.
 
 Here are the variants that can be used with the above effects:
 
-| Variant    | Parameters set                           | To be used with               |
-| ---------- | ---------------------------------------- | ----------------------------- |
-| `above`    | `--from-y: -100cqh`                      | `from`                        |
-| `below`    | `--from-y: 100cqh`                       | `from`                        |
-| `left`     | `--from-x: -100cqw`                      | `from`                        |
-| `start`    | `--from-x: -100cqw` (ltr) `100cqw` (rtl) | `from`                        |
-| `right`    | `--from-x: 100cqw`                       | `from`                        |
-| `end`      | `--from-x: 100cqw` (ltr) `-100cqw` (rtl) | `from`                        |
-| `red`      | `--effect-color: red`                    | `highlight`, `strike`         |
-| `blue`     | `--effect-color: blue`                   | `highlight`, `strike`         |
-| `green`    | `--effect-color: green`                  | `highlight`, `strike`         |
-| `yellow`   | `--effect-color: yellow`                 | `highlight`, `strike`         |
-| `dropping` | `transition-duration: var(--bounce)`     | `from`, `insert`, `reveal`... |
-| `boing`    | `transition-duration: var(--overshoot)`  | `from`, `insert`, `reveal`... |
+| Variant          | Parameters set                           | To be used with               |
+| ---------------- | ---------------------------------------- | ----------------------------- |
+| `above`/`top`    | `--from-y: -100cqh`                      | `from`                        |
+| `below`/`bottom` | `--from-y: 100cqh`                       | `from`                        |
+| `left`           | `--from-x: -100cqw`                      | `from`                        |
+| `start`          | `--from-x: -100cqw` (ltr) `100cqw` (rtl) | `from`                        |
+| `right`          | `--from-x: 100cqw`                       | `from`                        |
+| `end`            | `--from-x: 100cqw` (ltr) `-100cqw` (rtl) | `from`                        |
+| `red`            | `--effect-color: red`                    | `highlight`, `strike`         |
+| `blue`           | `--effect-color: oklch(0.6 0.1 240deg)`  | `highlight`, `strike`         |
+| `green`          | `--effect-color: oklch(0.6 0.1 160deg)`  | `highlight`, `strike`         |
+| `yellow`         | `--effect-color: oklch(0.6 0.1 80deg)`   | `highlight`, `strike`         |
+| `dropping`       | `transition-duration: var(--bounce)`     | `move`, `insert`, `reveal`... |
+| `boing`          | `transition-duration: var(--overshoot)`  | `move`, `insert`, `reveal`... |
 
 The last two don't set a parameter, but rather the timing function of the transition, using a couple of custom
 properties defined on `:root` (`--bounce` and `--overshoot`) that allows you to combine keywords like in
-`p-effect="dropping from above"`. They can be used for any effect, but give their best with `from`.
+`p-effect="dropping from above"`. They can be used for any effect, but give their best with `move`/`from`.
 
 > [!TIP]
 > The order of the words in the `p-effect` attribute doesn't matter, and unknown words are ignored:
 > `p-effect="above the hill, dropping a stone from the cabin"` has the same effect of `p-effect="dropping from above"`.
+
+> [!NOTE]
+> **Why is there no `to` effect?**
+> The concept of moving content _to_ a position suggests that you want to move the content _outside_ the viewport rather
+> than bring it in. This is a problem from an accessibility point of view, because fragments start with
+> `aria-hidden="true"` (i.e. not accessible) and end with `aria-hidden="false"` (therefore instrumentally visible but
+> visually hidden). Instead, consider setting the fragment as **initially visible** and setting the origin position.
 
 #### Fragment sub-effects
 
@@ -766,17 +802,17 @@ attribute to the descendant elements that you want to animate. For example:
 ```
 
 This way, the whole fragment will always be visible, including the heading (be careful with accessibility semantics,
-though!), while the sub-parts will animate together once the fragment will become "visible". Before that, to achieve a
+though!), while the sub-parts will animate together once the fragment will be activated. Before that, to achieve a
 similar effect you had to declare all the single parts as fragments, assigning the same index to each one of them.
 
-#### Fragment-less effects
+#### Animation on slide activation (fragment-less effects)
 
 It's possible to have animation effects on elements even if they're not fragments or contained in fragments. These
 effects will be run once the containing slide becomes visible, with a delay equal to `--sliding-duration`:
 
 ```html
 <p-slide>
-	<h2 p-effect="from above">I will fall once my slides complete its entry animation</h2>
+	<h2 p-effect="from above">I will fall once my slide complete its entry animation</h2>
 </p-slide>
 ```
 

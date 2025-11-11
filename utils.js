@@ -7,6 +7,11 @@ export const whenAllDefined = () => Promise.all(['p-deck', 'p-slide'].map(tag =>
 
 let styleRoot = 'css/';
 
+/** @internal */
+export const INITIALLY_VISIBLE = 'p-initially-visible';
+/** @internal */
+export const FRAGMENTS = 'p-fragment,[p-fragment]';
+
 /**
  * The `<p-deck>` element will start loading its stylesheet at the default location of `css/`, if nothing has been set
  * on `PresentationDeckElement.styles`. You can change that _before defining or instantiating_ a `<p-deck>` element.
@@ -77,7 +82,7 @@ export const selectSlide = (slides, nextSlide) => {
 		} else {
 			slide.isActive = false;
 			slide.isPrevious = isPrevious;
-			setFragmentVisibility(isPrevious)(...slide.fragments);
+			setFragmentActivation(isPrevious)(...slide.fragments);
 			setCurrentFragments(slide);
 		}
 	}
@@ -106,12 +111,12 @@ const isElement = node => node.nodeType === Node.ELEMENT_NODE;
 
 /** @param {Element | Comment} note @internal */
 const getNoteFragment = note => {
-	const fragment = (isElement(note) ? note : note.parentElement).closest('p-fragment, [p-fragment]');
+	const fragment = (isElement(note) ? note : note.parentElement).closest(FRAGMENTS);
 	if (fragment) return fragment;
 	if (!isElement(note)) return null;
 	const group = note.getAttribute('p-group');
 	if (group === null) return null;
-	return note.closest('p-slide')?.querySelector(`[p-group="${group}"]:is(p-fragment, [p-fragment])`) ?? null;
+	return note.closest('p-slide')?.querySelector(`[p-group="${group}"]:is(${FRAGMENTS})`) ?? null;
 };
 
 /** @param {PresentationSlideElement} slide @internal */
@@ -157,7 +162,7 @@ export const copyNotes = (noteContainer, notes) => {
  */
 export const checkNoteActivations = (noteContainer, notes) => {
 	notes.forEach((note, index) => {
-		noteContainer.children[index].hidden = !isNoteVisible(note);
+		noteContainer.children[index].hidden = !isNoteActive(note);
 	});
 };
 
@@ -226,25 +231,25 @@ const getFragmentGroup = element => {
 };
 
 /** @param {Element} element @internal */
-export const isFragmentVisible = element => element.getAttribute('aria-hidden') === 'false';
+export const isFragmentActivated = element => element.getAttribute('aria-hidden') === String(element.hasAttribute(INITIALLY_VISIBLE));
 
 /**
- * @param {boolean} visible
+ * @param {boolean} activate
  * @return {(...elements: Element[]) => void}
  * @internal
  */
-export const setFragmentVisibility =
-	visible =>
+export const setFragmentActivation =
+	activate =>
 	(...elements) =>
-		elements.forEach(element => element.setAttribute('aria-hidden', String(!visible)));
+		elements.forEach(element => element.setAttribute('aria-hidden', String(!(activate ^ element.hasAttribute(INITIALLY_VISIBLE)))));
 
 /** @param {PresentationSlideElement} slide @internal */
 export const setCurrentFragments = slide => {
 	slide.fragmentSequence.forEach((fragments, index, blocks) => {
-		const areVisible = fragments.every(isFragmentVisible);
-		const areCurrent = areVisible && !blocks[index + 1]?.every(isFragmentVisible);
+		const areActivated = fragments.every(isFragmentActivated);
+		const areCurrent = areActivated && !blocks[index + 1]?.every(isFragmentActivated);
 		fragments.forEach((fragment, index) => {
-			fragment.toggleAttribute('previous', areVisible && !areCurrent);
+			fragment.toggleAttribute('previous', areActivated && !areCurrent);
 			// Only the last fragment of a block should be set as the current fragment
 			fragment.ariaCurrent = areCurrent && index === fragments.length - 1 ? 'step' : 'false';
 		});
@@ -252,7 +257,10 @@ export const setCurrentFragments = slide => {
 };
 
 /** @param {Element | Comment} note @internal */
-const isNoteVisible = note => (getNoteFragment(note)?.getAttribute('aria-hidden') ?? 'false') === 'false';
+const isNoteActive = note => {
+	const fragment = getNoteFragment(note);
+	return !fragment || isFragmentActivated(fragment);
+};
 
 /**
  * @param {Map<K, V[]>} map

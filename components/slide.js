@@ -2,10 +2,12 @@
 import {
 	collectNotes,
 	fireEvent,
+	FRAGMENTS,
 	getSequencedFragments,
-	isFragmentVisible,
+	INITIALLY_VISIBLE,
+	isFragmentActivated,
 	setCurrentFragments,
-	setFragmentVisibility,
+	setFragmentActivation,
 	whenAllDefined
 } from '../utils.js';
 
@@ -19,7 +21,7 @@ const mutationOptions = {
 	subtree: true,
 	childList: true,
 	attributes: true,
-	attributeFilter: ['p-fragment', 'index']
+	attributeFilter: ['p-fragment', 'index', 'p-group']
 };
 
 /**
@@ -55,8 +57,12 @@ export class PresentationSlideElement extends HTMLElement {
 	/** @internal */
 	connectedCallback() {
 		this.ariaHidden = `${!this.isActive}`;
-		this.querySelectorAll('p-fragment, [p-fragment]').forEach(fragment => {
-			fragment.ariaHidden ??= 'true';
+		this.querySelectorAll(FRAGMENTS).forEach(fragment => {
+			if (fragment.ariaHidden === null) {
+				fragment.ariaHidden = String(!fragment.hasAttribute(INITIALLY_VISIBLE));
+			} else {
+				fragment.toggleAttribute(INITIALLY_VISIBLE, fragment.ariaHidden === 'false');
+			}
 			fragment.ariaCurrent ??= 'false';
 		});
 		this.#mutations.observe(this, mutationOptions);
@@ -104,9 +110,10 @@ export class PresentationSlideElement extends HTMLElement {
 
 	/**
 	 * The list of the fragment elements as they appear in the slide's markup.
+	 * @type {Element[]}
 	 */
 	get fragments() {
-		return this.querySelectorAll('p-fragment, [p-fragment]');
+		return this.querySelectorAll(FRAGMENTS);
 	}
 
 	#fragmentSequence;
@@ -123,17 +130,17 @@ export class PresentationSlideElement extends HTMLElement {
 	}
 
 	/**
-	 * The next group of fragments that will be shown when advancing the presentation, if any.
+	 * The next group of fragments that will be activated when advancing the presentation, if any.
 	 */
-	get nextHiddenFragments() {
-		return this.fragmentSequence.find(fragments => !fragments.every(isFragmentVisible));
+	get nextInactiveFragments() {
+		return this.fragmentSequence.find(fragments => !fragments.every(isFragmentActivated));
 	}
 
 	/**
-	 * The last group of fragments that has been shown when advancing the presentation, if any.
+	 * The last group of fragments that has been activated when advancing the presentation, if any.
 	 */
-	get lastVisibleFragments() {
-		return this.fragmentSequence.findLast(fragments => fragments.every(isFragmentVisible));
+	get lastActivatedFragments() {
+		return this.fragmentSequence.findLast(fragments => fragments.every(isFragmentActivated));
 	}
 
 	#notes;
@@ -152,13 +159,13 @@ export class PresentationSlideElement extends HTMLElement {
 	 * @fires {PresentationFragmentToggleEvent} p-slides.fragmenttoggle - If a set of fragments has been toggled
 	 */
 	next() {
-		const hiddenFragments = this.nextHiddenFragments;
-		if (hiddenFragments) {
-			setFragmentVisibility(true)(...hiddenFragments);
+		const inactiveFragments = this.nextInactiveFragments;
+		if (inactiveFragments) {
+			setFragmentActivation(true)(...inactiveFragments);
 			setCurrentFragments(this);
 			fireEvent(this, 'fragmenttoggle', {
-				fragments: hiddenFragments,
-				areVisible: true
+				fragments: inactiveFragments,
+				areActivated: true
 			});
 			this.deck?.broadcastState();
 			return false;
@@ -174,13 +181,13 @@ export class PresentationSlideElement extends HTMLElement {
 	 * @fires {PresentationFragmentToggleEvent} p-slides.fragmenttoggle - If a set of fragments has been toggled
 	 */
 	previous() {
-		const visibleFragments = this.lastVisibleFragments;
-		if (visibleFragments) {
-			setFragmentVisibility(false)(...visibleFragments);
+		const activatedFragments = this.lastActivatedFragments;
+		if (activatedFragments) {
+			setFragmentActivation(false)(...activatedFragments);
 			setCurrentFragments(this);
 			fireEvent(this, 'fragmenttoggle', {
-				fragments: visibleFragments,
-				areVisible: false
+				fragments: activatedFragments,
+				areActivated: false
 			});
 			this.deck?.broadcastState();
 			return false;

@@ -16,7 +16,7 @@ export type KeyCommand =
 
 export interface PresentationState {
 	currentIndex: number;
-	currentSlideFragmentVisibility: boolean[];
+	currentSlideFragmentActivation: boolean[];
 	clockElapsed: number;
 	clockStart: number | null;
 	deckId: string;
@@ -54,8 +54,8 @@ export type PresentationClockSetEvent = CustomEvent<{
 export type PresentationFragmentToggleEvent = CustomEvent<{
 	/** The fragments that have been toggled */
 	fragments: Element[];
-	/** The visibility state of the toggled fragments */
-	areVisible: boolean;
+	/** The activation state of the toggled fragments */
+	areActivated: boolean;
 }>;
 
 declare global {
