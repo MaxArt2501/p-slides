@@ -32,6 +32,7 @@
 	},
 	"customElements": "custom-elements.json",
 	"files": [
+		"changelog.md",
 		"components",
 		"css",
 		"custom-elements.json",
