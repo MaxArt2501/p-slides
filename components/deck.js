@@ -323,7 +323,7 @@ export class PresentationDeckElement extends HTMLElement {
 		const { slides } = this;
 		if (this.currentIndex < slides.length - 1) return false;
 		const lastSlide = slides[slides.length - 1];
-		return !lastSlide?.nextHiddenFragments;
+		return !lastSlide?.nextInactiveFragments;
 	}
 
 	/**
