@@ -519,6 +519,7 @@ export class PresentationDeckElement extends HTMLElement {
 		});
 		setCurrentFragments(currentSlide);
 		this.#updateClock();
+		this.#checkNotes();
 	}
 
 	#preventBroadcast = false;
