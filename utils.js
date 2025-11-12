@@ -164,6 +164,7 @@ export const checkNoteActivations = (noteContainer, notes) => {
 	notes.forEach((note, index) => {
 		noteContainer.children[index].hidden = !isNoteActive(note);
 	});
+	scrollIntoView(noteContainer.querySelector(':scope>:nth-last-child(1 of :not([hidden]))'), { block: 'center' });
 };
 
 /**
@@ -370,9 +371,15 @@ export const generateTextId = async element => {
 };
 
 const motionMatcher = matchMedia('(prefers-reduced-motion: no-preference)');
-/** @internal */
-export let whateverMotion = motionMatcher.matches;
+let whateverMotion = motionMatcher.matches;
 motionMatcher.addEventListener('change', event => (whateverMotion = event.matches));
+
+/**
+ * @param {Element} [element]
+ * @param {ScrollIntoViewOptions} opts
+ * @internal
+ */
+export const scrollIntoView = (element, opts = {}) => element?.scrollIntoView({ behavior: whateverMotion ? 'smooth' : 'auto', ...opts });
 
 /** @type {PresentationKeyHandler} @internal */
 export const defaultKeyHandler = (keyEvent, deck) => {

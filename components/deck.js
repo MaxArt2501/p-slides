@@ -12,10 +12,10 @@ import {
 	gridKeyHandler,
 	isFragmentActivated,
 	isSlide,
+	scrollIntoView,
 	selectSlide,
 	setCurrentFragments,
 	setFragmentActivation,
-	whateverMotion,
 	whenAllDefined
 } from '../utils.js';
 
@@ -336,10 +336,7 @@ export class PresentationDeckElement extends HTMLElement {
 		if (this.#highlightRule) {
 			this.#highlightRule.selectorText = getHighlightSelector(index + 1);
 		}
-		this.slides[index].scrollIntoView({
-			block: 'center',
-			behavior: whateverMotion ? 'smooth' : 'auto'
-		});
+		scrollIntoView(this.slides[index], { block: 'center' });
 	}
 
 	#keyHandler = /**
