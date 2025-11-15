@@ -289,6 +289,9 @@ mode's area for the notes.
 > <p-fragment p-group="together">A note will be lit when this phrase will appear</p-fragment><br />
 > <p-notes p-group="together">A phrase has appeared</p-notes>
 > ```
+>
+> The `p-group` attribute _takes precedence_ on the containing fragment, meaning that the note will be activated when
+> the fragments in the group are activated, and not when the containing fragment is.
 
 ### Keybindings
 

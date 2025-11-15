@@ -111,12 +111,12 @@ const isElement = node => node.nodeType === Node.ELEMENT_NODE;
 
 /** @param {Element | Comment} note @internal */
 const getNoteFragment = note => {
-	const fragment = (isElement(note) ? note : note.parentElement).closest(FRAGMENTS);
-	if (fragment) return fragment;
-	if (!isElement(note)) return null;
+	if (!isElement(note)) {
+		return note.parentElement?.closest(FRAGMENTS) ?? null;
+	}
 	const group = note.getAttribute('p-group');
-	if (group === null) return null;
-	return note.closest('p-slide')?.querySelector(`[p-group="${group}"]:is(${FRAGMENTS})`) ?? null;
+	const frag = group !== null && note.closest('p-slide')?.querySelector(`[p-group="${group}"]:is(${FRAGMENTS})`);
+	return frag || note.closest(FRAGMENTS);
 };
 
 /** @param {PresentationSlideElement} slide @internal */
