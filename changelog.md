@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.1
+
+- fix deck's `atEnd` property always yielding `true` on the last slide
+- fix speaker notes visibility when commanding from another tab
+- fix speaker note list cutting off long lists of notes and scroll to newly active notes
+- set note activation on fragment group (if present) rather than ancestor fragment activation
+
 ## 1.5.0
 
 - add several fragment effect presets in a separate **effects.css** file;
