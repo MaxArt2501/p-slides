@@ -95,55 +95,57 @@ button:last-of-type::after {
 	transform: rotate(-45deg);
 }
 
-:host([mode='speaker']) {
-	background: black;
-}
-/* :not([aria-current='page'] ~ *) doesn't work inside ::slotted(), but we have a workaround */
-:host([mode='speaker']) ::slotted(p-slide:not([aria-current='page']):not(:nth-child(1 of [aria-current='page'] ~ *))) {
-	position: absolute !important;
-	visibility: hidden !important;
-}
-:host([mode='speaker']) ::slotted(p-slide) {
-	animation: none !important;
-	overflow: hidden;
-}
-:host([mode='speaker']) ::slotted(p-slide[aria-current='page']) {
-	transform: scale(calc(1 - var(--speaker-next-scale)));
-	position: relative;
-	top: calc(var(--speaker-next-scale) * -50%);
-	left: calc(var(--speaker-next-scale) * 50% - 50%);
-	opacity: calc(1 - var(--speaker-next-scale) / 2);
-}
-:host([mode='speaker']) ::slotted(p-slide:nth-child(1 of [aria-current='page'] ~ *)) {
-	transform: scale(calc(var(--speaker-next-scale)));
-	position: relative;
-	top: calc(50% - var(--speaker-next-scale) * 50%);
-	left: calc(var(--speaker-next-scale) * 50% - 50%);
-}
-:host([mode='speaker']) aside {
-	display: flex;
-}
+@media screen {
+	:host([mode='speaker']) {
+		background: black;
+	}
+	/* :not([aria-current='page'] ~ *) doesn't work inside ::slotted(), but we have a workaround */
+	:host([mode='speaker']) ::slotted(p-slide:not([aria-current='page']):not(:nth-child(1 of [aria-current='page'] ~ *))) {
+		position: absolute !important;
+		visibility: hidden !important;
+	}
+	:host([mode='speaker']) ::slotted(p-slide) {
+		animation: none !important;
+		overflow: hidden;
+	}
+	:host([mode='speaker']) ::slotted(p-slide[aria-current='page']) {
+		transform: scale(calc(1 - var(--speaker-next-scale)));
+		position: relative;
+		top: calc(var(--speaker-next-scale) * -50%);
+		left: calc(var(--speaker-next-scale) * 50% - 50%);
+		opacity: calc(1 - var(--speaker-next-scale) / 2);
+	}
+	:host([mode='speaker']) ::slotted(p-slide:nth-child(1 of [aria-current='page'] ~ *)) {
+		transform: scale(calc(var(--speaker-next-scale)));
+		position: relative;
+		top: calc(50% - var(--speaker-next-scale) * 50%);
+		left: calc(var(--speaker-next-scale) * 50% - 50%);
+	}
+	:host([mode='speaker']) aside {
+		display: flex;
+	}
 
-:host([mode='grid']) {
-	grid-template: auto / repeat(var(--grid-columns), minmax(0, 1fr));
-	padding: var(--grid-gap);
-	gap: var(--grid-gap);
-	height: fit-content;
-	overflow: auto;
-	max-height: 100cqh;
-	scrollbar-width: none;
-	--slide-width: calc((100cqw - (var(--grid-columns) + 1) * var(--grid-gap)) / var(--grid-columns));
-	--slide-height: calc(var(--slide-width) / var(--slide-aspect-ratio));
-}
-:host([mode='grid']) ::slotted(p-slide) {
-	animation: none !important;
-	width: 100% !important;
-	height: auto !important;
-	aspect-ratio: var(--slide-aspect-ratio) !important;
-	grid-area: auto !important;
-	min-height: 0;
-	pointer-events: auto;
-}
-:host([mode='grid']) ::slotted(p-slide:hover) {
-	--is-highlighted: 1;
+	:host([mode='grid']) {
+		grid-template: auto / repeat(var(--grid-columns), minmax(0, 1fr));
+		padding: var(--grid-gap);
+		gap: var(--grid-gap);
+		height: fit-content;
+		overflow: auto;
+		max-height: 100cqh;
+		scrollbar-width: none;
+		--slide-width: calc((100cqw - (var(--grid-columns) + 1) * var(--grid-gap)) / var(--grid-columns));
+		--slide-height: calc(var(--slide-width) / var(--slide-aspect-ratio));
+	}
+	:host([mode='grid']) ::slotted(p-slide) {
+		animation: none !important;
+		width: 100% !important;
+		height: auto !important;
+		aspect-ratio: var(--slide-aspect-ratio) !important;
+		grid-area: auto !important;
+		min-height: 0;
+		pointer-events: auto;
+	}
+	:host([mode='grid']) ::slotted(p-slide:hover) {
+		--is-highlighted: 1;
+	}
 }
