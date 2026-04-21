@@ -85,10 +85,12 @@
 
 /**** reveal ****/
 [p-effect~='reveal'] {
-	transition-property: --fragment-progress, padding-inline, margin-inline, border-inline-width, overflow;
 	display: inline-block;
 	min-width: 0;
-	transition-behavior: allow-discrete;
+	padding-inline: calc(var(--padding-inline, initial) * (1 - var(--fragment-progress)));
+	margin-inline: calc(var(--margin-inline, initial) * (1 - var(--fragment-progress)));
+	border-inline-width: calc(var(--border-inline-width, initial) * (1 - var(--fragment-progress)));
+	overflow: if(style(--fragment-progress < 1): clip;);
 }
 @supports (width: calc-size(auto, size)) {
 	[p-effect~='reveal'] {
@@ -101,20 +103,14 @@
 	}
 }
 
-[p-effect~='reveal']:is(p-fragment, [p-fragment])[aria-hidden='true'],
-[p-effect~='reveal']:not(p-fragment, [p-fragment]):is([aria-hidden='true'] *) {
-	padding-inline: 0;
-	margin-inline: 0;
-	border-inline-width: 0;
-	overflow: clip;
-}
-
 /**** insert ****/
 [p-effect~='insert'] {
-	transition-property: --fragment-progress, padding-block, margin-block, border-block-width, overflow;
 	display: block;
 	min-height: 0;
-	transition-behavior: allow-discrete;
+	padding-block: calc(var(--padding-block, initial) * (1 - var(--fragment-progress)));
+	margin-block: calc(var(--margin-block, initial) * (1 - var(--fragment-progress)));
+	border-block-width: calc(var(--border-block-width, initial) * (1 - var(--fragment-progress)));
+	overflow: if(style(--fragment-progress < 1): clip;);
 }
 @supports (height: calc-size(auto, size)) {
 	[p-effect~='insert'] {
@@ -127,12 +123,15 @@
 	}
 }
 
-[p-effect~='insert']:is(p-fragment, [p-fragment])[aria-hidden='true'],
-[p-effect~='insert']:not(p-fragment, [p-fragment]):is([aria-hidden='true'] *) {
-	padding-block: 0;
-	margin-block: 0;
-	border-block-width: 0;
-	overflow: clip;
+@supports not (top: if(style(--a: 0): 0;)) {
+	:is([p-effect~='reveal'], [p-effect~='insert']) {
+		transition-property: --fragment-progress, overflow;
+		transition-behavior: allow-discrete;
+	}
+	:is([p-effect~='reveal'], [p-effect~='insert']):is(p-fragment, [p-fragment])[aria-hidden='true'],
+	:is([p-effect~='reveal'], [p-effect~='insert']):not(p-fragment, [p-fragment]):is([aria-hidden='true'] *) {
+		overflow: clip;
+	}
 }
 
 /**** strike ****/
