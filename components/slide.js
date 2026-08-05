@@ -110,7 +110,7 @@ export class PresentationSlideElement extends HTMLElement {
 
 	/**
 	 * The list of the fragment elements as they appear in the slide's markup.
-	 * @type {Element[]}
+	 * @type {NodeListOf<Element>}
 	 */
 	get fragments() {
 		return this.querySelectorAll(FRAGMENTS);
