@@ -253,29 +253,30 @@ export class PresentationDeckElement extends HTMLElement {
 	get currentSlide() {
 		return this.#currentSlide;
 	}
-	set currentSlide(nextSlide) {
-		if (this.#currentSlide === nextSlide) {
+	set currentSlide(slide) {
+		if (this.#currentSlide === slide) {
 			return;
 		}
-		if (!isSlide(nextSlide)) {
+		if (!isSlide(slide)) {
 			throw Error('Current slide can only be a <p-slide> element');
 		}
-		if (!this.contains(nextSlide)) {
+		if (!this.contains(slide)) {
 			throw Error('Deck does not contain the given slide');
 		}
-		if (!nextSlide.isActive) {
-			nextSlide.isActive = true;
+		if (!slide.isActive) {
+			slide.isActive = true;
 			// We return early because setting isActive will end up setting currentSlide again
 			return;
 		}
 
-		selectSlide(this.slides, nextSlide);
+		selectSlide(this.slides, slide);
 		this.#updateCounter();
-		copyNotes(this.shadowRoot.querySelector('[part~="notelist"]'), nextSlide.notes);
+		copyNotes(this.shadowRoot.querySelector('[part~="notelist"]'), slide.notes);
 		this.highlightedSlideIndex = this.currentIndex;
 
-		this.#currentSlide = nextSlide;
-		fireEvent(this, 'slidechange', { slide: nextSlide, previous: this.#currentSlide });
+		const previous = this.#currentSlide;
+		this.#currentSlide = slide;
+		fireEvent(this, 'slidechange', { slide, previous });
 		if (this.atEnd) {
 			fireEvent(this, 'finish');
 		}
