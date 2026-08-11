@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.6.0
+
+- upgrade TypeScript to v7
+- switch to subclasses of `CustomEvent` rather than using `CustomEvent` for the deck's events
+- add a default print stylesheet
+- redefine `reveal`, `insert` effects so they transit `--fragment-progress` only
+- add support to Invoker Commands API
+- add `presentationmode`, `speakermode` and `gridmode` as keybindings and Invoker Commands
+- fix `PresentationSlideChange.previous` property to actually point to the previous slide
+- fix type of deck's `fragments` property
+
 ## 1.5.1
 
 - fix deck's `atEnd` property always yielding `true` on the last slide

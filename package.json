@@ -1,6 +1,6 @@
 {
 	"name": "p-slides",
-	"version": "1.5.1",
+	"version": "1.6.0",
 	"description": "Presentations made simple with Web Components",
 	"repository": {
 		"url": "git+https://github.com/MaxArt2501/p-slides.git"
