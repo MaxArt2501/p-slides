@@ -12,6 +12,23 @@ export const INITIALLY_VISIBLE = 'p-initially-visible';
 /** @internal */
 export const FRAGMENTS = 'p-fragment,[p-fragment]';
 
+class PseudoCustomEvent extends CustomEvent {
+	constructor(detail) {
+		const type = new.target.name.slice(12, -5).toLowerCase();
+		super(`p-slides.${type}`, { bubbles: true, detail });
+		Object.assign(this, detail);
+	}
+}
+
+const eventClassMap = {
+	slidechange: class PresentationSlideChangeEvent extends PseudoCustomEvent {},
+	finish: class PresentationFinishEvent extends PseudoCustomEvent {},
+	clockstart: class PresentationClockStartEvent extends PseudoCustomEvent {},
+	clockstop: class PresentationClockStopEvent extends PseudoCustomEvent {},
+	clockset: class PresentationClockSetEvent extends PseudoCustomEvent {},
+	fragmenttoggle: class PresentationFragmentToggleEvent extends PseudoCustomEvent {}
+};
+
 /**
  * The `<p-deck>` element will start loading its stylesheet at the default location of `css/`, if nothing has been set
  * on `PresentationDeckElement.styles`. You can change that _before defining or instantiating_ a `<p-deck>` element.
@@ -198,7 +215,7 @@ function matchKey(keyEvent, keyMap) {
  * @internal
  */
 export const fireEvent = (target, eventName, detail = {}) => {
-	const event = new CustomEvent(`p-slides.${eventName}`, { bubbles: true, detail });
+	const event = new eventClassMap[eventName](detail);
 	return target.dispatchEvent(event);
 };
 

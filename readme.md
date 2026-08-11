@@ -455,46 +455,50 @@ Returns to the previous deck mode, which is returned my the method.
 
 #### Events
 
-All events emitted are instances of [`CustomEvent`](https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent), with
-additional data in the `detail` property. All the events bubble and cannot be cancelled.
+All events emitted are instances of classes that extend
+[`CustomEvent`](https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent), with additional data in the instance
+itself. Up to version 1.5.x, the events were instances of `CustomEvent`, so in order to keep everything backwards
+compatible they still mirror the additional properties in the `detail` object property.
 
-##### `p-slides.slidechange`
+All the events bubble and cannot be cancelled.
+
+##### `PresentationSlideChangeEvent` (type `p-slides.slidechange`)
 
 Fired when the current slide changes.
 
-| Detail property | Type                       | Description                        |
-| --------------- | -------------------------- | ---------------------------------- |
-| `slide`         | `PresentationSlideElement` | The new current slide              |
-| `previous`      | `PresentationSlideElement` | The slide previouly set as current |
+| Additional property | Type                       | Description                        |
+| ------------------- | -------------------------- | ---------------------------------- |
+| `slide`             | `PresentationSlideElement` | The new current slide              |
+| `previous`          | `PresentationSlideElement` | The slide previouly set as current |
 
-##### `p-slides.finish`
+##### `PresentationFinishEvent` (type `p-slides.finish`)
 
 Fired when the presentation has reached the end.
 
-##### `p-slides.clockstart`
+##### `PresentationClockStartEvent` (type `p-slides.clockstart`)
 
 Fired when the timer has been started.
 
-| Detail property | Type     | Description                               |
-| --------------- | -------- | ----------------------------------------- |
-| `timestamp`     | `number` | Timestamp when the times has been started |
-| `elapsed`       | `number` | Milliseconds on the timer                 |
+| Additional property | Type     | Description                                     |
+| ------------------- | -------- | ----------------------------------------------- |
+| `timestamp`         | `number` | Epoch timestamp when the times has been started |
+| `elapsed`           | `number` | Milliseconds on the timer                       |
 
-##### `p-slides.clockstop`
+##### `PresentationClockStopEvent` (type `p-slides.clockstop`)
 
 Fired when the timer has been paused.
 
-| Detail property | Type     | Description               |
-| --------------- | -------- | ------------------------- |
-| `elapsed`       | `number` | Milliseconds on the timer |
+| Additional property | Type     | Description               |
+| ------------------- | -------- | ------------------------- |
+| `elapsed`           | `number` | Milliseconds on the timer |
 
-##### `p-slides.clockset`
+##### `PresentationClockSetEvent` (type `p-slides.clockset`)
 
 Fired when the timer has been set via the `clock` property.
 
-| Detail property | Type     | Description               |
-| --------------- | -------- | ------------------------- |
-| `elapsed`       | `number` | Milliseconds on the timer |
+| Additional property | Type     | Description               |
+| ------------------- | -------- | ------------------------- |
+| `elapsed`           | `number` | Milliseconds on the timer |
 
 ### `PresentationSlideElement`
 
@@ -555,14 +559,16 @@ Attempts to bring the presentation back by hiding the last shown block of fragme
 
 #### Events
 
-##### `p-slides.fragmenttoggle`
+Just like events on the deck, this event is created from a class that extends `CustomEvent`.
+
+##### `PresentationFragmentToggleEvent` (type `p-slides.fragmenttoggle`)
 
 Fired when a block of fragments has been shown or hidden. The event bubbles and cannot be cancelled.
 
-| Detail property | Type        | Description                                   |
-| --------------- | ----------- | --------------------------------------------- |
-| `fragments`     | `Element[]` | The fragments that have been toggled          |
-| `areActivated`  | `boolean`   | The activation state of the toggled fragments |
+| Additional property | Type        | Description                                   |
+| ------------------- | ----------- | --------------------------------------------- |
+| `fragments`         | `Element[]` | The fragments that have been toggled          |
+| `areActivated`      | `boolean`   | The activation state of the toggled fragments |
 
 ### Style customizations
 
