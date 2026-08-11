@@ -2,7 +2,9 @@
 	"name": "p-slides",
 	"version": "1.5.1",
 	"description": "Presentations made simple with Web Components",
-	"repository": "https://github.com/MaxArt2501/p-slides",
+	"repository": {
+		"url": "git+https://github.com/MaxArt2501/p-slides.git"
+	},
 	"homepage": "https://github.com/MaxArt2501/p-slides",
 	"bugs": {
 		"url": "https://github.com/MaxArt2501/p-slides/issues"
@@ -28,7 +30,7 @@
 	"devDependencies": {
 		"@custom-elements-manifest/analyzer": "^0.10.4",
 		"custom-element-vs-code-integration": "^1.5.0",
-		"typescript": "^5.8.3"
+		"typescript": "^7.0.2"
 	},
 	"customElements": "custom-elements.json",
 	"files": [

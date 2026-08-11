@@ -7,6 +7,6 @@
 		"strict": true,
 		"stripInternal": true,
 		"target": "ESNext",
-		"lib": ["DOM", "DOM.Iterable", "Es2023"]
+		"lib": ["DOM", "DOM.Iterable", "ES2025"]
 	}
 }
