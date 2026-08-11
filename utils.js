@@ -399,8 +399,14 @@ motionMatcher.addEventListener('change', event => (whateverMotion = event.matche
 export const scrollIntoView = (element, opts = {}) => element?.scrollIntoView({ behavior: whateverMotion ? 'smooth' : 'auto', ...opts });
 
 /** @type {PresentationKeyHandler} @internal */
-export const defaultKeyHandler = (keyEvent, deck) => {
-	const command = matchKey(keyEvent, deck.keyCommands);
+export const defaultKeyHandler = (keyEvent, deck) => commandRunner(deck, matchKey(keyEvent, deck.keyCommands));
+
+/**
+ * @param {PresentationDeckElement} deck
+ * @param {import('./declarations.js').KeyCommand | null} command
+ * @internal
+ */
+export const commandRunner = (deck, command) => {
 	switch (command) {
 		case 'previous':
 			deck.previous();
@@ -433,6 +439,11 @@ export const defaultKeyHandler = (keyEvent, deck) => {
 			break;
 		case 'previousmode':
 			deck.mode = deck.modes[(deck.modes.indexOf(deck.mode) + deck.modes.length - 1) % deck.modes.length];
+			break;
+		case 'presentationmode':
+		case 'speakermode':
+		case 'gridmode':
+			deck.mode = command.slice(0, -4);
 			break;
 		default:
 			return false;

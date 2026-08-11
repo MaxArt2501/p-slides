@@ -300,18 +300,36 @@ maps a command name with a list of key descriptions (partials of
 [`KeyboardEvent`](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent) objects). These are the default
 definitions:
 
-| Command         | Keybindings                                                                                  |
-| --------------- | -------------------------------------------------------------------------------------------- |
-| `next`          | `[{ key: 'ArrowRight' }, { key: 'ArrowDown' }]`                                              |
-| `previous`      | `[{ key: 'ArrowLeft' }, { key: 'ArrowUp' }]`                                                 |
-| `nextslide`     | `[{ key: 'PageDown' }]`                                                                      |
-| `previousslide` | `[{ key: 'PageUp' }]`                                                                        |
-| `gotostart`     | `[{ key: 'Home' }]`                                                                          |
-| `gotoend`       | `[{ key: 'End' }]`                                                                           |
-| `toggleclock`   | `[{ key: 'P' }, { key: 'p' }]`                                                               |
-| `resetclock`    | `[{ key: '0', altKey: true }]`                                                               |
-| `togglemode`    | `[{ key: 'M', altKey: true, shiftKey: false }, { key: 'm', altKey: true, shiftKey: false }]` |
-| `previousmode`  | `[{ key: 'M', altKey: true, shiftKey: true }, { key: 'm', altKey: true, shiftKey: true }]`   |
+| Command            | Keybindings                                                                                  |
+| ------------------ | -------------------------------------------------------------------------------------------- |
+| `next`             | `[{ key: 'ArrowRight' }, { key: 'ArrowDown' }]`                                              |
+| `previous`         | `[{ key: 'ArrowLeft' }, { key: 'ArrowUp' }]`                                                 |
+| `nextslide`        | `[{ key: 'PageDown' }]`                                                                      |
+| `previousslide`    | `[{ key: 'PageUp' }]`                                                                        |
+| `gotostart`        | `[{ key: 'Home' }]`                                                                          |
+| `gotoend`          | `[{ key: 'End' }]`                                                                           |
+| `toggleclock`      | `[{ key: 'P', altKey: false }, { key: 'p', altKey: false }]`                                 |
+| `resetclock`       | `[{ key: '0', altKey: true }]`                                                               |
+| `togglemode`       | `[{ key: 'M', altKey: true, shiftKey: false }, { key: 'm', altKey: true, shiftKey: false }]` |
+| `previousmode`     | `[{ key: 'M', altKey: true, shiftKey: true }, { key: 'm', altKey: true, shiftKey: true }]`   |
+| `presentationmode` | `[{ key: 'P', altKey: true }, { key: 'p', altKey: true }]`                                   |
+| `speakermode`      | `[{ key: 'S', altKey: true }, { key: 's', altKey: true }]`                                   |
+| `gridmode`         | `[{ key: 'G', altKey: true }, { key: 'g', altKey: true }]`                                   |
+
+### Invoker commands
+
+You can create your own presentation on-screen controls using something as simple as a `<button>` and the
+[Invoker Commands API](https://developer.mozilla.org/en-US/docs/Web/API/Invoker_Commands_API), without a single line of
+JavaScript. For example, you can create your presentation like this:
+
+```html
+<p-deck id="myPresentation">...</p-deck>
+<button type="button" command="--previous" commandfor="myPresentation">Go back</button>
+<button type="button" command="--next" commandfor="myPresentation">Go forward</button>
+```
+
+The available commands are the same listed for the keybinding in the previous section, preceded by a double dash (`--`),
+as mandatory for all custom commands.
 
 ### A11y and I18n
 
@@ -428,6 +446,14 @@ Advances the presentation, either by showing a new fragment on the current slide
 
 Brings the presentation back, either by hiding the last shown fragment on the current slide, or switching to the
 previous slide.
+
+##### `nextSlide(): void`
+
+Advances the presentation to the next slide, if possible.
+
+##### `previousSlide(): void`
+
+Brings the presentation back to the previous slide, if possible.
 
 ##### `startClock(): void`
 

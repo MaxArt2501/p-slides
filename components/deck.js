@@ -1,6 +1,7 @@
 import {
 	applyStylesheets,
 	checkNoteActivations,
+	commandRunner,
 	copyNotes,
 	defaultKeyHandler,
 	fireEvent,
@@ -93,7 +94,10 @@ export class PresentationDeckElement extends HTMLElement {
 		previousslide: [{ key: 'PageUp' }],
 		gotostart: [{ key: 'Home' }],
 		gotoend: [{ key: 'End' }],
-		toggleclock: [{ key: 'P' }, { key: 'p' }],
+		toggleclock: [
+			{ key: 'P', altKey: false },
+			{ key: 'p', altKey: false }
+		],
 		resetclock: [{ key: '0', altKey: true }],
 		togglemode: [
 			{ key: 'M', altKey: true, shiftKey: false },
@@ -102,6 +106,18 @@ export class PresentationDeckElement extends HTMLElement {
 		previousmode: [
 			{ key: 'M', altKey: true, shiftKey: true },
 			{ key: 'm', altKey: true, shiftKey: true }
+		],
+		presentationmode: [
+			{ key: 'P', altKey: true },
+			{ key: 'p', altKey: true }
+		],
+		speakermode: [
+			{ key: 'S', altKey: true },
+			{ key: 's', altKey: true }
+		],
+		gridmode: [
+			{ key: 'G', altKey: true },
+			{ key: 'g', altKey: true }
 		]
 	};
 
@@ -144,6 +160,8 @@ export class PresentationDeckElement extends HTMLElement {
 					<ul part="notelist"></ul>
 				</aside>`;
 		}
+
+		this.addEventListener('command', /** @param {CommandEvent} event */ event => commandRunner(this, event.command.slice(2)));
 
 		applyStylesheets(this).then(([styleSheet]) => {
 			styleSheet.insertRule(`${getHighlightSelector(this.currentIndex + 1)}{--is-highlighted:1}`);

@@ -12,7 +12,10 @@ export type KeyCommand =
 	| 'toggleclock'
 	| 'resetclock'
 	| 'togglemode'
-	| 'previousmode';
+	| 'previousmode'
+	| 'presentationmode'
+	| 'speakermode'
+	| 'gridmode';
 
 export interface PresentationState {
 	currentIndex: number;
